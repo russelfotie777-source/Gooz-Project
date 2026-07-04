@@ -1,0 +1,7 @@
+backend/.env
+backend/vendor/
+backend/storage/*.key
+frontend/node_modules/
+frontend/.next/
+frontend/.env*.local
+.DS_Store
