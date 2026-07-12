@@ -2,48 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): AnonymousResourceCollection
     {
-        //
+        $orders = $request->user()->orders()
+            ->with(['items.product.brand', 'items.variant', 'payment', 'warehouse'])
+            ->latest()
+            ->paginate(15);
+
+        return OrderResource::collection($orders);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show(Request $request, Order $order): OrderResource
     {
-        //
-    }
+        abort_if(
+            $order->user_id !== $request->user()->id && ! $request->user()->isAdmin(),
+            403
+        );
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Order $order)
-    {
-        //
-    }
+        $order->load(['items.product.brand', 'items.variant', 'payment', 'warehouse']);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Order $order)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Order $order)
-    {
-        //
+        return new OrderResource($order);
     }
 }

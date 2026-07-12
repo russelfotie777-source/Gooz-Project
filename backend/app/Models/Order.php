@@ -3,8 +3,69 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
-    //
+    protected $fillable = [
+        'user_id',
+        'coupon_id',
+        'order_reference',
+        'status',
+        'total_amount',
+        'discount_amount',
+        'delivery_fees',
+        'delivery_method',
+        'warehouse_id',
+        'shipping_address',
+        'shipping_phone',
+        'shipping_latitude',
+        'shipping_longitude',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'total_amount' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'delivery_fees' => 'decimal:2',
+            'shipping_latitude' => 'decimal:7',
+            'shipping_longitude' => 'decimal:7',
+        ];
+    }
+
+    public function user(): BelongsTo
+    {
+        // withTrashed: a soft-deleted (anonymized) account must still resolve
+        // here so order history keeps showing "Utilisateur supprimé" instead
+        // of a null user.
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    public function delivery(): HasOne
+    {
+        return $this->hasOne(Delivery::class);
+    }
 }
