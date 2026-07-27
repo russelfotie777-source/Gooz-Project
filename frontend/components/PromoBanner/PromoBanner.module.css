@@ -1,0 +1,30 @@
+.wrapper {
+  width: 100%;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.mobilePlaceholder {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .image {
+    display: none;
+  }
+
+  .mobilePlaceholder {
+    display: block;
+    width: 100%;
+    height: 32px;
+    background: var(--color-placeholder);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+  }
+}
