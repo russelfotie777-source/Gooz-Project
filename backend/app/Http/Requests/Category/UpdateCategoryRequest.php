@@ -24,7 +24,7 @@ class UpdateCategoryRequest extends FormRequest
                 'nullable', 'integer', 'exists:categories,id',
                 Rule::notIn([$this->route('category')?->id]),
             ],
-            'image' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'max:4096'],
             'is_active' => ['boolean'],
         ];
     }

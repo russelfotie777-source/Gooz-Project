@@ -25,7 +25,7 @@ class StoreCategoryRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:categories,slug'],
             'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'image' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'max:4096'],
             'is_active' => ['boolean'],
         ];
     }
