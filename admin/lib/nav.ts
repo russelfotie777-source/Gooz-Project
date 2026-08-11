@@ -86,7 +86,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Clients",
     items: [
       { label: "Clients", href: "/dashboard/clients", icon: Users, ready: true },
-      { label: "Adresses clients", href: "/dashboard/adresses-clients", icon: MapPin },
+      { label: "Adresses clients", href: "/dashboard/adresses-clients", icon: MapPin, ready: true },
     ],
   },
   {
@@ -94,7 +94,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Catégorie", href: "/dashboard/categories", icon: LayoutGrid, ready: true },
       { label: "Produit", href: "/dashboard/produits", icon: Package, ready: true },
-      { label: "Variante de produit", href: "/dashboard/variantes", icon: Boxes },
+      { label: "Variante de produit", href: "/dashboard/variantes", icon: Boxes, ready: true },
       { label: "Marque", href: "/dashboard/marques", icon: Tag, ready: true },
     ],
   },
@@ -111,7 +111,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Stock & achats",
     items: [
-      { label: "Stocks", href: "/dashboard/stocks", icon: Boxes },
+      { label: "Stocks", href: "/dashboard/stocks", icon: Boxes, ready: true },
       { label: "Emplacements", href: "/dashboard/entrepots", icon: Building2, ready: true },
       { label: "Fournisseurs", href: "/dashboard/fournisseurs", icon: Truck },
       { label: "Commandes d'achat", href: "/dashboard/commandes-achat", icon: ClipboardList },

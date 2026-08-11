@@ -19,21 +19,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     let cancelled = false;
 
-    apiFetch<{ data: { id: number; role: string } }>("/me")
-      .then(({ data: user }) => {
-        if (cancelled) return;
-        if (user.role !== "admin") {
+    function checkMe() {
+      apiFetch<{ data: { id: number; role: string } }>("/me")
+        .then(({ data: user }) => {
+          if (cancelled) return;
+          if (user.role !== "admin") {
+            clearToken();
+            router.replace("/login");
+            return;
+          }
+          setChecking(false);
+        })
+        .catch(() => {
+          if (cancelled) return;
           clearToken();
           router.replace("/login");
-          return;
-        }
-        setChecking(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        clearToken();
-        router.replace("/login");
-      });
+        });
+    }
+
+    checkMe();
 
     return () => {
       cancelled = true;
@@ -131,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      <main className="h-screen flex-1 overflow-y-auto p-8">{children}</main>
     </div>
   );
 }

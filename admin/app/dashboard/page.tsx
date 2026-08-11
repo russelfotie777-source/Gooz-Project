@@ -1,103 +1,243 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Wallet, ShoppingCart, Receipt } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import {
+  Bell,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  LogOut,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import { apiFetch, clearToken } from "@/lib/api";
 
 type Overview = {
-  total_revenue: number;
   total_orders: number;
-  average_order_value: number;
   orders_by_status: Record<string, number>;
+  pending_orders: number;
+  orders_today: number;
+  total_customers: number;
+  low_stock: { product_name: string | null; warehouse_name: string | null; quantity_available: number }[];
 };
 
-const STATUS_STYLES: Record<string, string> = {
-  en_attente: "bg-amber-100 text-amber-700",
-  confirmée: "bg-blue-100 text-blue-700",
-  en_préparation: "bg-violet-100 text-violet-700",
-  expédiée: "bg-blue-100 text-blue-700",
-  livrée: "bg-emerald-100 text-emerald-700",
-  annulée: "bg-red-100 text-red-700",
+type Me = { name: string; role: string };
+
+const STATUS_LABELS: Record<string, string> = {
+  en_attente: "En attente",
+  confirmée: "Confirmée",
+  en_préparation: "En préparation",
+  expédiée: "Expédiée",
+  livrée: "Livrée",
+  annulée: "Annulée",
 };
 
-function formatXAF(value: number): string {
-  return `${value.toLocaleString("fr-FR")} XAF`;
+const STATUS_COLORS: Record<string, string> = {
+  en_attente: "#f59e0b",
+  confirmée: "#2563eb",
+  en_préparation: "#7c3aed",
+  expédiée: "#0ea5e9",
+  livrée: "#10b981",
+  annulée: "#ef4444",
+};
+const FALLBACK_COLOR = "#52525b";
+
+function Sparkline({ colorClass, path }: { colorClass: string; path: string }) {
+  return (
+    <svg viewBox="0 0 120 24" preserveAspectRatio="none" className={`mt-4 h-6 w-full ${colorClass}`}>
+      <path d={path} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     apiFetch<Overview>("/admin/stats/overview")
       .then(setOverview)
       .catch(() => setError("Impossible de charger les statistiques."));
+    apiFetch<{ data: Me }>("/me")
+      .then((res) => setMe(res.data))
+      .catch(() => {});
   }, []);
 
+  async function handleLogout() {
+    try {
+      await apiFetch("/logout", { method: "POST" });
+    } finally {
+      clearToken();
+      router.replace("/login");
+    }
+  }
+
+  const statusEntries = overview ? Object.entries(overview.orders_by_status) : [];
+  const totalStatusCount = statusEntries.reduce((sum, [, count]) => sum + count, 0);
+
+  let cumulative = 0;
+  const gradientStops = statusEntries.map(([status, count]) => {
+    const color = STATUS_COLORS[status] ?? FALLBACK_COLOR;
+    const start = totalStatusCount > 0 ? (cumulative / totalStatusCount) * 360 : 0;
+    cumulative += count;
+    const end = totalStatusCount > 0 ? (cumulative / totalStatusCount) * 360 : 0;
+    return `${color} ${start}deg ${end}deg`;
+  });
+  const donutBackground =
+    gradientStops.length > 0 ? `conic-gradient(${gradientStops.join(", ")})` : "#27272a";
+
   return (
-    <div className="animate-fade-in-up">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-zinc-900">Vue d&apos;ensemble</h1>
-        <p className="mt-1 text-sm text-zinc-500">Performance globale de la boutique.</p>
+    <div className="-m-8 min-h-screen bg-[#0b0d12] p-8 text-white">
+      <div className="mb-6 flex items-center justify-end gap-4">
+        <button className="text-white/40 transition-colors hover:text-white/70">
+          <Bell className="h-5 w-5" />
+        </button>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
+          {me ? initials(me.name) : "..."}
+        </div>
       </div>
 
+      <h1 className="mb-6 text-2xl font-bold">Tableau de bord</h1>
+
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </p>
       )}
 
+      <div className="mb-6 flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+        <div className="flex items-center gap-4">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-sm font-semibold">
+            {me ? initials(me.name) : "AP"}
+          </div>
+          <div>
+            <p className="font-semibold text-white">Bonjour</p>
+            <p className="text-sm text-white/40">Administrateur Principal</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+        >
+          <LogOut className="h-4 w-4" />
+          Déconnexion
+        </button>
+      </div>
+
       {overview && (
         <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              label="Chiffre d'affaires"
-              value={formatXAF(overview.total_revenue)}
-              icon={Wallet}
-              accent="from-brand-orange to-brand-orange-dark"
-              glow="shadow-brand-orange/15"
+              label="Commandes en attente"
+              value={overview.pending_orders.toString()}
+              note="Commandes en cours de traitement"
+              icon={Clock}
+              colorClass="text-amber-500"
+              sparklinePath="M0 18 Q 20 6, 40 14 T 80 10 T 120 16"
             />
             <StatCard
-              label="Commandes"
+              label="Total des commandes"
               value={overview.total_orders.toString()}
-              icon={ShoppingCart}
-              accent="from-brand-blue to-blue-700"
-              glow="shadow-brand-blue/15"
+              note="Toutes les commandes"
+              icon={ShieldCheck}
+              colorClass="text-emerald-500"
+              sparklinePath="M0 20 Q 20 16, 40 8 T 80 12 T 120 4"
             />
             <StatCard
-              label="Panier moyen"
-              value={formatXAF(overview.average_order_value)}
-              icon={Receipt}
-              accent="from-brand-violet to-violet-700"
-              glow="shadow-brand-violet/15"
+              label="Total des clients"
+              value={overview.total_customers.toLocaleString("fr-FR")}
+              note="Clients enregistrés"
+              icon={Users}
+              colorClass="text-amber-500"
+              sparklinePath="M0 16 Q 20 4, 40 10 T 80 6 T 120 14"
+            />
+            <StatCard
+              label="Commandes du jour"
+              value={overview.orders_today.toString()}
+              note="Commandes passées aujourd'hui"
+              icon={Calendar}
+              colorClass="text-brand-blue"
+              sparklinePath="M0 12 Q 20 18, 40 10 T 80 16 T 120 8"
             />
           </div>
 
-          <div className="mt-8 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-              Commandes par statut
-            </h2>
-            {Object.keys(overview.orders_by_status).length === 0 ? (
-              <p className="text-sm text-zinc-400">Aucune commande pour le moment.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {Object.entries(overview.orders_by_status).map(([status, count]) => (
-                  <li
-                    key={status}
-                    className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-zinc-50"
-                  >
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                        STATUS_STYLES[status] ?? "bg-zinc-100 text-zinc-600"
-                      }`}
-                    >
-                      {status}
-                    </span>
-                    <span className="text-sm font-semibold text-zinc-900">{count}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
+              <h2 className="mb-6 text-sm font-semibold text-white/70">Statut des commandes</h2>
+              {totalStatusCount === 0 ? (
+                <p className="text-sm text-white/30">Aucune commande pour le moment.</p>
+              ) : (
+                <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-around">
+                  <div
+                    className="h-56 w-56 shrink-0 rounded-full"
+                    style={{
+                      background: donutBackground,
+                      WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 32px), #000 calc(100% - 32px))",
+                      mask: "radial-gradient(farthest-side, transparent calc(100% - 32px), #000 calc(100% - 32px))",
+                    }}
+                  />
+                  <ul className="flex flex-col gap-2.5">
+                    {statusEntries.map(([status, count]) => (
+                      <li key={status} className="flex items-center gap-2.5 text-sm">
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: STATUS_COLORS[status] ?? FALLBACK_COLOR }}
+                        />
+                        <span className="text-white/60">{STATUS_LABELS[status] ?? status}</span>
+                        <span className="font-semibold text-white">{count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
+              <h2 className="mb-4 text-sm font-semibold text-white/70">Alertes de stock faible</h2>
+              {overview.low_stock.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <p className="font-semibold text-white">Aucun article en stock faible</p>
+                  <p className="text-sm text-white/40">Tous les produits sont bien approvisionnés !</p>
+                </div>
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-white/5 text-xs uppercase tracking-wide text-white/30">
+                      <th className="pb-3 font-medium">Produit</th>
+                      <th className="pb-3 font-medium">Emplacement</th>
+                      <th className="pb-3 text-right font-medium">Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {overview.low_stock.map((item, idx) => (
+                      <tr key={idx} className="border-b border-white/5 last:border-0">
+                        <td className="py-2.5">{item.product_name ?? "—"}</td>
+                        <td className="py-2.5 text-white/50">{item.warehouse_name ?? "—"}</td>
+                        <td className="py-2.5 text-right font-semibold text-amber-400">
+                          {item.quantity_available}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -108,23 +248,27 @@ export default function DashboardPage() {
 function StatCard({
   label,
   value,
+  note,
   icon: Icon,
-  accent,
-  glow,
+  colorClass,
+  sparklinePath,
 }: {
   label: string;
   value: string;
+  note: string;
   icon: React.ComponentType<{ className?: string }>;
-  accent: string;
-  glow: string;
+  colorClass: string;
+  sparklinePath: string;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${accent} shadow-lg ${glow}`}>
-        <Icon className="h-5 w-5 text-white" />
-      </div>
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-zinc-900">{value}</p>
+    <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+      <p className="text-sm text-white/40">{label}</p>
+      <p className="mt-2 text-3xl font-bold text-white">{value}</p>
+      <p className={`mt-2 flex items-center gap-1.5 text-xs font-medium ${colorClass}`}>
+        <Icon className="h-3.5 w-3.5" />
+        {note}
+      </p>
+      <Sparkline colorClass={colorClass} path={sparklinePath} />
     </div>
   );
 }
