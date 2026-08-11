@@ -45,6 +45,7 @@
   }
 
   .categoryLink {
+    display: block;
     width: 100%;
     text-align: left;
     padding: 8px 20px;

@@ -1,3 +1,9 @@
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { addCartItem } from "@/lib/api";
+import { getSession } from "@/lib/auth";
+import { notifyCartUpdated } from "@/lib/cartEvents";
 import type { Product } from "@/lib/types";
 import styles from "./ProductCard.module.css";
 
@@ -28,24 +34,55 @@ export default function ProductCard({
   onAddToCart,
   onToggleWishlist,
 }: ProductCardProps) {
+  const router = useRouter();
+  const [cartStatus, setCartStatus] = useState<"idle" | "adding" | "added">("idle");
   const primaryImage =
     product.images.find((img) => img.is_primary) ?? product.images[0];
   const discount = discountPercent(product);
 
+  // No `onAddToCart` override is used anywhere in the app today — this is
+  // the real add-to-cart action (API.md §4 cart routes require auth, hence
+  // the guest -> /connexion redirect) — but the prop stays so a future
+  // caller can still special-case it (e.g. a quick-view modal).
+  async function handleAddToCart() {
+    if (onAddToCart) {
+      onAddToCart(product);
+      return;
+    }
+
+    const session = getSession();
+    if (!session) {
+      router.push("/connexion");
+      return;
+    }
+
+    setCartStatus("adding");
+    try {
+      const cart = await addCartItem(session.token, product.id, 1);
+      notifyCartUpdated(cart.items.length);
+      setCartStatus("added");
+      window.setTimeout(() => setCartStatus("idle"), 2000);
+    } catch {
+      setCartStatus("idle");
+    }
+  }
+
   return (
     <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={primaryImage?.image_url ?? PLACEHOLDER_IMAGE}
-          alt={product.name}
-          className={styles.image}
-          loading="lazy"
-          onError={(e) => {
-            if (e.currentTarget.src.endsWith(PLACEHOLDER_IMAGE)) return;
-            e.currentTarget.src = PLACEHOLDER_IMAGE;
-          }}
-        />
+        <Link href={`/products/${product.id}`} className={styles.imageLink}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={primaryImage?.image_url ?? PLACEHOLDER_IMAGE}
+            alt={product.name}
+            className={styles.image}
+            loading="lazy"
+            onError={(e) => {
+              if (e.currentTarget.src.endsWith(PLACEHOLDER_IMAGE)) return;
+              e.currentTarget.src = PLACEHOLDER_IMAGE;
+            }}
+          />
+        </Link>
         {discount && <span className={styles.discountTag}>-{discount}%</span>}
         <button
           type="button"
@@ -58,10 +95,12 @@ export default function ProductCard({
       </div>
 
       <div className={styles.info}>
-        <p className={styles.name}>{product.name}</p>
-        {product.description && (
-          <p className={styles.description}>{product.description}</p>
-        )}
+        <Link href={`/products/${product.id}`} className={styles.infoLink}>
+          <p className={styles.name}>{product.name}</p>
+          {product.description && (
+            <p className={styles.description}>{product.description}</p>
+          )}
+        </Link>
         <div className={styles.footer}>
           <span className={styles.priceGroup}>
             {discount && (
@@ -71,14 +110,22 @@ export default function ProductCard({
           </span>
           <button
             type="button"
-            className={styles.cartButton}
+            className={`${styles.cartButton} ${cartStatus === "added" ? styles.cartButtonAdded : ""}`}
             aria-label="Ajouter au panier"
-            onClick={() => onAddToCart?.(product)}
+            disabled={cartStatus === "adding"}
+            onClick={handleAddToCart}
           >
             <img src="/icon/product/add-to-cart.svg" alt="" className={styles.cartIcon} />
           </button>
         </div>
       </div>
+
+      {cartStatus === "added" && (
+        <div className={styles.toast} role="status" aria-live="polite">
+          <img src="/icon/product-detail/check-circle.svg" alt="" className={styles.toastIcon} />
+          Produit ajouté au panier !
+        </div>
+      )}
     </article>
   );
 }

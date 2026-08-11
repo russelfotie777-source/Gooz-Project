@@ -1,30 +1,103 @@
+import Link from "next/link";
 import styles from "./BottomNav.module.css";
 
+interface BottomNavProps {
+  /** Which slot is raised as the active orange circle. Defaults to "home". */
+  active?: "home" | "cart" | "profile";
+}
+
 // Real mobile nav bar from Figma (node 372:242, frame 372:185) — floating
-// orange circular "Accueil" button raised above a white pill bar, with plain
-// cart/bell/user icons alongside (no text labels).
-export default function BottomNav() {
+// orange circular button raised above a white pill bar, with plain icons
+// alongside (no text labels). The cart page (node 538:336) raises the
+// "Panier" slot instead of "Accueil", so whichever slot is active moves
+// into the floating circle and the rest render inline in the bar.
+// Each slot has two icon variants: "icon" (dark, used inline in the white
+// bar) and "activeIcon" (white, used when raised into the orange circle) —
+// the two states use differently-colored exports in Figma, not just CSS.
+const SLOTS = [
+  {
+    key: "home",
+    href: "/",
+    icon: "/icon/bottom-nav/nav-home-inline.svg",
+    activeIcon: "/icon/bottom-nav/nav-home.svg",
+    label: "Accueil",
+  },
+  {
+    key: "cart",
+    href: "/cart",
+    icon: "/icon/bottom-nav/nav-cart.svg",
+    activeIcon: "/icon/bottom-nav/nav-cart-active.svg",
+    label: "Panier",
+  },
+  {
+    key: "bell",
+    href: null,
+    icon: "/icon/bottom-nav/nav-bell.svg",
+    activeIcon: "/icon/bottom-nav/nav-bell.svg",
+    label: "Notifications",
+  },
+  {
+    key: "profile",
+    href: "/compte",
+    icon: "/icon/bottom-nav/nav-user.svg",
+    activeIcon: "/icon/bottom-nav/nav-user-active.svg",
+    label: "Compte",
+  },
+] as const;
+
+export default function BottomNav({ active = "home" }: BottomNavProps) {
+  const activeIndex = SLOTS.findIndex((slot) => slot.key === active);
+  const activeSlot = SLOTS[activeIndex];
+  const circlePosition = `${(activeIndex * 2 + 1) * 12.5}%`;
+
   return (
     <nav className={styles.nav} aria-label="Navigation principale">
-      <div className={styles.bar}>
-        <div className={styles.homeSlot}>
-          <img src="/icon/bottom-nav/nav-shadow.svg" alt="" className={styles.homeShadow} aria-hidden />
-          <button type="button" className={styles.homeCircle} aria-label="Accueil" aria-current="page">
-            <img src="/icon/bottom-nav/nav-home.svg" alt="" className={styles.homeIcon} />
-          </button>
+      <div className={styles.barWrapper}>
+        <div className={styles.bar}>
+          <img
+            src="/icon/bottom-nav/nav-shadow.svg"
+            alt=""
+            className={styles.homeShadow}
+            style={{ left: circlePosition }}
+            aria-hidden
+          />
+
+          {SLOTS.map((slot, index) =>
+            index === activeIndex ? (
+              <div key={slot.key} className={styles.homeSlot} aria-hidden />
+            ) : slot.href ? (
+              <Link key={slot.key} href={slot.href} className={styles.item} aria-label={slot.label}>
+                <img src={slot.icon} alt="" className={styles.icon} />
+              </Link>
+            ) : (
+              <button key={slot.key} type="button" className={styles.item} aria-label={slot.label}>
+                <img src={slot.icon} alt="" className={styles.icon} />
+              </button>
+            )
+          )}
         </div>
 
-        <button type="button" className={styles.item} aria-label="Panier">
-          <img src="/icon/bottom-nav/nav-cart.svg" alt="" className={styles.icon} />
-        </button>
-
-        <button type="button" className={styles.item} aria-label="Notifications">
-          <img src="/icon/bottom-nav/nav-bell.svg" alt="" className={styles.icon} />
-        </button>
-
-        <button type="button" className={styles.item} aria-label="Compte">
-          <img src="/icon/bottom-nav/nav-user.svg" alt="" className={styles.icon} />
-        </button>
+        {activeSlot.href ? (
+          <Link
+            href={activeSlot.href}
+            className={styles.homeCircle}
+            style={{ left: circlePosition }}
+            aria-label={activeSlot.label}
+            aria-current="page"
+          >
+            <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className={styles.homeCircle}
+            style={{ left: circlePosition }}
+            aria-label={activeSlot.label}
+            aria-current="page"
+          >
+            <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
+          </button>
+        )}
       </div>
     </nav>
   );

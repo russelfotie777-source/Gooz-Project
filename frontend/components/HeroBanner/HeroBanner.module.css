@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--color-primary-soft);
+  background: var(--color-text);
   border-radius: var(--radius-md);
   overflow: visible;
   min-height: 170px;
@@ -27,7 +27,7 @@
 }
 
 .titleAccent {
-  color: var(--color-text);
+  color: var(--color-accent);
 }
 
 .subtitle {
@@ -49,7 +49,7 @@
 
 .cta {
   align-self: flex-start;
-  background: var(--color-accent-strong);
+  background: var(--color-accent);
   color: var(--color-white);
   font-family: var(--font-heading);
   font-weight: 700;
@@ -91,13 +91,20 @@
   pointer-events: none;
 }
 
-.circleDecoration {
+.circleWrapper {
   position: absolute;
-  height: 100%;
-  top: -5%;
-  right: 1%;
-  left: -40%;
+  top: 50%;
+  right: -2%;
+  transform: translateY(-50%);
+  height: 65%;
+  aspect-ratio: 1 / 1;
   z-index: 0;
+}
+
+.circleDecoration {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .productImage {
@@ -192,5 +199,13 @@
     bottom: -16%;
     right: 8%;
     width: 28%;
+  }
+
+  .circleWrapper {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    height: 100%;
   }
 }

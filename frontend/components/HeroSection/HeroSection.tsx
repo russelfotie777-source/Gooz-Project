@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Category } from "@/lib/types";
 import HeroBanner from "@/components/HeroBanner/HeroBanner";
 import styles from "./HeroSection.module.css";
@@ -16,9 +17,9 @@ export default function HeroSection({ categories }: HeroSectionProps) {
         <ul className={styles.categoryList}>
           {categories.map((category) => (
             <li key={category.id}>
-              <button type="button" className={styles.categoryLink}>
+              <Link href={`/categories/${category.slug}`} className={styles.categoryLink}>
                 {category.name}
-              </button>
+              </Link>
             </li>
           ))}
         </ul>

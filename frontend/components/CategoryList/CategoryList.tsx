@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Category } from "@/lib/types";
 import styles from "./CategoryList.module.css";
 
@@ -21,14 +22,14 @@ export default function CategoryList({ categories }: CategoryListProps) {
       <ul className={styles.list}>
         {categories.map((category) => (
           <li key={category.id} className={styles.item}>
-            <button type="button" className={styles.button}>
+            <Link href={`/categories/${category.slug}`} className={styles.button}>
               <span className={styles.iconCircle}>
                 {IMAGES[category.slug] && (
                   <img src={IMAGES[category.slug]} alt="" className={styles.iconImage} />
                 )}
               </span>
               <span className={styles.label}>{category.name}</span>
-            </button>
+            </Link>
           </li>
         ))}
       </ul>

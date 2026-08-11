@@ -1,0 +1,231 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: #e7e8ea;
+  padding-bottom: calc(var(--bottom-nav-height) + 32px);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(24px, env(safe-area-inset-top)) 20px 12px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.themeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.themeIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px 16px 0;
+}
+
+/* User card */
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f5f7fa;
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+}
+
+.avatarPhoto {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.avatarPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #d9d9d9;
+  flex: 0 0 auto;
+}
+
+.avatarPlaceholderIcon {
+  width: 54px;
+  height: 54px;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userName {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.userEmail {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.64);
+  margin: 0;
+}
+
+.editButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.editIcon {
+  width: 26px;
+  height: 26px;
+}
+
+/* Rows card */
+
+.card {
+  background: #f5f7fa;
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.15);
+}
+
+.rowButton {
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.rowNoBorder {
+  border-bottom: none;
+}
+
+.rowIcon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+
+.rowIconTilted {
+  transform: rotate(-43deg);
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowTitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.rowTitleOnly {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.rowSubtitle {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.68);
+  margin: 0;
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+/* Logged-out: highlighted login card */
+
+.loginCard {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f5f7fa;
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  border: none;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.loginIcon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+
+.loginLabel {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-accent-strong);
+}
+
+@media (min-width: 1024px) {
+  .page {
+    display: none;
+  }
+}

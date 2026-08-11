@@ -10,10 +10,16 @@
   pointer-events: none;
 }
 
-.bar {
+.barWrapper {
   position: relative;
   width: 100%;
   max-width: 480px;
+  pointer-events: auto;
+}
+
+.bar {
+  position: relative;
+  width: 100%;
   height: var(--bottom-nav-height);
   background: var(--color-white);
   border-radius: var(--radius-lg);
@@ -21,7 +27,7 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  pointer-events: auto;
+  overflow: hidden;
 }
 
 .item {
@@ -34,23 +40,18 @@
 }
 
 .icon {
-  width: 20px;
   height: 20px;
+  width: auto;
 }
 
 .homeSlot {
-  position: relative;
-  display: flex;
   flex: 1;
-  align-items: center;
-  justify-content: center;
   height: 100%;
 }
 
 .homeShadow {
   position: absolute;
-  top: -9px;
-  left: 50%;
+  top: 0;
   transform: translateX(-50%);
   width: 98px;
   height: 50px;
@@ -60,7 +61,6 @@
 .homeCircle {
   position: absolute;
   top: -9px;
-  left: 50%;
   transform: translateX(-50%);
   width: 50px;
   height: 50px;
@@ -70,11 +70,12 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 6px 14px rgba(255, 149, 0, 0.35);
+  z-index: 1;
 }
 
 .homeIcon {
-  width: 20px;
   height: 20px;
+  width: auto;
 }
 
 @media (min-width: 1024px) {

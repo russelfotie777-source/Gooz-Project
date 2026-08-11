@@ -1,22 +1,29 @@
+/* display:contents unwraps these wrappers from the box tree so the sticky
+   nav's containing block becomes the full-height page wrapper instead of a
+   box that's only as tall as the header itself — otherwise position:sticky
+   only has ~56px of "room" to stick in before scrolling away with it. */
 .header {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 0;
-  background: var(--color-bg);
+  display: contents;
+}
+
+.desktopHeader {
+  display: contents;
+}
+
+.desktopSticky {
   position: sticky;
   top: 0;
   z-index: 20;
 }
 
-.desktopHeader {
-  display: block;
-  width: 100%;
-}
-
 .mobileHeader {
   display: none;
-  width: 100%;
+}
+
+.mobileSticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   background: var(--color-bg);
 }
 
@@ -30,10 +37,10 @@
 .mainRow {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 0 40px;
-  background: var(--color-primary);
-  min-height: 96px;
+  gap: 16px;
+  padding: 0 24px;
+  background: var(--color-text);
+  min-height: 66px;
   width: 100%;
 }
 
@@ -53,12 +60,12 @@
 }
 
 .menuIcon {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
 }
 
 .logo {
-  height: 46px;
+  height: 30px;
   width: auto;
   flex: 0 0 auto;
   object-fit: contain;
@@ -69,8 +76,8 @@
   flex-direction: row;
   align-items: stretch;
   flex: 1;
-  max-width: 720px;
-  height: 56px;
+  max-width: 640px;
+  height: 45px;
   background: #ffffff;
   border-radius: 9999px;
   overflow: hidden;
@@ -84,10 +91,10 @@
   outline: none;
   flex: 1;
   min-width: 0;
-  font-size: 16px;
+  font-size: 14px;
   color: rgba(0, 0, 0, 0.44);
   font-family: var(--font-body);
-  padding: 0 24px;
+  padding: 0 16px;
   height: 100%;
 }
 
@@ -100,10 +107,10 @@
   color: #ffffff;
   border: none;
   height: 100%;
-  min-width: 150px;
-  padding: 0 28px;
+  min-width: 100px;
+  padding: 0 18px;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.2s;
@@ -117,21 +124,36 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   flex: 0 0 auto;
+}
+
+.langWrapper {
+  position: relative;
+}
+
+.accountWrapper {
+  position: relative;
+  /* Extends the hoverable box past the visual gap before .accountDropdown,
+     so the pointer never truly leaves .accountWrapper while moving from the
+     trigger down into the menu (classic CSS hover-dropdown dead-zone fix). */
+  padding-bottom: 16px;
+  margin-bottom: -16px;
 }
 
 .langButton {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-primary-dark);
+  background: var(--color-accent);
   border: none;
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
+  border-radius: 6px;
+  padding: 8px 14px;
   color: #ffffff;
+  font-family: var(--font-body);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 13px;
+  white-space: nowrap;
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -140,34 +162,127 @@
   opacity: 0.85;
 }
 
-.langIcon {
-  width: 12px;
-  height: 6px;
-}
-
-.iconButton {
+.accountButton {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
   background: none;
   border: none;
+  padding: 8px 0;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
   cursor: pointer;
   transition: opacity 0.2s;
 }
 
-.iconButton:hover {
+.accountButton:hover {
   opacity: 0.8;
 }
 
-.actionIcon {
-  width: 30px;
-  height: 30px;
+.langFlag {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.accountAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.accountAvatarIcon {
+  width: 15px;
+  height: 15px;
+}
+
+.dropdownChevron {
+  width: 10px;
+  height: 10px;
+  transition: transform 0.2s;
+}
+
+.chevronLight {
+  filter: brightness(0) invert(1);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.langDropdown,
+.accountDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 170px;
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 6px;
+  margin: 0;
+  list-style: none;
+}
+
+.accountDropdown {
+  display: none;
+  min-width: 190px;
+  top: 100%;
+}
+
+.accountWrapper:hover .accountDropdown {
+  display: block;
+}
+
+.langOption,
+.accountMenuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.langOption:hover,
+.accountMenuItem:hover {
+  background: var(--color-surface);
+}
+
+.accountMenuIcon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.accountMenuIconDanger {
+  color: #fe522e;
 }
 
 .cartButton {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: none;
   border: none;
   color: #ffffff;
@@ -185,16 +300,16 @@
 }
 
 .cartIcon {
-  width: 28px;
-  height: 28px;
+  width: 21px;
+  height: 21px;
 }
 
 .cartBadge {
   position: absolute;
-  top: -10px;
-  right: -12px;
-  width: 22px;
-  height: 22px;
+  top: -8px;
+  right: -9px;
+  width: 16px;
+  height: 16px;
 }
 
 .cartBadgeBg {
@@ -213,14 +328,14 @@
   width: 100%;
   height: 100%;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
   font-family: var(--font-heading);
 }
 
 .cartLabel {
   font-weight: 700;
-  font-size: 16px;
+  font-size: 14px;
   white-space: nowrap;
 }
 
@@ -228,9 +343,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  background: var(--color-primary);
-  padding: 14px 40px;
+  gap: 12px;
+  background: var(--color-text);
+  padding: 8px 24px;
   width: 100%;
   overflow-x: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
@@ -239,12 +354,12 @@
 .categoryButton {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 4px;
+  gap: 6px;
+  padding: 4px;
   background: transparent;
   border: none;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 11px;
   color: #ffffff;
   text-transform: uppercase;
   white-space: nowrap;
@@ -257,8 +372,8 @@
 }
 
 .categoryIcon {
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
 }
 
@@ -271,7 +386,7 @@
 
 .mobilePromoStrip {
   background: var(--color-placeholder);
-  height: 20px;
+  height: 50px;
   margin: 10px 12px 0;
   border-radius: 5px;
 }
@@ -346,12 +461,84 @@
   color: rgba(0, 0, 0, 0.5);
 }
 
+.mobileDetailSticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: transparent;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.mobileDetailStickyScrolled {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, var(--shadow-card);
+}
+
+.mobileDetailStickyScrolled .mobileDetailSearchButton {
+  box-shadow: none;
+}
+
+.mobileDetailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.mobileBackButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.mobileBackIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.mobileDetailSearchButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.mobileInfoButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.mobileInfoIcon {
+  width: 24px;
+  height: 24px;
+}
+
 @media (max-width: 900px) {
   .desktopHeader {
     display: none;
   }
 
   .mobileHeader {
-    display: block;
+    display: contents;
   }
 }

@@ -4,7 +4,9 @@
   width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 12px 16px 4px;
+  padding: 4px 16px;
+  margin-top: -12px;
+  margin-bottom: -22px;
 }
 
 .wrapper::-webkit-scrollbar {

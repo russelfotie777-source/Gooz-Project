@@ -14,11 +14,14 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CityController;
 use App\Http\Controllers\Admin\WarehouseController as AdminWarehouseController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\DeliveryEstimateController;
 use App\Http\Controllers\DeliveryQuoteController;
 use App\Http\Controllers\DeviceTokenController;
+use App\Http\Controllers\NeighborhoodController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
@@ -68,6 +71,10 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/warehouses', [WarehouseController::class, 'index']);
     Route::get('/warehouses/{warehouse}', [WarehouseController::class, 'show']);
+
+    Route::get('/cities', [CityController::class, 'index']);
+    Route::get('/neighborhoods', [NeighborhoodController::class, 'index']);
+    Route::get('/delivery/estimate', [DeliveryEstimateController::class, 'show']);
 
     Route::middleware(['auth:sanctum', 'can:manage-products'])->group(function () {
         Route::post('/products', [ProductController::class, 'store']);

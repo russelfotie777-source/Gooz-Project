@@ -25,7 +25,9 @@ export default function HeroBanner() {
       </div>
 
       <div className={styles.imageWrapper} aria-hidden="true">
-        <img src="/images/hero/circle-decoration.svg" alt="" className={styles.circleDecoration} />
+        <div className={styles.circleWrapper}>
+          <img src="/images/hero/circle-decoration.svg" alt="" className={styles.circleDecoration} />
+        </div>
         <img src="/images/hero/product-camera.png" alt="" className={styles.productImage} />
       </div>
 

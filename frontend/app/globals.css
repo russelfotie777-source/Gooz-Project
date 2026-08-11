@@ -15,6 +15,7 @@
   --color-placeholder: #d9d9d9;
   --color-placeholder-strong: #ccc8c8;
   --color-border: #e5e7eb;
+  --color-navy: #04305c;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -26,9 +27,8 @@
   --font-heading: var(--font-sora), "Sora", sans-serif;
   --font-body: var(--font-inter), "Inter", sans-serif;
 
-  --header-height: 64px;
+  --header-height: 90px;
   --bottom-nav-height: 68px;
-  --content-max-width: 1400px;
 }
 
 * {
