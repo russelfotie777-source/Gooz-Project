@@ -25,7 +25,7 @@ return [
 
     'price_per_extra_item' => (float) env('DELIVERY_PRICE_PER_EXTRA_ITEM', 100),
 
-    'min_fee' => (float) env('DELIVERY_MIN_FEE', 500),
+    'min_fee' => (float) env('DELIVERY_MIN_FEE', 800),
 
     'max_fee' => (float) env('DELIVERY_MAX_FEE', 5000),
 

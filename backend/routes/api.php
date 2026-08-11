@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
@@ -66,6 +68,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
+    Route::get('/banners', [BannerController::class, 'index']);
+
     Route::get('/brands', [BrandController::class, 'index']);
     Route::get('/brands/{brand}', [BrandController::class, 'show']);
 
@@ -95,6 +99,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/brands', [AdminBrandController::class, 'store']);
         Route::put('/brands/{brand}', [AdminBrandController::class, 'update']);
         Route::delete('/brands/{brand}', [AdminBrandController::class, 'destroy']);
+
+        Route::get('/admin/banners', [AdminBannerController::class, 'index']);
+        Route::post('/banners', [AdminBannerController::class, 'store']);
+        Route::put('/banners/{banner}', [AdminBannerController::class, 'update']);
+        Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-coupons'])->group(function () {
