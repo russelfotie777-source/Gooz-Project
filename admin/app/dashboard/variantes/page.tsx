@@ -7,6 +7,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  ImageOff,
   MoreVertical,
   Pencil,
   Plus,
@@ -16,18 +18,23 @@ import {
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
 import { Toast } from "@/components/toast";
 
-type Product = {
+type Variant = {
   id: number;
-  name: string;
-  reference: string | null;
+  product_name: string | null;
+  display_name: string | null;
+  price: number;
   is_active: boolean;
-  category: { id: number; name: string } | null;
+  images_count: number;
 };
 
-export default function ProduitsPage() {
+function formatXAF(value: number): string {
+  return `${Number(value).toLocaleString("fr-FR")} XAF`;
+}
+
+export default function VariantesPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<Product[] | null>(null);
-  const [meta, setMeta] = useState<Paginated<Product>["meta"] | null>(null);
+  const [variants, setVariants] = useState<Variant[] | null>(null);
+  const [meta, setMeta] = useState<Paginated<Variant>["meta"] | null>(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,12 +47,12 @@ export default function ProduitsPage() {
     const query = new URLSearchParams({ page: String(page), per_page: "25" });
     if (search) query.set("q", search);
 
-    apiFetch<Paginated<Product>>(`/admin/products?${query.toString()}`)
+    apiFetch<Paginated<Variant>>(`/admin/variants?${query.toString()}`)
       .then((res) => {
-        setProducts(res.data);
+        setVariants(res.data);
         setMeta(res.meta);
       })
-      .catch(() => setError("Impossible de charger les produits."));
+      .catch(() => setError("Impossible de charger les variantes."));
   }
 
   useEffect(() => {
@@ -54,29 +61,29 @@ export default function ProduitsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search]);
 
-  async function toggleActive(product: Product) {
+  async function toggleActive(variant: Variant) {
     try {
-      await apiFetch(`/products/${product.id}`, {
+      await apiFetch(`/variants/${variant.id}`, {
         method: "PUT",
-        body: JSON.stringify({ is_active: !product.is_active }),
+        body: JSON.stringify({ is_active: !variant.is_active }),
       });
-      setProducts(
-        (prev) => prev?.map((p) => (p.id === product.id ? { ...p, is_active: !p.is_active } : p)) ?? null
+      setVariants(
+        (prev) => prev?.map((v) => (v.id === variant.id ? { ...v, is_active: !v.is_active } : v)) ?? null
       );
       setToast({
-        title: "Statut du produit mis à jour",
-        message: `Le produit a été ${!product.is_active ? "activé" : "désactivé"}.`,
+        title: "Statut de la variante mis à jour",
+        message: `La variante a été ${!variant.is_active ? "activée" : "désactivée"}.`,
       });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     }
   }
 
-  async function deleteProduct(id: number) {
-    if (!confirm("Supprimer ce produit ?")) return;
+  async function deleteVariant(id: number) {
+    if (!confirm("Supprimer cette variante ?")) return;
     try {
-      await apiFetch(`/products/${id}`, { method: "DELETE" });
-      setProducts((prev) => prev?.filter((p) => p.id !== id) ?? null);
+      await apiFetch(`/variants/${id}`, { method: "DELETE" });
+      setVariants((prev) => prev?.filter((v) => v.id !== id) ?? null);
       setSelected((prev) => {
         const next = new Set(prev);
         next.delete(id);
@@ -87,31 +94,13 @@ export default function ProduitsPage() {
     }
   }
 
-  async function bulkSetActive(active: boolean) {
-    setBulkOpen(false);
-    const ids = Array.from(selected);
-    try {
-      await Promise.all(
-        ids.map((id) => apiFetch(`/products/${id}`, { method: "PUT", body: JSON.stringify({ is_active: active }) }))
-      );
-      setProducts((prev) => prev?.map((p) => (selected.has(p.id) ? { ...p, is_active: active } : p)) ?? null);
-      setToast({
-        title: "Statut des produits mis à jour",
-        message: `${ids.length} produit(s) ${active ? "activé(s)" : "désactivé(s)"}.`,
-      });
-      setSelected(new Set());
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Échec de la mise à jour groupée.");
-    }
-  }
-
   async function bulkDelete() {
     setBulkOpen(false);
-    if (!confirm(`Supprimer ${selected.size} produit(s) ?`)) return;
+    if (!confirm(`Supprimer ${selected.size} variante(s) ?`)) return;
     const ids = Array.from(selected);
     try {
-      await Promise.all(ids.map((id) => apiFetch(`/products/${id}`, { method: "DELETE" })));
-      setProducts((prev) => prev?.filter((p) => !selected.has(p.id)) ?? null);
+      await Promise.all(ids.map((id) => apiFetch(`/variants/${id}`, { method: "DELETE" })));
+      setVariants((prev) => prev?.filter((v) => !selected.has(v.id)) ?? null);
       setSelected(new Set());
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la suppression groupée.");
@@ -119,8 +108,8 @@ export default function ProduitsPage() {
   }
 
   function toggleSelectAll() {
-    if (!products) return;
-    setSelected((prev) => (prev.size === products.length ? new Set() : new Set(products.map((p) => p.id))));
+    if (!variants) return;
+    setSelected((prev) => (prev.size === variants.length ? new Set() : new Set(variants.map((v) => v.id))));
   }
 
   function toggleSelect(id: number) {
@@ -137,20 +126,20 @@ export default function ProduitsPage() {
       {toast && <Toast title={toast.title} message={toast.message} onClose={() => setToast(null)} />}
 
       <div className="mb-4 flex items-center gap-1.5 text-xs text-white/40">
-        <span>Produits</span>
+        <span>Variantes de produit</span>
         <ChevronRight className="h-3 w-3" />
         <span>Liste</span>
       </div>
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Produits</h1>
+        <h1 className="text-2xl font-bold">Variantes de produit</h1>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push("/dashboard/produits/create")}
+            onClick={() => router.push("/dashboard/variantes/create")}
             className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 hover:brightness-105"
           >
             <Plus className="h-4 w-4" />
-            Ajouter un produit
+            Ajouter une variante
           </button>
           <div className="relative">
             <button
@@ -166,18 +155,6 @@ export default function ProduitsPage() {
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setBulkOpen(false)} />
                 <div className="absolute right-0 top-11 z-20 w-48 rounded-xl border border-white/10 bg-[#12141c] p-1.5 shadow-2xl">
-                  <button
-                    onClick={() => bulkSetActive(true)}
-                    className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-emerald-400 hover:bg-white/5"
-                  >
-                    Activer la sélection
-                  </button>
-                  <button
-                    onClick={() => bulkSetActive(false)}
-                    className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-white/60 hover:bg-white/5"
-                  >
-                    Désactiver la sélection
-                  </button>
                   <button
                     onClick={bulkDelete}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-400 hover:bg-white/5"
@@ -208,7 +185,7 @@ export default function ProduitsPage() {
                 setPage(1);
                 setSearch(e.target.value);
               }}
-              placeholder="Rechercher"
+              placeholder="Rechercher un produit"
               className="w-64 rounded-lg border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-brand-orange/60"
             />
           </div>
@@ -220,61 +197,79 @@ export default function ProduitsPage() {
               <th className="w-10 px-5 py-3">
                 <input
                   type="checkbox"
-                  checked={Boolean(products?.length) && selected.size === products?.length}
+                  checked={Boolean(variants?.length) && selected.size === variants?.length}
                   onChange={toggleSelectAll}
                   className="h-4 w-4 rounded border-white/20 bg-white/5"
                 />
               </th>
-              <th className="px-5 py-3 font-medium">Titre</th>
-              <th className="px-5 py-3 font-medium">Catégorie</th>
+              <th className="px-5 py-3 font-medium">Produit</th>
+              <th className="px-5 py-3 font-medium">Nom de variante</th>
+              <th className="px-5 py-3 font-medium">Images</th>
+              <th className="px-5 py-3 font-medium">Prix</th>
               <th className="px-5 py-3 font-medium">Actif</th>
               <th className="px-5 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {products?.map((product) => (
-              <tr key={product.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
+            {variants?.map((variant) => (
+              <tr key={variant.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
                 <td className="px-5 py-3">
                   <input
                     type="checkbox"
-                    checked={selected.has(product.id)}
-                    onChange={() => toggleSelect(product.id)}
+                    checked={selected.has(variant.id)}
+                    onChange={() => toggleSelect(variant.id)}
                     className="h-4 w-4 rounded border-white/20 bg-white/5"
                   />
                 </td>
+                <td className="px-5 py-3 text-white/80">{variant.product_name ?? "—"}</td>
+                <td className="px-5 py-3 font-medium text-white">{variant.display_name ?? "—"}</td>
                 <td className="px-5 py-3">
-                  <p className="font-medium text-white">{product.name}</p>
-                  {product.reference && <p className="text-xs text-white/40">{product.reference}</p>}
+                  <Link
+                    href={`/dashboard/variantes/${variant.id}/edit`}
+                    className={`inline-flex items-center gap-1.5 text-sm hover:underline ${
+                      variant.images_count > 0 ? "text-brand-blue" : "text-white/30"
+                    }`}
+                  >
+                    {variant.images_count === 0 && <ImageOff className="h-3.5 w-3.5" />}
+                    {variant.images_count} image{variant.images_count > 1 ? "s" : ""}
+                  </Link>
                 </td>
-                <td className="px-5 py-3 text-white/60">{product.category?.name ?? "—"}</td>
+                <td className="px-5 py-3 text-white/60">{formatXAF(variant.price)}</td>
                 <td className="px-5 py-3">
                   <button
-                    onClick={() => toggleActive(product)}
+                    onClick={() => toggleActive(variant)}
                     className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                      product.is_active ? "bg-brand-orange" : "bg-white/10"
+                      variant.is_active ? "bg-brand-orange" : "bg-white/10"
                     }`}
                   >
                     <span
                       className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                        product.is_active ? "translate-x-5" : "translate-x-0.5"
+                        variant.is_active ? "translate-x-5" : "translate-x-0.5"
                       }`}
                     />
                   </button>
                 </td>
                 <td className="relative px-5 py-3 text-right">
                   <button
-                    onClick={() => setOpenMenuId(openMenuId === product.id ? null : product.id)}
+                    onClick={() => setOpenMenuId(openMenuId === variant.id ? null : variant.id)}
                     className="rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </button>
 
-                  {openMenuId === product.id && (
+                  {openMenuId === variant.id && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
                       <div className="absolute right-5 top-11 z-20 w-40 rounded-xl border border-white/10 bg-[#12141c] p-1.5 shadow-2xl">
                         <Link
-                          href={`/dashboard/produits/${product.id}/edit`}
+                          href={`/dashboard/variantes/${variant.id}`}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Voir
+                        </Link>
+                        <Link
+                          href={`/dashboard/variantes/${variant.id}/edit`}
                           className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber-400 hover:bg-white/5"
                         >
                           <Pencil className="h-4 w-4" />
@@ -283,7 +278,7 @@ export default function ProduitsPage() {
                         <button
                           onClick={() => {
                             setOpenMenuId(null);
-                            deleteProduct(product.id);
+                            deleteVariant(variant.id);
                           }}
                           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-red-400 hover:bg-white/5"
                         >
@@ -299,8 +294,8 @@ export default function ProduitsPage() {
           </tbody>
         </table>
 
-        {products?.length === 0 && (
-          <p className="px-5 py-10 text-center text-sm text-white/30">Aucun produit trouvé.</p>
+        {variants?.length === 0 && (
+          <p className="px-5 py-10 text-center text-sm text-white/30">Aucune variante trouvée.</p>
         )}
 
         {meta && meta.last_page > 1 && (
