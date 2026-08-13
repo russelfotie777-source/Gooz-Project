@@ -29,6 +29,8 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'status_changed_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
         ];
     }
 
@@ -50,5 +52,20 @@ class User extends Authenticatable
     public function deviceTokens(): HasMany
     {
         return $this->hasMany(DeviceToken::class);
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(UserStatusHistory::class)->latest();
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class)->latest();
+    }
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class)->latest();
     }
 }

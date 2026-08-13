@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Address;
 use App\Models\Coupon;
 use App\Models\Delivery;
 use App\Models\Order;
@@ -26,6 +27,7 @@ class DemoDataSeeder extends Seeder
     public function run(): void
     {
         $customers = $this->seedCustomers();
+        $this->seedAddresses($customers);
         $deliveryBoy = $this->seedDeliveryBoy();
         $warehouse = Warehouse::query()->first();
         $coupon = Coupon::query()->where('code', 'BIENVENUE10')->first();
@@ -67,6 +69,56 @@ class DemoDataSeeder extends Seeder
         ));
     }
 
+    /**
+     * @param  \Illuminate\Support\Collection<int, User>  $customers
+     */
+    private function seedAddresses($customers): void
+    {
+        $places = [
+            ['region' => 'Littoral', 'ville' => 'Douala', 'quartier' => 'Akwa'],
+            ['region' => 'Littoral', 'ville' => 'Douala', 'quartier' => 'Bonapriso'],
+            ['region' => 'Centre', 'ville' => 'Yaoundé', 'quartier' => 'Bastos'],
+            ['region' => 'Centre', 'ville' => 'Yaoundé', 'quartier' => 'Mvan'],
+            ['region' => 'Littoral', 'ville' => 'Douala', 'quartier' => 'Bonamoussadi'],
+        ];
+
+        foreach ($customers as $index => $customer) {
+            if ($customer->addresses()->exists()) {
+                continue;
+            }
+
+            $home = $places[$index % count($places)];
+
+            Address::create([
+                'user_id' => $customer->id,
+                'label' => 'Maison',
+                'recipient_name' => $customer->name,
+                'recipient_phone' => $customer->phone,
+                'ville' => $home['ville'],
+                'region' => $home['region'],
+                'quartier' => $home['quartier'],
+                'address_line' => 'Rue '.(100 + $index),
+                'is_default' => true,
+            ]);
+
+            if ($index % 2 === 0) {
+                $work = $places[($index + 1) % count($places)];
+
+                Address::create([
+                    'user_id' => $customer->id,
+                    'label' => 'Bureau',
+                    'recipient_name' => $customer->name,
+                    'recipient_phone' => $customer->phone,
+                    'ville' => $work['ville'],
+                    'region' => $work['region'],
+                    'quartier' => $work['quartier'],
+                    'address_line' => 'Avenue '.(200 + $index),
+                    'is_default' => false,
+                ]);
+            }
+        }
+    }
+
     private function seedDeliveryBoy(): User
     {
         $user = User::query()->firstOrCreate(
@@ -96,24 +148,26 @@ class DemoDataSeeder extends Seeder
             $subtotal = 0;
 
             foreach ($products->random(min($itemCount, $products->count())) as $product) {
-                $variant = $product->variants->isNotEmpty() && random_int(0, 1) === 1
-                    ? $product->variants->random()
-                    : null;
+                if ($product->variants->isEmpty()) {
+                    continue;
+                }
 
+                $variant = $product->variants->random();
                 $quantity = random_int(1, 2);
-                $unitPrice = $product->is_promotion && $product->promo_price
-                    ? $product->promo_price
-                    : $product->base_price;
-                $unitPrice += $variant?->additional_price ?? 0;
+                $unitPrice = $variant->effectivePrice();
 
                 $subtotal += $unitPrice * $quantity;
 
                 $lines[] = [
                     'product_id' => $product->id,
-                    'product_variant_id' => $variant?->id,
+                    'product_variant_id' => $variant->id,
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                 ];
+            }
+
+            if (empty($lines)) {
+                continue;
             }
 
             $useCoupon = $coupon && random_int(1, 5) === 1;

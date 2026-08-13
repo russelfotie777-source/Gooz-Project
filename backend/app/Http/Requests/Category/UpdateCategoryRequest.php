@@ -20,10 +20,6 @@ class UpdateCategoryRequest extends FormRequest
                 'sometimes', 'required', 'string', 'max:255',
                 Rule::unique('categories', 'slug')->ignore($this->route('category')),
             ],
-            'parent_id' => [
-                'nullable', 'integer', 'exists:categories,id',
-                Rule::notIn([$this->route('category')?->id]),
-            ],
             'image' => ['nullable', 'image', 'max:4096'],
             'is_active' => ['boolean'],
         ];

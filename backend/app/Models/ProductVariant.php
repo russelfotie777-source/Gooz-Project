@@ -10,10 +10,15 @@ class ProductVariant extends Model
 {
     protected $fillable = [
         'product_id',
+        'name',
         'size',
         'color',
         'material',
-        'additional_price',
+        'base_price',
+        'promo_price',
+        'is_promotion',
+        'cost_price',
+        'tax_rate',
         'barcode',
         'is_active',
     ];
@@ -21,7 +26,11 @@ class ProductVariant extends Model
     protected function casts(): array
     {
         return [
-            'additional_price' => 'decimal:2',
+            'base_price' => 'decimal:2',
+            'promo_price' => 'decimal:2',
+            'is_promotion' => 'boolean',
+            'cost_price' => 'decimal:2',
+            'tax_rate' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }
@@ -29,6 +38,11 @@ class ProductVariant extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function effectivePrice(): float
+    {
+        return (float) ($this->is_promotion && $this->promo_price ? $this->promo_price : $this->base_price);
     }
 
     public function images(): HasMany

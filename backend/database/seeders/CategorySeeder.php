@@ -12,17 +12,17 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $vetements = Category::firstOrCreate(
+        Category::firstOrCreate(
             ['slug' => 'vetements'],
             ['name' => 'Vêtements']
         );
         Category::firstOrCreate(
             ['slug' => 'chaussures'],
-            ['name' => 'Chaussures', 'parent_id' => $vetements->id]
+            ['name' => 'Chaussures']
         );
         Category::firstOrCreate(
             ['slug' => 'sacs'],
-            ['name' => 'Sacs', 'parent_id' => $vetements->id]
+            ['name' => 'Sacs']
         );
 
         Category::firstOrCreate(

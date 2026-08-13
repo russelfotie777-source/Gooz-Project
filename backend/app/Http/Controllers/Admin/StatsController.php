@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Stock;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 class StatsController extends Controller
 {
     private const CANCELLED_STATUS = 'annulée';
+    private const PENDING_STATUS = 'en_attente';
+    private const LOW_STOCK_THRESHOLD = 5;
 
     public function overview(Request $request)
     {
@@ -25,11 +29,27 @@ class StatsController extends Controller
             ->groupBy('status')
             ->pluck('count', 'status');
 
+        $lowStock = Stock::query()
+            ->with(['product:id,name', 'warehouse:id,name'])
+            ->whereRaw('(quantity_available - quantity_reserved) <= ?', [self::LOW_STOCK_THRESHOLD])
+            ->orderByRaw('(quantity_available - quantity_reserved) asc')
+            ->limit(5)
+            ->get()
+            ->map(fn (Stock $stock) => [
+                'product_name' => $stock->product?->name,
+                'warehouse_name' => $stock->warehouse?->name,
+                'quantity_available' => $stock->quantity_available - $stock->quantity_reserved,
+            ]);
+
         return response()->json([
             'total_revenue' => round((float) $totalRevenue, 2),
             'total_orders' => $totalOrders,
             'average_order_value' => $totalOrders > 0 ? round($totalRevenue / $totalOrders, 2) : 0,
             'orders_by_status' => $ordersByStatus,
+            'pending_orders' => (clone $paidOrders)->where('status', self::PENDING_STATUS)->count(),
+            'orders_today' => Order::query()->whereDate('created_at', now()->toDateString())->count(),
+            'total_customers' => User::query()->where('role', 'customer')->count(),
+            'low_stock' => $lowStock,
         ]);
     }
 

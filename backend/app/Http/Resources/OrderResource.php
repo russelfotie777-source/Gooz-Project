@@ -28,6 +28,7 @@ class OrderResource extends JsonResource
             'payment' => new PaymentResource($this->whenLoaded('payment')),
             'delivery' => new DeliveryResource($this->whenLoaded('delivery')),
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

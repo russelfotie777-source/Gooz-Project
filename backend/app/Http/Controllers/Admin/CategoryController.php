@@ -7,11 +7,25 @@ use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $perPage = min((int) $request->query('per_page', 25), 100) ?: 25;
+
+        $categories = Category::query()
+            ->when($request->query('q'), fn ($q, $search) => $q->where('name', 'like', "%{$search}%"))
+            ->orderBy('name')
+            ->paginate($perPage);
+
+        return CategoryResource::collection($categories);
+    }
+
     public function store(StoreCategoryRequest $request): CategoryResource
     {
         $data = $request->validated();

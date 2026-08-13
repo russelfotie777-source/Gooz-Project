@@ -13,10 +13,10 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'parent_id' => $this->parent_id,
             'image' => $this->image,
             'is_active' => $this->is_active,
-            'children' => CategoryResource::collection($this->whenLoaded('children')),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

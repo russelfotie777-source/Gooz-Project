@@ -15,14 +15,9 @@ class CartResource extends JsonResource
             'id' => $this->id,
             'items' => $items,
             'total' => $this->relationLoaded('items')
-                ? round($this->items->sum(function ($item) {
-                    $unitPrice = $item->product->is_promotion && $item->product->promo_price
-                        ? $item->product->promo_price
-                        : $item->product->base_price;
-                    $unitPrice += $item->variant?->additional_price ?? 0;
-
-                    return $unitPrice * $item->quantity;
-                }), 2)
+                ? round($this->items->sum(
+                    fn ($item) => ($item->variant?->effectivePrice() ?? 0) * $item->quantity
+                ), 2)
                 : null,
         ];
     }

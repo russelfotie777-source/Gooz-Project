@@ -9,10 +9,9 @@ class CartItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $unitPrice = $this->product->is_promotion && $this->product->promo_price
-            ? $this->product->promo_price
-            : $this->product->base_price;
-        $unitPrice += $this->variant?->additional_price ?? 0;
+        // Pricing lives entirely on the variant now; an item added without one
+        // has nothing to charge.
+        $unitPrice = $this->variant?->effectivePrice() ?? 0;
 
         return [
             'id' => $this->id,

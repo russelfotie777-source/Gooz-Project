@@ -25,20 +25,20 @@ class ProductSeeder extends Seeder
         $maison = Category::where('slug', 'maison-cuisine')->first();
         $vetements = Category::where('slug', 'vetements')->first();
 
+        // Pricing lives on the variant, so every product below gets at least
+        // one variant — a "Standard" placeholder for products with no real
+        // size/color options — to carry its price.
         $products = [
             [
                 'name' => 'Sneakers Classic',
                 'reference' => 'SNK-001',
                 'category_id' => $chaussures->id,
                 'brand_id' => $gooz->id,
-                'base_price' => 25000,
-                'promo_price' => 20000,
-                'is_promotion' => true,
                 'description' => 'Baskets confortables pour un usage quotidien.',
                 'variants' => [
-                    ['size' => '40', 'additional_price' => 0],
-                    ['size' => '41', 'additional_price' => 0],
-                    ['size' => '42', 'additional_price' => 500],
+                    ['size' => '40', 'base_price' => 25000, 'promo_price' => 20000, 'is_promotion' => true],
+                    ['size' => '41', 'base_price' => 25000, 'promo_price' => 20000, 'is_promotion' => true],
+                    ['size' => '42', 'base_price' => 25500, 'promo_price' => 20500, 'is_promotion' => true],
                 ],
                 'stock' => 20,
             ],
@@ -47,9 +47,10 @@ class ProductSeeder extends Seeder
                 'reference' => 'SAC-001',
                 'category_id' => $sacs->id,
                 'brand_id' => $doualaStyle->id,
-                'base_price' => 18000,
                 'description' => 'Sac à dos résistant, idéal pour la ville.',
-                'variants' => [],
+                'variants' => [
+                    ['size' => 'Standard', 'base_price' => 18000],
+                ],
                 'stock' => 15,
             ],
             [
@@ -57,9 +58,10 @@ class ProductSeeder extends Seeder
                 'reference' => 'ELEC-001',
                 'category_id' => $electronique->id,
                 'brand_id' => $kmerFashion->id,
-                'base_price' => 15000,
                 'description' => 'Écouteurs sans fil, autonomie 8h.',
-                'variants' => [],
+                'variants' => [
+                    ['size' => 'Standard', 'base_price' => 15000],
+                ],
                 'stock' => 30,
             ],
             [
@@ -67,9 +69,10 @@ class ProductSeeder extends Seeder
                 'reference' => 'MAI-001',
                 'category_id' => $maison->id,
                 'brand_id' => $doualaStyle->id,
-                'base_price' => 8000,
                 'description' => 'Théière en acier inoxydable, 1.5L.',
-                'variants' => [],
+                'variants' => [
+                    ['size' => 'Standard', 'base_price' => 8000],
+                ],
                 'stock' => 25,
             ],
             [
@@ -77,13 +80,10 @@ class ProductSeeder extends Seeder
                 'reference' => 'VET-001',
                 'category_id' => $vetements->id,
                 'brand_id' => $kmerFashion->id,
-                'base_price' => 12000,
-                'promo_price' => 9000,
-                'is_promotion' => true,
                 'description' => 'Chemise en tissu wax, coupe moderne.',
                 'variants' => [
-                    ['color' => 'Bleu', 'additional_price' => 0],
-                    ['color' => 'Rouge', 'additional_price' => 0],
+                    ['color' => 'Bleu', 'base_price' => 12000, 'promo_price' => 9000, 'is_promotion' => true],
+                    ['color' => 'Rouge', 'base_price' => 12000, 'promo_price' => 9000, 'is_promotion' => true],
                 ],
                 'stock' => 18,
             ],
@@ -92,9 +92,10 @@ class ProductSeeder extends Seeder
                 'reference' => 'ELEC-002',
                 'category_id' => $electronique->id,
                 'brand_id' => $gooz->id,
-                'base_price' => 35000,
                 'description' => 'Montre connectée avec suivi santé.',
-                'variants' => [],
+                'variants' => [
+                    ['size' => 'Standard', 'base_price' => 35000],
+                ],
                 'stock' => 10,
             ],
         ];
@@ -105,15 +106,6 @@ class ProductSeeder extends Seeder
             unset($data['variants'], $data['stock']);
 
             $product = Product::firstOrCreate(['reference' => $data['reference']], $data);
-
-            if (empty($variants)) {
-                $product->stocks()->firstOrCreate([
-                    'warehouse_id' => $warehouse->id,
-                    'product_variant_id' => null,
-                ], ['quantity_available' => $stockQty]);
-
-                continue;
-            }
 
             foreach ($variants as $variantData) {
                 $variant = $product->variants()->firstOrCreate($variantData);
