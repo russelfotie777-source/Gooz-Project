@@ -1,0 +1,66 @@
+/* Mobile-only: this bubble strip belongs to the mobile header (Figma node 372:185).
+   The desktop header has its own category bar built in — see Header.module.css. */
+.wrapper {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 16px;
+  margin-top: -12px;
+  margin-bottom: -22px;
+}
+
+.wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.list {
+  display: flex;
+  gap: 20px;
+  padding: 4px 2px;
+}
+
+.item {
+  flex-shrink: 0;
+}
+
+.button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 68px;
+}
+
+.iconCircle {
+  width: 47px;
+  height: 47px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.iconImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--color-text);
+}
+
+@media (min-width: 901px) {
+  .wrapper {
+    display: none;
+  }
+}

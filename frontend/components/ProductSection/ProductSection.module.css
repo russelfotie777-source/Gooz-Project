@@ -1,0 +1,83 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.trackWrapper {
+  position: relative;
+}
+
+.track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.item {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 260px;
+}
+
+.navButton {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+  padding: 0;
+}
+
+.navButtonPrev {
+  left: -8px;
+}
+
+.navButtonNext {
+  right: -8px;
+}
+
+.navIcon {
+  width: 10px;
+  height: auto;
+}
+
+.navIconFlipped {
+  transform: rotate(180deg);
+}
+
+@media (min-width: 1024px) {
+  .title {
+    font-size: 22px;
+  }
+
+  .item {
+    width: 280px;
+  }
+
+  .navButton {
+    display: flex;
+  }
+}

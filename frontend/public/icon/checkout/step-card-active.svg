@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="credit_card">
+<mask id="mask0_0_79" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="30" height="30">
+<rect id="Bounding box" width="30" height="30" fill="#D9D9D9"/>
+</mask>
+<g mask="url(#mask0_0_79)">
+<path id="credit_card_2" d="M27.5 7.5V22.5C27.5 23.1875 27.2552 23.776 26.7656 24.2656C26.276 24.7552 25.6875 25 25 25H5C4.3125 25 3.72396 24.7552 3.23438 24.2656C2.74479 23.776 2.5 23.1875 2.5 22.5V7.5C2.5 6.8125 2.74479 6.22396 3.23438 5.73438C3.72396 5.24479 4.3125 5 5 5H25C25.6875 5 26.276 5.24479 26.7656 5.73438C27.2552 6.22396 27.5 6.8125 27.5 7.5ZM5 10H25V7.5H5V10ZM5 15V22.5H25V15H5Z" fill="#1C1B1F"/>
+</g>
+</g>
+</svg>

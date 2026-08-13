@@ -1,0 +1,97 @@
+.card {
+  background: #f5f7fa;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-text);
+  margin: 0 0 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.required {
+  color: #fe522e;
+  margin-right: 2px;
+}
+
+.inputBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-white);
+  border: 1px solid #e2e2e9;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.inputIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+  background: transparent;
+}
+
+.input::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.select {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  appearance: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+  background: transparent;
+  padding-right: 20px;
+}
+
+.selectChevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.note {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0;
+}

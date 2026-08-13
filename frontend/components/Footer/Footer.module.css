@@ -1,0 +1,185 @@
+.footer {
+  /* Mobile has no footer in the Figma design — the bottom nav bar replaces
+     it (see BottomNav), so the footer is desktop-only. */
+  display: none;
+  background: var(--color-footer-bg);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 32px 20px 24px;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.columnTitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0;
+  color: var(--color-white);
+}
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.socialRow {
+  display: flex;
+  gap: 10px;
+}
+
+.socialIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.socialGlyph {
+  height: 16px;
+  width: auto;
+}
+
+.storeRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.storeBadge {
+  height: 34px;
+  width: auto;
+}
+
+.newsletterRow {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.paymentRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.paymentBadge {
+  height: 32px;
+  width: auto;
+  border-radius: var(--radius-sm);
+}
+
+.paymentIcon {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.paymentIconCard {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 21px;
+  height: auto;
+}
+
+.paymentIconHand {
+  position: absolute;
+  left: 8px;
+  top: 12px;
+  width: 21px;
+  height: auto;
+}
+
+.newsletterField {
+  display: flex;
+  gap: 8px;
+}
+
+.newsletterInput {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  background: rgba(217, 217, 217, 0.72);
+  color: var(--color-white);
+}
+
+.newsletterInput::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.newsletterButton {
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.copyright {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .footer {
+    display: flex;
+    padding: 56px 64px 32px;
+  }
+
+  .columns {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 48px;
+  }
+
+  .column {
+    flex: 1;
+  }
+
+  .newsletterRow {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .newsletterField {
+    width: 380px;
+  }
+}

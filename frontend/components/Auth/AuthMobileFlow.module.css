@@ -1,0 +1,348 @@
+.viewport {
+  position: relative;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: var(--color-accent-strong);
+}
+
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.welcomeSlide,
+.formsSlide {
+  height: 100dvh;
+  width: 100%;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcomeSlide {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* Shared background image (see the JSX comment): positioned in the
+   viewport's own scroll coordinates rather than inside either slide, so it
+   scrolls continuously across the welcome -> forms boundary instead of
+   resetting. top/height are expressed in dvh against the full 200dvh
+   scrollable track (100dvh per slide): it starts partway down the welcome
+   slide and extends just past the 100dvh mark, so only its bottom edge
+   peeks into the top of the forms slide's orange header. */
+
+.welcomeImage {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 30dvh;
+  height: 92dvh;
+  width: auto;
+  transform: translateX(-50%);
+  opacity: 0.9;
+  mix-blend-mode: soft-light;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 82%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 82%, transparent 100%);
+  pointer-events: none;
+}
+
+
+.welcomeHeadline {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0 24px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.15;
+}
+
+.welcomeHeadlineDark {
+  color: #1f1f1f;
+}
+
+.welcomeHeadlineLight {
+  color: #f2f2f7;
+}
+
+.swipeHint {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 24px 0 max(28px, env(safe-area-inset-bottom));
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.swipeChevron {
+  width: 32px;
+  height: 32px;
+  animation: bounceUp 1.6s ease-in-out infinite;
+}
+
+@keyframes bounceUp {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.formsSlide {
+  display: flex;
+  flex-direction: column;
+}
+
+.formsHeader {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: max(56px, env(safe-area-inset-top)) 24px 28px;
+}
+
+.formsHello {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 32px;
+  color: #1f1f1f;
+}
+
+.formsWelcome {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 32px;
+  color: #f2f2f7;
+}
+
+.sheet {
+  flex: 0 0 56%;
+  min-height: 0;
+  background: var(--color-white);
+  border-radius: 40px 40px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sheetHandle {
+  width: 67px;
+  margin: 14px auto 4px;
+  opacity: 0.5;
+  flex: 0 0 auto;
+}
+
+.formsTrack {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.formsTrack::-webkit-scrollbar {
+  display: none;
+}
+
+.formSlide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 24px 28px;
+  overflow-y: auto;
+}
+
+.sheetTitle {
+  margin: 0 0 4px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.required {
+  color: #fe522e;
+  margin-right: 2px;
+}
+
+.input {
+  height: 50px;
+  border: 1px solid #e2e2e9;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--color-accent-strong);
+}
+
+.passwordBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 50px;
+  border: 1px solid #e2e2e9;
+  border-radius: 12px;
+  padding: 0 16px;
+  transition: border-color 0.2s ease;
+}
+
+.passwordBox:focus-within {
+  border-color: var(--color-accent-strong);
+}
+
+.passwordInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.visibilityButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.visibilityIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.forgotLink {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+.submitButton {
+  position: relative;
+  overflow: hidden;
+  height: 54px;
+  margin-top: 4px;
+  border-radius: 5px;
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 600;
+  box-shadow: 0 10px 20px rgba(255, 149, 0, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.submitButton span {
+  position: relative;
+  z-index: 1;
+}
+
+.submitButton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+
+.submitButton:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 10px rgba(255, 149, 0, 0.25);
+}
+
+.submitButton:active::before {
+  left: 125%;
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.formError {
+  margin: -8px 0 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #fe522e;
+  text-align: center;
+}
+
+.switchLine {
+  margin: 4px 0 0;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #818183;
+}
+
+.switchLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #06c;
+}
+
+@media (min-width: 1024px) {
+  .viewport {
+    display: none;
+  }
+}

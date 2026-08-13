@@ -1,0 +1,152 @@
+.summaryCard {
+  background: #f5f7fa;
+  border-radius: var(--radius-md);
+  box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.1);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.summaryTotalRow {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+
+.paymentCard {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f5f7fa;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.1);
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.paymentCardActive {
+  border-color: var(--color-accent-strong);
+}
+
+.radioIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.paymentLabel {
+  flex: 1;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.paymentIcon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.onlineIcons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.onlineIcon {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
+}
+
+.onlineOu {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+.couponLabel {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.couponRow {
+  display: flex;
+  gap: 8px;
+}
+
+.couponInput {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.couponApply {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  background: var(--color-footer-bg);
+  color: var(--color-white);
+  border: none;
+  border-radius: 6px;
+  padding: 0 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.couponApplyIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.error {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(254, 82, 46, 0.08);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #fe522e;
+  text-align: center;
+}

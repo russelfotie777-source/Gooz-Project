@@ -1,0 +1,823 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.topRow {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Gallery */
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: -16px -16px 0;
+  width: calc(100% + 32px);
+}
+
+.mainImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 402 / 443;
+  border-radius: 0 0 20px 20px;
+  background: var(--color-placeholder);
+  overflow: hidden;
+}
+
+.swipeTrack {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.swipeTrack::-webkit-scrollbar {
+  display: none;
+}
+
+.swipeSlide {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnails {
+  display: none;
+}
+
+.thumbnail {
+  padding: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: var(--color-placeholder);
+  flex-shrink: 0;
+}
+
+.thumbnailActive {
+  border-color: var(--color-primary);
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dots {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  z-index: 2;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: var(--color-placeholder-strong);
+}
+
+.dotActive {
+  background: var(--color-primary);
+}
+
+/* Info */
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 20px;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+
+.stockBadgeIn {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent-strong);
+}
+
+.stockBadgeOut {
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+.stockIcon {
+  width: 12px;
+  height: 12px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star {
+  width: 14px;
+  height: 14px;
+}
+
+.metaLine {
+  font-family: var(--font-body);
+  font-size: 12px;
+  display: flex;
+  gap: 6px;
+}
+
+.metaLabel {
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.metaValue {
+  color: var(--color-text);
+}
+
+.price {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+}
+
+.specialPriceTag {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: var(--color-primary-tint);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.descriptionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.descriptionTitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.description {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.detailsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detailsLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Delivery box — desktop only, see media query below */
+
+.deliveryBox {
+  display: none;
+}
+
+.deliveryPrompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.locationIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.selectField {
+  position: relative;
+  display: flex;
+}
+
+.select {
+  width: 100%;
+  appearance: none;
+  padding: 10px 36px 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.selectChevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.deliveryCost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.deliveryCostValue {
+  color: var(--color-accent-strong);
+  font-weight: 700;
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.orLine {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.pickupButton {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 2px dashed var(--color-accent-strong);
+  color: var(--color-accent-strong);
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.5s ease, border-style 0.15s step-end;
+}
+
+.pickupLabel {
+  position: relative;
+  z-index: 2;
+}
+
+.pickupButton::before,
+.pickupButton::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 100%;
+  width: 280px;
+  height: 280px;
+  background: var(--color-accent-strong);
+  transform: translateX(-50%);
+  transition: top 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pickupButton::before {
+  border-radius: 45%;
+  opacity: 0.5;
+  animation: pickupWaveSpin 7s linear infinite;
+}
+
+.pickupButton::after {
+  border-radius: 47%;
+  opacity: 0.85;
+  animation: pickupWaveSpin 5s linear infinite reverse;
+}
+
+.pickupButton:hover {
+  color: var(--color-white);
+  border-style: solid;
+}
+
+.pickupButton:hover::before {
+  top: -12px;
+}
+
+.pickupButton:hover::after {
+  top: -20px;
+}
+
+@keyframes pickupWaveSpin {
+  from {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateX(-50%) rotate(360deg);
+  }
+}
+
+.pickupButtonActive {
+  border-style: solid;
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+}
+
+.pickupButtonActive::before,
+.pickupButtonActive::after {
+  top: -16px;
+}
+
+.buyRow {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.buyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  background: rgba(255, 149, 0, 0.8);
+  color: var(--color-white);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 14px;
+  border-radius: var(--radius-pill);
+}
+
+.buyButtonLabelDesktop {
+  display: none;
+}
+
+.buyIcon {
+  display: none;
+  width: 20px;
+  height: 20px;
+}
+
+.quickAddButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+}
+
+.quickAddIcon {
+  width: 26px;
+  height: 26px;
+}
+
+.buyButton:disabled,
+.quickAddButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.addToCartSuccess,
+.addToCartError {
+  margin: 8px 0 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.addToCartSuccess {
+  color: #1a9b4c;
+}
+
+.addToCartError {
+  color: #fe522e;
+}
+
+/* Feature badges — desktop only */
+
+.features {
+  display: none;
+}
+
+.featureCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f2f2f2;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+}
+
+.featureIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.featureLabel {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 0 4px;
+  color: var(--color-text);
+}
+
+.featureText {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Accordions — desktop only */
+
+.accordions {
+  display: none;
+}
+
+.accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.accordionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-text);
+}
+
+.accordionChevron {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
+}
+
+.accordionChevronOpen {
+  transform: rotate(180deg);
+}
+
+.accordionBody {
+  padding: 0 20px 20px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.accordionBody p {
+  margin: 0;
+}
+
+/* Reviews — both mobile and desktop */
+
+.reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 20px;
+}
+
+.reviewsTitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.moods {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.moodButton {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 2px;
+  border: 0.5px solid rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-sm);
+  flex: 1;
+  min-width: 0;
+  transition: border-color 0.4s ease;
+}
+
+.moodButton::before,
+.moodButton::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 100%;
+  width: 150px;
+  height: 150px;
+  background: var(--color-accent-strong);
+  transform: translateX(-50%);
+  transition: top 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.moodButton::before {
+  border-radius: 45%;
+  opacity: 0.5;
+  animation: pickupWaveSpin 7s linear infinite;
+}
+
+.moodButton::after {
+  border-radius: 47%;
+  opacity: 0.85;
+  animation: pickupWaveSpin 5s linear infinite reverse;
+}
+
+.moodIcon,
+.moodLabel {
+  position: relative;
+  z-index: 1;
+}
+
+.moodButtonActive {
+  border-color: var(--color-accent-strong);
+}
+
+.moodButtonActive::before {
+  top: -8px;
+}
+
+.moodButtonActive::after {
+  top: -14px;
+}
+
+.moodButtonActive .moodLabel {
+  color: var(--color-white);
+}
+
+.moodIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.moodLabel {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.commentInput {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-body);
+  font-size: 13px;
+  resize: vertical;
+}
+
+.reviewActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancelButton {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.submitButton {
+  padding: 10px 24px;
+  border-radius: 6px;
+  background: var(--color-accent);
+  color: var(--color-white);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 13px;
+  transition:ease 0.3s;
+}
+
+.submitButton:hover{
+  background: none;
+  color:var(--color-accent);
+  border: 1.3px solid var(--color-accent);
+  animation: ease 0.3s;
+}
+
+@media (min-width: 1024px) {
+  .topRow {
+    flex-direction: row;
+    gap: 40px;
+  }
+
+  .gallery {
+    flex-direction: row-reverse;
+    flex: 0 0 480px;
+    height: fit-content;
+    margin: 0;
+    width: auto;
+  }
+
+  .mainImageWrapper {
+    flex: 1;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-md);
+  }
+
+  .thumbnails {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 90px;
+  }
+
+  .thumbnail {
+    width: 90px;
+    height: 78px;
+  }
+
+  .dots {
+    display: none;
+  }
+
+  .info {
+    flex: 1;
+    gap: 14px;
+  }
+
+  .name {
+    font-size: 26px;
+  }
+
+  .price {
+    font-size: 28px;
+  }
+
+  .detailsRow {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 32px;
+  }
+
+  .detailsLeft {
+    flex: 1;
+  }
+
+  .deliveryBox {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fdfdfd;
+    border: 1px solid #c8c8c8;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    flex: 0 0 340px;
+  }
+
+  .buyRow {
+    position: static;
+    margin-top: 6px;
+  }
+
+  .buyButton {
+    background: var(--color-navy);
+    border-radius: var(--radius-md);
+    font-size: 18px;
+    padding: 18px;
+  }
+
+  .buyButtonLabelDesktop {
+    display: inline;
+  }
+
+  .buyButtonLabelMobile {
+    display: none;
+  }
+
+  .buyIcon {
+    display: block;
+  }
+
+  .quickAddButton {
+    display: none;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .accordions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .moods {
+    flex-wrap: nowrap;
+  }
+}
