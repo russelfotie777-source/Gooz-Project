@@ -1,0 +1,87 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+  padding: 80px 24px 40px;
+  text-align: center;
+  background: var(--color-bg);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--color-text);
+  margin: 0 0 16px;
+}
+
+.subtitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--color-text);
+  margin: 0 0 32px;
+  max-width: 320px;
+}
+
+.icon {
+  width: 140px;
+  height: 140px;
+  margin-bottom: 32px;
+}
+
+.orderLabel {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.orderNumber {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-accent-strong);
+  margin: 0 0 32px;
+}
+
+.contact {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  max-width: 320px;
+  margin: 0 0 32px;
+}
+
+.contactNumber {
+  color: var(--color-accent-strong);
+}
+
+.homeButton {
+  width: 100%;
+  max-width: 370px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+}
+
+.homeArrow {
+  width: 18px;
+  height: 18px;
+}
+
+.homeArrowFlipped {
+  width: 18px;
+  height: 18px;
+  transform: rotate(180deg);
+}

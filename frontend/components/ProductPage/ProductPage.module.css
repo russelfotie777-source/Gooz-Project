@@ -1,0 +1,38 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 16px 16px 96px;
+  width: 100%;
+}
+
+.adBanner {
+  display: none;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.adBannerImage {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .main {
+    gap: 56px;
+    padding: 32px 5% 64px;
+  }
+
+  .adBanner {
+    display: block;
+  }
+}

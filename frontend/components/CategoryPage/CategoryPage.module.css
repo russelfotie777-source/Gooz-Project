@@ -1,0 +1,21 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 16px 16px calc(var(--bottom-nav-height) + 32px);
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .main {
+    gap: 56px;
+    padding: 32px 5% 64px;
+  }
+}

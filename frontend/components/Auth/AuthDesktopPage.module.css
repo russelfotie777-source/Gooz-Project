@@ -1,0 +1,429 @@
+.page {
+  display: none;
+  min-height: 100dvh;
+  width: 100%;
+  background: var(--color-accent-strong);
+}
+
+@media (min-width: 1024px) {
+  .page {
+    display: flex;
+  }
+}
+
+.leftPanel {
+  position: relative;
+  flex: 1 1 0;
+  overflow: hidden;
+  background: var(--color-accent-strong);
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(24px, 3vw, 40px) 0 clamp(28px, 3.5vw, 48px);
+}
+
+.skyline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.leftContent {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.leftHeadline {
+  margin: 0 0 clamp(18px, 1.8vw, 26px);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(30px, 3.2vw, 50px);
+  line-height: 1.2;
+  color: #f2f2f7;
+}
+
+.leftHeadlineDark {
+  color: #1f1f1f;
+}
+
+.quote {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: clamp(15px, 1.2vw, 19px);
+  color: var(--color-white);
+}
+
+.rightPanel {
+  --curve-r: clamp(48px, 5vw, 80px);
+  position: relative;
+  flex: 1 1 0;
+  background: var(--color-white);
+}
+
+/* The seam between the two panels is drawn as two small radial-gradient
+   patches rather than border-radius on either panel: at the top the orange
+   panel needs to look like it curves away revealing white, and at the
+   bottom white needs to curve away revealing orange — two opposite curve
+   directions that a single shared background color can't fake via a plain
+   border-radius "reveal the parent" trick, so each patch paints both
+   colors itself. */
+.topNotch {
+  position: absolute;
+  top: 0;
+  left: calc(var(--curve-r) * -1);
+  width: var(--curve-r);
+  height: var(--curve-r);
+  pointer-events: none;
+  background: radial-gradient(
+    circle at bottom left,
+    var(--color-accent-strong) 0,
+    var(--color-accent-strong) var(--curve-r),
+    var(--color-white) var(--curve-r),
+    var(--color-white) 100%
+  );
+}
+
+.bottomNotch {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: var(--curve-r);
+  height: var(--curve-r);
+  pointer-events: none;
+  background: radial-gradient(
+    circle at top right,
+    var(--color-white) 0,
+    var(--color-white) var(--curve-r),
+    var(--color-accent-strong) var(--curve-r),
+    var(--color-accent-strong) 100%
+  );
+}
+
+.rightPanelScroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: clamp(20px, 2.2vw, 32px) clamp(28px, 4vw, 56px) clamp(32px, 4vw, 48px);
+}
+
+.logo {
+  display: block;
+  height: clamp(30px, 1.4vw, 36px);
+  width: auto;
+  margin-left: auto;
+  opacity: 0.7;
+}
+
+.formWrap {
+  max-width: 400px;
+  margin: 0 auto;
+  animation: formEnter 0.4s ease both;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+@keyframes formEnter {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.formHeadline {
+  margin: clamp(20px, 2.6vw, 32px) 0 clamp(16px, 2vw, 24px);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(22px, 1.8vw, 32px);
+  line-height: 1.25;
+  color: #1f1f1f;
+}
+
+.formHeadline span {
+  color: #c0c0c0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(13px, 1.2vw, 17px);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 0.5vw, 7px);
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: clamp(12px, 0.8vw, 13.5px);
+  color: var(--color-text);
+}
+
+.required {
+  color: #fe522e;
+  margin-right: 2px;
+}
+
+.input {
+  height: clamp(38px, 2.6vw, 44px);
+  border: 1px solid #e2e2e9;
+  border-radius: 10px;
+  padding: 0 clamp(12px, 1vw, 16px);
+  font-family: var(--font-body);
+  font-size: clamp(12.5px, 0.85vw, 14px);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--color-accent-strong);
+}
+
+.passwordBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: clamp(38px, 2.6vw, 44px);
+  border: 1px solid #e2e2e9;
+  border-radius: 10px;
+  padding: 0 clamp(10px, 0.8vw, 14px);
+  transition: border-color 0.2s ease;
+}
+
+.passwordBox:focus-within {
+  border-color: var(--color-accent-strong);
+}
+
+.passwordInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: clamp(12.5px, 0.85vw, 14px);
+  color: var(--color-text);
+}
+
+.visibilityButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-muted);
+}
+
+.visibilityIcon {
+  width: clamp(16px, 1.1vw, 19px);
+  height: clamp(16px, 1.1vw, 19px);
+}
+
+.bottomRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: clamp(11px, 0.7vw, 12.5px);
+  color: #525252;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent-strong);
+}
+
+.forgotButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(11px, 0.7vw, 12.5px);
+  color: var(--color-accent-strong);
+}
+
+.forgotArrow {
+  width: 14px;
+  height: 14px;
+  transform: rotate(180deg);
+}
+
+.submitButton {
+  position: relative;
+  overflow: hidden;
+  height: clamp(40px, 2.8vw, 46px);
+  border-radius: 8px;
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(13px, 0.9vw, 15px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submitButton span {
+  position: relative;
+  z-index: 1;
+}
+
+.submitButton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 149, 0, 0.35);
+}
+
+.submitButton:hover::before {
+  left: 125%;
+}
+
+.submitButton:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  box-shadow: none;
+  transform: none;
+}
+
+.formError {
+  margin: -8px 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(12px, 0.8vw, 13px);
+  color: #fe522e;
+  text-align: center;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e5e5e5;
+}
+
+.dividerLabel {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: clamp(11px, 0.7vw, 12px);
+  color: #a3a3a3;
+}
+
+.snsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.snsButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(38px, 2.6vw, 44px);
+  height: clamp(38px, 2.6vw, 44px);
+  border-radius: 50%;
+  border: 1px solid #e5e5e5;
+  background: var(--color-white);
+  padding: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.snsButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.snsIcon {
+  width: clamp(18px, 1.3vw, 22px);
+  height: clamp(18px, 1.3vw, 22px);
+}
+
+.snsButtonFull {
+  width: clamp(38px, 2.6vw, 44px);
+  height: clamp(38px, 2.6vw, 44px);
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.snsButtonFull:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.snsIconFull {
+  width: 100%;
+  height: 100%;
+}
+
+.switchLine {
+  margin: 4px 0 0;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: clamp(12px, 0.8vw, 14px);
+  color: #818183;
+}
+
+.switchLink {
+  font-weight: 600;
+  color: #06c;
+}
+
+.exiting .leftContent {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+
+.exiting .formWrap {
+  opacity: 0;
+  transform: translateX(-24px);
+  animation: none;
+}
