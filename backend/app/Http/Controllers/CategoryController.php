@@ -10,17 +10,13 @@ class CategoryController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $categories = Category::query()
-            ->where('is_active', true)
-            ->whereNull('parent_id')
-            ->with('children')
-            ->get();
+        $categories = Category::query()->where('is_active', true)->get();
 
         return CategoryResource::collection($categories);
     }
 
     public function show(Category $category): CategoryResource
     {
-        return new CategoryResource($category->load('children'));
+        return new CategoryResource($category);
     }
 }

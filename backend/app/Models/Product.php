@@ -11,22 +11,16 @@ class Product extends Model
     protected $fillable = [
         'name',
         'description',
-        'base_price',
-        'promo_price',
         'brand_id',
         'category_id',
         'reference',
         'is_active',
-        'is_promotion',
     ];
 
     protected function casts(): array
     {
         return [
-            'base_price' => 'decimal:2',
-            'promo_price' => 'decimal:2',
             'is_active' => 'boolean',
-            'is_promotion' => 'boolean',
         ];
     }
 

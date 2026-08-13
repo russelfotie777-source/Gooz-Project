@@ -39,12 +39,15 @@ class CheckoutController extends Controller
             $lines = [];
 
             foreach ($cart->items as $item) {
+                if (! $item->variant) {
+                    throw ValidationException::withMessages([
+                        'cart' => ["Veuillez sélectionner une variante pour {$item->product->name}."],
+                    ]);
+                }
+
                 $this->decrementStock($item->product_id, $item->product_variant_id, $item->quantity);
 
-                $unitPrice = $item->product->is_promotion && $item->product->promo_price
-                    ? $item->product->promo_price
-                    : $item->product->base_price;
-                $unitPrice += $item->variant?->additional_price ?? 0;
+                $unitPrice = $item->variant->effectivePrice();
 
                 $subtotal += $unitPrice * $item->quantity;
 

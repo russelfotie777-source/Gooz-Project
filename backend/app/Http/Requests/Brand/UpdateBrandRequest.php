@@ -19,7 +19,11 @@ class UpdateBrandRequest extends FormRequest
                 'sometimes', 'required', 'string', 'max:255',
                 Rule::unique('brands', 'name')->ignore($this->route('brand')),
             ],
-            'logo' => ['nullable', 'string'],
+            'slug' => [
+                'sometimes', 'required', 'string', 'max:255',
+                Rule::unique('brands', 'slug')->ignore($this->route('brand')),
+            ],
+            'logo' => ['nullable', 'image', 'max:4096'],
             'description' => ['nullable', 'string'],
             'country_origin' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],

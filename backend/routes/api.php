@@ -1,16 +1,21 @@
 <?php
 
+use App\Http\Controllers\Admin\AddressController as AdminAddressController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DeliveryController as AdminDeliveryController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
+use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\StatsController as AdminStatsController;
+use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
@@ -59,6 +64,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('/device-tokens', [DeviceTokenController::class, 'destroy']);
 
         Route::post('/delivery/quote', [DeliveryQuoteController::class, 'store']);
+
+        Route::get('/addresses', [AddressController::class, 'index']);
+        Route::post('/addresses', [AddressController::class, 'store']);
+        Route::put('/addresses/{address}', [AddressController::class, 'update']);
+        Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
     });
 
     Route::get('/products', [ProductController::class, 'index']);
@@ -81,10 +91,14 @@ Route::prefix('v1')->group(function () {
     Route::get('/delivery/estimate', [DeliveryEstimateController::class, 'show']);
 
     Route::middleware(['auth:sanctum', 'can:manage-products'])->group(function () {
+        Route::get('/admin/products', [AdminProductController::class, 'index']);
+        Route::get('/admin/products/{product}', [AdminProductController::class, 'show']);
         Route::post('/products', [ProductController::class, 'store']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
 
+        Route::get('/admin/variants', [AdminProductVariantController::class, 'index']);
+        Route::get('/admin/variants/{variant}', [AdminProductVariantController::class, 'show']);
         Route::post('/products/{product}/variants', [AdminProductVariantController::class, 'store']);
         Route::put('/variants/{variant}', [AdminProductVariantController::class, 'update']);
         Route::delete('/variants/{variant}', [AdminProductVariantController::class, 'destroy']);
@@ -92,10 +106,15 @@ Route::prefix('v1')->group(function () {
         Route::post('/products/{product}/images', [AdminProductImageController::class, 'store']);
         Route::delete('/images/{image}', [AdminProductImageController::class, 'destroy']);
 
+        Route::get('/admin/stocks', [AdminStockController::class, 'index']);
+        Route::get('/admin/stocks/{stock}', [AdminStockController::class, 'show']);
+
+        Route::get('/admin/categories', [AdminCategoryController::class, 'index']);
         Route::post('/categories', [AdminCategoryController::class, 'store']);
         Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
 
+        Route::get('/admin/brands', [AdminBrandController::class, 'index']);
         Route::post('/brands', [AdminBrandController::class, 'store']);
         Route::put('/brands/{brand}', [AdminBrandController::class, 'update']);
         Route::delete('/brands/{brand}', [AdminBrandController::class, 'destroy']);
@@ -121,6 +140,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'can:manage-orders'])->group(function () {
         Route::get('/admin/orders', [AdminOrderController::class, 'index']);
+        Route::get('/admin/orders/{order}', [AdminOrderController::class, 'show']);
         Route::patch('/admin/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
     });
 
@@ -138,8 +158,17 @@ Route::prefix('v1')->group(function () {
         Route::get('/admin/users', [AdminUserController::class, 'index']);
         Route::get('/admin/users/{user}', [AdminUserController::class, 'show']);
         Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole']);
-        Route::patch('/admin/users/{user}/suspend', [AdminUserController::class, 'suspend']);
-        Route::patch('/admin/users/{user}/reactivate', [AdminUserController::class, 'reactivate']);
+        Route::patch('/admin/users/{user}/status', [AdminUserController::class, 'updateStatus']);
+        Route::patch('/admin/users/{user}/verify-phone', [AdminUserController::class, 'verifyPhone']);
+        Route::post('/admin/users/{user}/tickets', [AdminTicketController::class, 'store']);
+
+        Route::get('/admin/tickets', [AdminTicketController::class, 'index']);
+        Route::get('/admin/tickets/{ticket}', [AdminTicketController::class, 'show']);
+        Route::patch('/admin/tickets/{ticket}/status', [AdminTicketController::class, 'updateStatus']);
+        Route::patch('/admin/tickets/{ticket}/assign', [AdminTicketController::class, 'assign']);
+
+        Route::get('/admin/addresses', [AdminAddressController::class, 'index']);
+        Route::get('/admin/addresses/{address}', [AdminAddressController::class, 'show']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-warehouses'])->group(function () {

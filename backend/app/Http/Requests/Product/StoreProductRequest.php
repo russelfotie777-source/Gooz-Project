@@ -16,13 +16,10 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'base_price' => ['required', 'numeric', 'min:0'],
-            'promo_price' => ['nullable', 'numeric', 'min:0', 'lt:base_price'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'reference' => ['nullable', 'string', 'max:255', 'unique:products,reference'],
             'is_active' => ['boolean'],
-            'is_promotion' => ['boolean'],
         ];
     }
 }

@@ -19,10 +19,24 @@ class OrderController extends Controller
         $orders = Order::query()
             ->with(['user', 'items.product', 'payment', 'delivery', 'warehouse'])
             ->when($request->query('status'), fn ($q, $status) => $q->where('status', $status))
+            ->when($request->query('user_id'), fn ($q, $userId) => $q->where('user_id', $userId))
+            ->when($request->query('q'), fn ($q, $search) => $q->where(function ($query) use ($search) {
+                $query->where('order_reference', 'like', "%{$search}%")
+                    ->orWhere('shipping_phone', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%"));
+            }))
             ->latest()
             ->paginate(20);
 
         return OrderResource::collection($orders);
+    }
+
+    public function show(Order $order): OrderResource
+    {
+        return new OrderResource($order->load([
+            'user', 'items.product', 'items.variant', 'payment', 'delivery.deliveryBoy', 'warehouse', 'coupon',
+        ]));
     }
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order): OrderResource
