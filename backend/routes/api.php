@@ -145,6 +145,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-deliveries'])->group(function () {
+        Route::get('/admin/deliveries', [AdminDeliveryController::class, 'index']);
         Route::post('/admin/orders/{order}/delivery', [AdminDeliveryController::class, 'store']);
     });
 

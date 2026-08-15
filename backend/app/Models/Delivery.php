@@ -12,6 +12,17 @@ class Delivery extends Model
         'delivery_boy_id',
         'delivery_status',
         'tracking_code',
+        'shipped_at',
+        'out_for_delivery_at',
+        'delivered_at',
+        'failed_at',
+    ];
+
+    protected $casts = [
+        'shipped_at' => 'datetime',
+        'out_for_delivery_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'failed_at' => 'datetime',
     ];
 
     public function order(): BelongsTo
