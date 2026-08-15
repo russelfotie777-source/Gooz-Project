@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
+use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
@@ -178,5 +179,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/admin/warehouses', [AdminWarehouseController::class, 'store']);
         Route::put('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'update']);
         Route::delete('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-suppliers'])->group(function () {
+        Route::get('/admin/suppliers', [AdminSupplierController::class, 'index']);
+        Route::get('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'show']);
+        Route::post('/admin/suppliers', [AdminSupplierController::class, 'store']);
+        Route::put('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'update']);
+        Route::delete('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'destroy']);
     });
 });
