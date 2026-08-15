@@ -31,7 +31,22 @@ class DeliveryController extends Controller
             403
         );
 
-        $delivery->update(['delivery_status' => $request->validated('delivery_status')]);
+        $status = $request->validated('delivery_status');
+
+        $timelineColumn = match ($status) {
+            'pris_en_charge' => 'shipped_at',
+            'en_transit' => 'out_for_delivery_at',
+            'livré' => 'delivered_at',
+            'échec' => 'failed_at',
+            default => null,
+        };
+
+        $attributes = ['delivery_status' => $status];
+        if ($timelineColumn) {
+            $attributes[$timelineColumn] = now();
+        }
+
+        $delivery->update($attributes);
 
         if ($delivery->delivery_status === 'livré') {
             $delivery->order->update(['status' => 'livrée']);
