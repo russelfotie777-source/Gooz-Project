@@ -2,7 +2,6 @@ import type { LucideIcon } from "lucide-react";
 import {
   Home,
   ShoppingCart,
-  Receipt,
   Users,
   MapPin,
   LayoutGrid,
@@ -12,10 +11,7 @@ import {
   ShoppingBag,
   CreditCard,
   Undo2,
-  Warehouse,
   Truck,
-  ClipboardList,
-  PackageCheck,
   SlidersHorizontal,
   BookOpen,
   Map,
@@ -76,13 +72,6 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [{ label: "Tableau de bord", href: "/dashboard", icon: Home, ready: true }],
   },
   {
-    title: "Point de vente",
-    items: [
-      { label: "Caisse", href: "/dashboard/caisse", icon: ShoppingCart },
-      { label: "Historique des ventes", href: "/dashboard/historique-ventes", icon: Receipt },
-    ],
-  },
-  {
     title: "Clients",
     items: [
       { label: "Clients", href: "/dashboard/clients", icon: Users, ready: true },
@@ -103,8 +92,6 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Commandes", href: "/dashboard/commandes", icon: ShoppingBag, ready: true },
       { label: "Paiements", href: "/dashboard/paiements", icon: CreditCard },
-      { label: "Cas de Commande", href: "/dashboard/cas-commande", icon: Undo2 },
-      { label: "File entrepôt", href: "/dashboard/file-entrepot", icon: Warehouse },
       { label: "File expédition", href: "/dashboard/file-expedition", icon: Truck },
     ],
   },
@@ -114,11 +101,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Stocks", href: "/dashboard/stocks", icon: Boxes, ready: true },
       { label: "Emplacements", href: "/dashboard/entrepots", icon: Building2, ready: true },
       { label: "Fournisseurs", href: "/dashboard/fournisseurs", icon: Truck },
-      { label: "Commandes d'achat", href: "/dashboard/commandes-achat", icon: ClipboardList },
-      { label: "Réceptions d'achat", href: "/dashboard/receptions-achat", icon: PackageCheck },
       { label: "Ajustement de stock", href: "/dashboard/ajustement-stock", icon: SlidersHorizontal },
       { label: "Journal d'inventaire", href: "/dashboard/journal-inventaire", icon: BookOpen },
-      { label: "Autorisations de Retour", href: "/dashboard/autorisations-retour", icon: Undo2 },
     ],
   },
   {
