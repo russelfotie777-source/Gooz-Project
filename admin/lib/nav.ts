@@ -92,7 +92,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Commandes", href: "/dashboard/commandes", icon: ShoppingBag, ready: true },
       { label: "Paiements", href: "/dashboard/paiements", icon: CreditCard },
-      { label: "File expédition", href: "/dashboard/file-expedition", icon: Truck },
+      { label: "File expédition", href: "/dashboard/file-expedition", icon: Truck, ready: true },
     ],
   },
   {
