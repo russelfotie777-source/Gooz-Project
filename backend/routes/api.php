@@ -174,6 +174,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'can:manage-warehouses'])->group(function () {
         Route::get('/admin/warehouses', [AdminWarehouseController::class, 'index']);
+        Route::get('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'show']);
         Route::post('/admin/warehouses', [AdminWarehouseController::class, 'store']);
         Route::put('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'update']);
         Route::delete('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'destroy']);
