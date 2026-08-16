@@ -10,7 +10,9 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
+use App\Http\Controllers\Admin\DeliverySettingController as AdminDeliverySettingController;
 use App\Http\Controllers\Admin\InventoryLedgerController as AdminInventoryLedgerController;
+use App\Http\Controllers\Admin\NeighborhoodController as AdminNeighborhoodController;
 use App\Http\Controllers\Admin\StockAdjustmentController as AdminStockAdjustmentController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
@@ -202,5 +204,18 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'can:view-inventory-ledger'])->group(function () {
         Route::get('/admin/inventory-ledgers', [AdminInventoryLedgerController::class, 'index']);
         Route::get('/admin/inventory-ledgers/{inventoryLedger}', [AdminInventoryLedgerController::class, 'show']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-delivery-settings'])->group(function () {
+        Route::get('/admin/delivery-settings', [AdminDeliverySettingController::class, 'show']);
+        Route::put('/admin/delivery-settings', [AdminDeliverySettingController::class, 'update']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-neighborhoods'])->group(function () {
+        Route::get('/admin/neighborhoods', [AdminNeighborhoodController::class, 'index']);
+        Route::get('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'show']);
+        Route::post('/admin/neighborhoods', [AdminNeighborhoodController::class, 'store']);
+        Route::put('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'update']);
+        Route::delete('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'destroy']);
     });
 });
