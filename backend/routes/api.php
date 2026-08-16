@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
+use App\Http\Controllers\Admin\StockAdjustmentController as AdminStockAdjustmentController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
@@ -187,5 +188,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/admin/suppliers', [AdminSupplierController::class, 'store']);
         Route::put('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'update']);
         Route::delete('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-stock-adjustments'])->group(function () {
+        Route::get('/admin/stock-adjustments', [AdminStockAdjustmentController::class, 'index']);
+        Route::get('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'show']);
+        Route::post('/admin/stock-adjustments', [AdminStockAdjustmentController::class, 'store']);
+        Route::put('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'update']);
+        Route::delete('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'destroy']);
     });
 });

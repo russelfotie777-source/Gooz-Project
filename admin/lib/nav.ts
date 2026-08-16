@@ -101,7 +101,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Stocks", href: "/dashboard/stocks", icon: Boxes, ready: true },
       { label: "Emplacements", href: "/dashboard/entrepots", icon: Building2, ready: true },
       { label: "Fournisseurs", href: "/dashboard/fournisseurs", icon: Truck, ready: true },
-      { label: "Ajustement de stock", href: "/dashboard/ajustement-stock", icon: SlidersHorizontal },
+      { label: "Ajustement de stock", href: "/dashboard/ajustement-stock", icon: SlidersHorizontal, ready: true },
       { label: "Journal d'inventaire", href: "/dashboard/journal-inventaire", icon: BookOpen },
     ],
   },
