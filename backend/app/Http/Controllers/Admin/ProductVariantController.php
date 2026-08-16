@@ -24,6 +24,7 @@ class ProductVariantController extends Controller
                 'product',
                 fn ($query) => $query->where('name', 'like', "%{$search}%")
             ))
+            ->when($request->query('product_id'), fn ($q, $productId) => $q->where('product_id', $productId))
             ->latest()
             ->paginate($perPage);
 
