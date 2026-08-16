@@ -10,17 +10,13 @@ import {
   Tag,
   ShoppingBag,
   CreditCard,
-  Undo2,
   Truck,
   SlidersHorizontal,
   BookOpen,
   Map,
   MapPinned,
   Building2,
-  Gift,
-  DollarSign,
   Bike,
-  Car,
   Megaphone,
   Ticket,
   Bell,
@@ -41,16 +37,13 @@ import {
   Mail,
   FolderTree,
   HelpCircle,
-  Phone,
   Percent,
-  Shield,
   Building,
   UserCog,
   ShieldCheck,
   BarChart3,
   FileCheck2,
   Banknote,
-  ClipboardCheck,
 } from "lucide-react";
 
 export type NavItem = {
@@ -108,13 +101,9 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Optimisation de livraison",
     items: [
-      { label: "Zones de livraison", href: "/dashboard/zones-livraison", icon: Map },
-      { label: "Quartiers de livraison", href: "/dashboard/quartiers-livraison", icon: MapPinned },
-      { label: "Villes de livraison", href: "/dashboard/villes-livraison", icon: Building2 },
-      { label: "Règles de livraison gratuite", href: "/dashboard/regles-livraison-gratuite", icon: Gift },
-      { label: "Surcharges de livraison", href: "/dashboard/surcharges-livraison", icon: DollarSign },
+      { label: "Zones de livraison", href: "/dashboard/zones-livraison", icon: Map, ready: true },
+      { label: "Quartiers de livraison", href: "/dashboard/quartiers-livraison", icon: MapPinned, ready: true },
       { label: "Livreurs", href: "/dashboard/livreurs", icon: Bike, ready: true },
-      { label: "Types de véhicule", href: "/dashboard/types-vehicule", icon: Car },
     ],
   },
   {
@@ -161,14 +150,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Paramètres",
     items: [
-      { label: "Coordonnées", href: "/dashboard/coordonnees", icon: Phone },
       { label: "Paramètres panier", href: "/dashboard/parametres-panier", icon: ShoppingCart },
-      { label: "Paramètres des commandes", href: "/dashboard/parametres-commandes", icon: ClipboardCheck },
-      { label: "Paramètres paiements", href: "/dashboard/parametres-paiements", icon: CreditCard },
-      { label: "Paramètres TVA", href: "/dashboard/parametres-tva", icon: Percent },
-      { label: "Paramètres retours", href: "/dashboard/parametres-retours", icon: Undo2 },
-      { label: "Conditions d'utilisation", href: "/dashboard/conditions-utilisation", icon: FileText },
-      { label: "Politique de confidentialité", href: "/dashboard/politique-confidentialite", icon: Shield },
     ],
   },
   {
