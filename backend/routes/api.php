@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
+use App\Http\Controllers\Admin\InventoryLedgerController as AdminInventoryLedgerController;
 use App\Http\Controllers\Admin\StockAdjustmentController as AdminStockAdjustmentController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
@@ -196,5 +197,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/admin/stock-adjustments', [AdminStockAdjustmentController::class, 'store']);
         Route::put('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'update']);
         Route::delete('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:view-inventory-ledger'])->group(function () {
+        Route::get('/admin/inventory-ledgers', [AdminInventoryLedgerController::class, 'index']);
+        Route::get('/admin/inventory-ledgers/{inventoryLedger}', [AdminInventoryLedgerController::class, 'show']);
     });
 });

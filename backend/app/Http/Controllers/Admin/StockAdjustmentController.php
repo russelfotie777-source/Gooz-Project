@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Requests\StockAdjustment\UpdateStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
+use App\Models\InventoryLedger;
 use App\Models\Stock;
 use App\Models\StockAdjustment;
 use Illuminate\Http\Request;
@@ -118,7 +119,9 @@ class StockAdjustmentController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            $next = ($stock->quantity_available ?? 0) + $line->delta_quantity;
+            $before = $stock->quantity_available ?? 0;
+            $reserved = $stock->quantity_reserved ?? 0;
+            $next = $before + $line->delta_quantity;
 
             if ($next < 0) {
                 throw ValidationException::withMessages([
@@ -136,6 +139,27 @@ class StockAdjustmentController extends Controller
                     'quantity_available' => $next,
                 ]);
             }
+
+            InventoryLedger::create([
+                'warehouse_id' => $adjustment->warehouse_id,
+                'product_id' => $line->product_id,
+                'product_variant_id' => $line->product_variant_id,
+                'movement_type' => 'adjustment',
+                'quantity_delta' => $line->delta_quantity,
+                'reserved_delta' => 0,
+                'quantity_before' => $before,
+                'quantity_after' => $next,
+                'reserved_before' => $reserved,
+                'reserved_after' => $reserved,
+                'reason' => $line->motif ?? $adjustment->motif,
+                'reference_type' => StockAdjustment::class,
+                'reference_id' => $adjustment->id,
+                'actor_id' => $adjustment->created_by,
+                'meta' => array_filter([
+                    'line_note' => $line->note,
+                    'adjustment_type' => $adjustment->type,
+                ]),
+            ]);
         }
 
         $adjustment->update(['status' => 'appliqué', 'applied_at' => now()]);
