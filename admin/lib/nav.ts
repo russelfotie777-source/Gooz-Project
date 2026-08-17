@@ -17,7 +17,6 @@ import {
   MapPinned,
   Building2,
   Bike,
-  Megaphone,
   Ticket,
   Bell,
   Users2,
@@ -109,7 +108,6 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Marketing",
     items: [
-      { label: "Campagnes", href: "/dashboard/campagnes", icon: Megaphone },
       { label: "Coupons", href: "/dashboard/coupons", icon: Ticket, ready: true },
       { label: "Notifications push", href: "/dashboard/notifications-push", icon: Bell },
       { label: "Influenceurs", href: "/dashboard/influenceurs", icon: Users2 },
