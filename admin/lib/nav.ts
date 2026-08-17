@@ -117,7 +117,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Gestion de contenu",
     items: [
-      { label: "Homepage Sections", href: "/dashboard/homepage-sections", icon: LayoutTemplate },
+      { label: "Sections d'accueil", href: "/dashboard/homepage-sections", icon: LayoutTemplate, ready: true },
       { label: "Bannière", href: "/dashboard/bannieres", icon: Image, ready: true },
       { label: "Réseaux sociaux", href: "/dashboard/reseaux-sociaux", icon: Share2 },
     ],
