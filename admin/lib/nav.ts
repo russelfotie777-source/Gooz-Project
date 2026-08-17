@@ -19,8 +19,6 @@ import {
   Bike,
   Ticket,
   Bell,
-  Users2,
-  Wallet,
   LayoutTemplate,
   Image,
   Share2,
@@ -33,10 +31,6 @@ import {
   Repeat,
   Smartphone,
   LifeBuoy,
-  Mail,
-  FolderTree,
-  HelpCircle,
-  Percent,
   Building,
   UserCog,
   ShieldCheck,
@@ -110,8 +104,6 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Coupons", href: "/dashboard/coupons", icon: Ticket, ready: true },
       { label: "Notifications push", href: "/dashboard/notifications-push", icon: Bell },
-      { label: "Influenceurs", href: "/dashboard/influenceurs", icon: Users2 },
-      { label: "Paiements influenceurs", href: "/dashboard/paiements-influenceurs", icon: Wallet },
     ],
   },
   {
@@ -140,9 +132,6 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Support client",
     items: [
       { label: "Tickets", href: "/dashboard/tickets", icon: LifeBuoy },
-      { label: "Messages contact", href: "/dashboard/messages-contact", icon: Mail },
-      { label: "Catégories FAQ", href: "/dashboard/categories-faq", icon: FolderTree },
-      { label: "FAQ", href: "/dashboard/faq", icon: HelpCircle },
     ],
   },
   {
@@ -168,14 +157,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Detailed Orders Report", href: "/dashboard/rapports/commandes-detaillees", icon: ShoppingBag },
       { label: "Rapport des paiements", href: "/dashboard/rapports/paiements", icon: CreditCard },
       { label: "Rapport des paiements en attente", href: "/dashboard/rapports/paiements-attente", icon: CreditCard },
-      { label: "Cash Movement Report", href: "/dashboard/rapports/mouvements-caisse", icon: ArrowLeftRight },
-      { label: "Cashier Shift Report", href: "/dashboard/rapports/quarts-caissier", icon: Lock },
-      { label: "Relevés de compte", href: "/dashboard/rapports/releves-compte", icon: Landmark },
-      { label: "Rapport d'acquisition des clients", href: "/dashboard/rapports/acquisition-clients", icon: Users },
-      { label: "Discount Report", href: "/dashboard/rapports/remises", icon: Percent },
-      { label: "Supplier Due Report", href: "/dashboard/rapports/dus-fournisseurs", icon: Truck },
-      { label: "Stock Value Report", href: "/dashboard/rapports/valeur-stock", icon: Boxes },
-      { label: "POS Sales Report", href: "/dashboard/rapports/ventes-pos", icon: ShoppingCart },
     ],
   },
 ];
