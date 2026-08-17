@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DeliveryController as AdminDeliveryController;
+use App\Http\Controllers\Admin\HomepageSectionController as AdminHomepageSectionController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
@@ -128,6 +129,15 @@ Route::prefix('v1')->group(function () {
         Route::post('/banners', [AdminBannerController::class, 'store']);
         Route::put('/banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-homepage-sections'])->group(function () {
+        Route::get('/admin/homepage-sections', [AdminHomepageSectionController::class, 'index']);
+        Route::get('/admin/homepage-sections/{homepageSection}', [AdminHomepageSectionController::class, 'show']);
+        Route::post('/admin/homepage-sections', [AdminHomepageSectionController::class, 'store']);
+        Route::post('/admin/homepage-sections/reorder', [AdminHomepageSectionController::class, 'reorder']);
+        Route::put('/admin/homepage-sections/{homepageSection}', [AdminHomepageSectionController::class, 'update']);
+        Route::delete('/admin/homepage-sections/{homepageSection}', [AdminHomepageSectionController::class, 'destroy']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-coupons'])->group(function () {
