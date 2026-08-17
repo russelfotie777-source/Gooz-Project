@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, MoreVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
-import { Pager } from "@/components/pager";
 
 type Coupon = {
   id: number;
@@ -18,14 +19,19 @@ type Coupon = {
 };
 
 export default function CouponsPage() {
+  const router = useRouter();
   const [coupons, setCoupons] = useState<Coupon[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Coupon>["meta"] | null>(null);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   function load() {
-    apiFetch<Paginated<Coupon>>(`/admin/coupons?page=${page}`)
+    const query = new URLSearchParams({ page: String(page), per_page: "25" });
+    if (search) query.set("q", search);
+
+    apiFetch<Paginated<Coupon>>(`/admin/coupons?${query.toString()}`)
       .then((res) => {
         setCoupons(res.data);
         setMeta(res.meta);
@@ -33,7 +39,11 @@ export default function CouponsPage() {
       .catch(() => setError("Impossible de charger les coupons."));
   }
 
-  useEffect(load, [page]);
+  useEffect(() => {
+    const timeout = setTimeout(load, search ? 300 : 0);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search]);
 
   async function toggleActive(coupon: Coupon) {
     try {
@@ -60,72 +70,129 @@ export default function CouponsPage() {
   }
 
   return (
-    <div className="animate-fade-in-up">
+    <div className="-m-8 min-h-screen bg-[#0b0d12] p-8 text-white">
+      <div className="mb-4 flex items-center gap-1.5 text-xs text-white/40">
+        <span>Coupons</span>
+        <ChevronRight className="h-3 w-3" />
+        <span>Liste</span>
+      </div>
+
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Coupons</h1>
-          <p className="mt-1 text-sm text-zinc-500">Codes promotionnels de la boutique.</p>
+          <h1 className="text-2xl font-bold">Coupons</h1>
+          <p className="mt-1 text-sm text-white/40">Codes promotionnels de la boutique.</p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 transition-all hover:brightness-105"
+          onClick={() => router.push("/dashboard/coupons/create")}
+          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 hover:brightness-105"
         >
           <Plus className="h-4 w-4" />
-          Nouveau coupon
+          Créer
         </button>
       </div>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </p>
       )}
 
-      <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.03]">
+        <div className="flex items-center justify-between gap-3 border-b border-white/5 p-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+            <input
+              value={search}
+              onChange={(e) => {
+                setPage(1);
+                setSearch(e.target.value);
+              }}
+              placeholder="Rechercher un code..."
+              className="w-64 rounded-lg border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-brand-orange/60"
+            />
+          </div>
+        </div>
+
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-400">
+            <tr className="border-b border-white/5 text-xs uppercase tracking-wide text-white/30">
               <th className="px-5 py-3 font-medium">Code</th>
-              <th className="px-5 py-3 font-medium">Réduction</th>
-              <th className="px-5 py-3 font-medium">Utilisations</th>
+              <th className="px-5 py-3 font-medium">Type</th>
+              <th className="px-5 py-3 font-medium">Valeur</th>
+              <th className="px-5 py-3 font-medium">Total min</th>
+              <th className="px-5 py-3 font-medium">Limite</th>
+              <th className="px-5 py-3 font-medium">Utilisé</th>
               <th className="px-5 py-3 font-medium">Expire le</th>
-              <th className="px-5 py-3 font-medium">Statut</th>
+              <th className="px-5 py-3 font-medium">Actif</th>
               <th className="px-5 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {coupons?.map((coupon) => (
-              <tr key={coupon.id} className="border-b border-zinc-50 last:border-0 hover:bg-zinc-50/60">
-                <td className="px-5 py-3 font-mono text-xs font-semibold text-zinc-900">{coupon.code}</td>
-                <td className="px-5 py-3 text-zinc-600">
+              <tr key={coupon.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
+                <td className="px-5 py-3 font-mono text-xs font-semibold text-white">{coupon.code}</td>
+                <td className="px-5 py-3">
+                  <span className="rounded-full bg-brand-orange/10 px-2.5 py-1 text-xs font-medium text-brand-orange">
+                    {coupon.type === "percentage" ? "Pourcentage" : "Montant fixe"}
+                  </span>
+                </td>
+                <td className="px-5 py-3 text-white/70">
                   {coupon.type === "percentage" ? `${coupon.value}%` : `${coupon.value} XAF`}
                 </td>
-                <td className="px-5 py-3 text-zinc-500">
-                  {coupon.used_count}
-                  {coupon.max_uses ? ` / ${coupon.max_uses}` : ""}
+                <td className="px-5 py-3 text-white/50">
+                  {coupon.min_order_amount ? `${coupon.min_order_amount} XAF` : "—"}
                 </td>
-                <td className="px-5 py-3 text-zinc-400">
+                <td className="px-5 py-3 text-white/50">{coupon.max_uses ?? "∞"}</td>
+                <td className="px-5 py-3 text-white/50">{coupon.used_count}</td>
+                <td className="px-5 py-3 text-white/40">
                   {coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString("fr-FR") : "—"}
                 </td>
                 <td className="px-5 py-3">
                   <button
                     onClick={() => toggleActive(coupon)}
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                      coupon.is_active
-                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                        : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                      coupon.is_active ? "bg-brand-orange" : "bg-white/10"
                     }`}
                   >
-                    {coupon.is_active ? "Actif" : "Inactif"}
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                        coupon.is_active ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
                   </button>
                 </td>
-                <td className="px-5 py-3 text-right">
+                <td className="relative px-5 py-3 text-right">
                   <button
-                    onClick={() => deleteCoupon(coupon.id)}
-                    className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    onClick={() => setOpenMenuId(openMenuId === coupon.id ? null : coupon.id)}
+                    className="rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <MoreVertical className="h-4 w-4" />
                   </button>
+
+                  {openMenuId === coupon.id && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                      <div className="absolute right-5 top-11 z-20 w-44 rounded-xl border border-white/10 bg-[#12141c] p-1.5 shadow-2xl">
+                        <Link
+                          href={`/dashboard/coupons/${coupon.id}/edit`}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber-400 hover:bg-white/5"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Modifier
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            deleteCoupon(coupon.id);
+                          }}
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-red-400 hover:bg-white/5"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
@@ -133,141 +200,33 @@ export default function CouponsPage() {
         </table>
 
         {coupons?.length === 0 && (
-          <p className="px-5 py-10 text-center text-sm text-zinc-400">Aucun coupon pour le moment.</p>
+          <p className="px-5 py-10 text-center text-sm text-white/30">Aucun coupon pour le moment.</p>
         )}
 
-        {meta && (
-          <div className="px-5 py-4">
-            <Pager page={meta.current_page} lastPage={meta.last_page} total={meta.total} onChange={setPage} />
+        {meta && meta.last_page > 1 && (
+          <div className="flex items-center justify-between border-t border-white/5 px-5 py-4">
+            <p className="text-xs text-white/30">{meta.total} résultat{meta.total > 1 ? "s" : ""}</p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page <= 1}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/50 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs font-medium text-white/60">
+                {meta.current_page} / {meta.last_page}
+              </span>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= meta.last_page}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-white/50 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
-      </div>
-
-      {showForm && (
-        <CouponFormModal
-          onClose={() => setShowForm(false)}
-          onCreated={(coupon) => {
-            setCoupons((prev) => (prev ? [coupon, ...prev] : [coupon]));
-            setShowForm(false);
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function CouponFormModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: (coupon: Coupon) => void;
-}) {
-  const [code, setCode] = useState("");
-  const [type, setType] = useState<"percentage" | "fixed">("percentage");
-  const [value, setValue] = useState("");
-  const [minOrder, setMinOrder] = useState("");
-  const [maxUses, setMaxUses] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
-    try {
-      const coupon = await apiFetch<{ data: Coupon }>("/admin/coupons", {
-        method: "POST",
-        body: JSON.stringify({
-          code,
-          type,
-          value: Number(value),
-          min_order_amount: minOrder ? Number(minOrder) : null,
-          max_uses: maxUses ? Number(maxUses) : null,
-          expires_at: expiresAt || null,
-          is_active: true,
-        }),
-      });
-      onCreated(coupon.data);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Échec de la création.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900">Nouveau coupon</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            required
-            placeholder="Code (ex: WELCOME10)"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-          />
-          <div className="flex gap-3">
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as "percentage" | "fixed")}
-              className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-            >
-              <option value="percentage">Pourcentage</option>
-              <option value="fixed">Montant fixe</option>
-            </select>
-            <input
-              required
-              type="number"
-              step="0.01"
-              placeholder="Valeur"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-            />
-          </div>
-          <div className="flex gap-3">
-            <input
-              type="number"
-              placeholder="Montant min. (XAF)"
-              value={minOrder}
-              onChange={(e) => setMinOrder(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-            />
-            <input
-              type="number"
-              placeholder="Utilisations max."
-              value={maxUses}
-              onChange={(e) => setMaxUses(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-            />
-          </div>
-          <label className="text-xs font-medium text-zinc-500">Date d&apos;expiration (optionnel)</label>
-          <input
-            type="date"
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-          />
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-2 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 disabled:opacity-50"
-          >
-            {submitting ? "Création..." : "Créer le coupon"}
-          </button>
-        </form>
       </div>
     </div>
   );

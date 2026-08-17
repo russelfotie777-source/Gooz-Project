@@ -132,6 +132,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'can:manage-coupons'])->group(function () {
         Route::get('/admin/coupons', [AdminCouponController::class, 'index']);
+        Route::get('/admin/coupons/{coupon}', [AdminCouponController::class, 'show']);
         Route::post('/admin/coupons', [AdminCouponController::class, 'store']);
         Route::put('/admin/coupons/{coupon}', [AdminCouponController::class, 'update']);
         Route::delete('/admin/coupons/{coupon}', [AdminCouponController::class, 'destroy']);
