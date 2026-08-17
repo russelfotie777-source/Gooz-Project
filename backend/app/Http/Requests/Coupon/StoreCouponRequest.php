@@ -14,15 +14,13 @@ class StoreCouponRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->code) {
-            $this->merge(['code' => strtoupper($this->code)]);
-        }
+        $this->merge(['code' => $this->code ? strtoupper($this->code) : null]);
     }
 
     public function rules(): array
     {
         return [
-            'code' => ['required', 'string', 'max:50', 'unique:coupons,code'],
+            'code' => ['nullable', 'string', 'max:50', 'unique:coupons,code'],
             'type' => ['required', Rule::in(['percentage', 'fixed'])],
             'value' => ['required', 'numeric', 'min:0.01', Rule::when($this->type === 'percentage', ['max:100'])],
             'min_order_amount' => ['nullable', 'numeric', 'min:0'],
