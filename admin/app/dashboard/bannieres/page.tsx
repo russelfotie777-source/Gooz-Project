@@ -1,22 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ImageOff, Plus, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ChevronRight, MoreVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
 
 type Banner = {
   id: number;
   title: string | null;
   image: string;
-  link_url: string | null;
+  location: "homepage" | "category" | "search" | "checkout";
   position: number;
   is_active: boolean;
 };
 
 export default function BannersPage() {
+  const router = useRouter();
   const [banners, setBanners] = useState<Banner[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   function load() {
     apiFetch<{ data: Banner[] }>("/admin/banners")
@@ -28,10 +31,10 @@ export default function BannersPage() {
 
   async function toggleActive(banner: Banner) {
     try {
-      await apiFetch(`/banners/${banner.id}`, {
-        method: "PUT",
-        body: JSON.stringify({ is_active: !banner.is_active }),
-      });
+      const formData = new FormData();
+      formData.set("_method", "PUT");
+      formData.set("is_active", banner.is_active ? "0" : "1");
+      await apiFetch(`/banners/${banner.id}`, { method: "POST", body: formData });
       setBanners(
         (prev) => prev?.map((b) => (b.id === banner.id ? { ...b, is_active: !b.is_active } : b)) ?? null
       );
@@ -51,76 +54,111 @@ export default function BannersPage() {
   }
 
   return (
-    <div className="animate-fade-in-up">
+    <div className="-m-8 min-h-screen bg-[#0b0d12] p-8 text-white">
+      <div className="mb-4 flex items-center gap-1.5 text-xs text-white/40">
+        <span>Bannières</span>
+        <ChevronRight className="h-3 w-3" />
+        <span>Liste</span>
+      </div>
+
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Bannières</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Bannières défilantes affichées sur la page d&apos;accueil de la boutique.
+          <h1 className="text-2xl font-bold">Bannières</h1>
+          <p className="mt-1 text-sm text-white/40">
+            Bannières promotionnelles affichées dans la boutique.
           </p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 transition-all hover:brightness-105"
+          onClick={() => router.push("/dashboard/bannieres/create")}
+          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 hover:brightness-105"
         >
           <Plus className="h-4 w-4" />
-          Nouvelle bannière
+          Ajouter une bannière
         </button>
       </div>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </p>
       )}
 
-      <div className="rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+      <div className="rounded-2xl border border-white/5 bg-white/[0.03]">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-400">
+            <tr className="border-b border-white/5 text-xs uppercase tracking-wide text-white/30">
               <th className="px-5 py-3 font-medium">Image</th>
               <th className="px-5 py-3 font-medium">Titre</th>
-              <th className="px-5 py-3 font-medium">Lien</th>
+              <th className="px-5 py-3 font-medium">Emplacement</th>
+              <th className="px-5 py-3 font-medium">Actif</th>
               <th className="px-5 py-3 font-medium">Ordre</th>
-              <th className="px-5 py-3 font-medium">Statut</th>
               <th className="px-5 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {banners?.map((banner) => (
-              <tr key={banner.id} className="border-b border-zinc-50 last:border-0 hover:bg-zinc-50/60">
+              <tr key={banner.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
                 <td className="px-5 py-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={banner.image}
                     alt={banner.title ?? "Bannière"}
-                    className="h-10 w-20 rounded-lg object-cover ring-1 ring-zinc-200"
+                    className="h-10 w-20 rounded-lg object-cover ring-1 ring-white/10"
                   />
                 </td>
-                <td className="px-5 py-3 font-medium text-zinc-900">{banner.title ?? "—"}</td>
-                <td className="px-5 py-3 max-w-[220px] truncate text-zinc-500">
-                  {banner.link_url ?? "—"}
+                <td className="px-5 py-3 font-medium text-white">{banner.title ?? "—"}</td>
+                <td className="px-5 py-3">
+                  <span className="rounded-full bg-brand-orange/10 px-2.5 py-1 text-xs font-medium text-brand-orange">
+                    {banner.location}
+                  </span>
                 </td>
-                <td className="px-5 py-3 text-zinc-500">{banner.position}</td>
                 <td className="px-5 py-3">
                   <button
                     onClick={() => toggleActive(banner)}
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                      banner.is_active
-                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                        : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                      banner.is_active ? "bg-brand-orange" : "bg-white/10"
                     }`}
                   >
-                    {banner.is_active ? "Active" : "Inactive"}
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                        banner.is_active ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
                   </button>
                 </td>
-                <td className="px-5 py-3 text-right">
+                <td className="px-5 py-3 text-white/50">{banner.position}</td>
+                <td className="relative px-5 py-3 text-right">
                   <button
-                    onClick={() => deleteBanner(banner.id)}
-                    className="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    onClick={() => setOpenMenuId(openMenuId === banner.id ? null : banner.id)}
+                    className="rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <MoreVertical className="h-4 w-4" />
                   </button>
+
+                  {openMenuId === banner.id && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                      <div className="absolute right-5 top-11 z-20 w-44 rounded-xl border border-white/10 bg-[#12141c] p-1.5 shadow-2xl">
+                        <Link
+                          href={`/dashboard/bannieres/${banner.id}/edit`}
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber-400 hover:bg-white/5"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Modifier
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            deleteBanner(banner.id);
+                          }}
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-red-400 hover:bg-white/5"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
@@ -128,143 +166,8 @@ export default function BannersPage() {
         </table>
 
         {banners?.length === 0 && (
-          <p className="px-5 py-10 text-center text-sm text-zinc-400">Aucune bannière pour le moment.</p>
+          <p className="px-5 py-10 text-center text-sm text-white/30">Aucune bannière pour le moment.</p>
         )}
-      </div>
-
-      {showForm && (
-        <BannerFormModal
-          onClose={() => setShowForm(false)}
-          onCreated={() => {
-            setShowForm(false);
-            load();
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function BannerFormModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [title, setTitle] = useState("");
-  const [linkUrl, setLinkUrl] = useState("");
-  const [position, setPosition] = useState("0");
-  const [isActive, setIsActive] = useState(true);
-  const [image, setImage] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
-    setImage(file);
-    setPreview(file ? URL.createObjectURL(file) : null);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    if (!image) {
-      setError("L'image est obligatoire.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const formData = new FormData();
-      if (title) formData.set("title", title);
-      if (linkUrl) formData.set("link_url", linkUrl);
-      formData.set("position", position || "0");
-      formData.set("is_active", isActive ? "1" : "0");
-      formData.set("image", image);
-
-      await apiFetch("/banners", { method: "POST", body: formData });
-      onCreated();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Échec de la création.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900">Nouvelle bannière</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            placeholder="Titre (optionnel)"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-          />
-
-          <input
-            type="url"
-            placeholder="Lien (ex: https://...)"
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            className="rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-          />
-
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="text-xs font-medium text-zinc-500">Ordre d&apos;affichage</label>
-              <input
-                type="number"
-                min={0}
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-brand-orange/60"
-              />
-            </div>
-            <label className="flex items-center gap-2 self-end pb-2.5 text-sm text-zinc-600">
-              <input
-                type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="h-4 w-4 rounded border-zinc-300 text-brand-orange focus:ring-brand-orange/40"
-              />
-              Active
-            </label>
-          </div>
-
-          <label className="text-xs font-medium text-zinc-500">Image</label>
-          <div className="flex items-center gap-3">
-            {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview} alt="Aperçu" className="h-14 w-24 rounded-lg object-cover ring-1 ring-zinc-200" />
-            ) : (
-              <div className="flex h-14 w-24 items-center justify-center rounded-lg bg-zinc-100 text-zinc-300">
-                <ImageOff className="h-5 w-5" />
-              </div>
-            )}
-            <input
-              required
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="flex-1 text-xs text-zinc-500 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mt-2 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 disabled:opacity-50"
-          >
-            {submitting ? "Création..." : "Créer la bannière"}
-          </button>
-        </form>
       </div>
     </div>
   );
