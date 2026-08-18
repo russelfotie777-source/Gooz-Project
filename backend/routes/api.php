@@ -126,6 +126,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('/brands/{brand}', [AdminBrandController::class, 'destroy']);
 
         Route::get('/admin/banners', [AdminBannerController::class, 'index']);
+        Route::get('/admin/banners/{banner}', [AdminBannerController::class, 'show']);
         Route::post('/banners', [AdminBannerController::class, 'store']);
         Route::put('/banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
