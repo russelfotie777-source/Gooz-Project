@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useCheckout } from "./CheckoutContext";
 import CheckoutSuccessContent from "./CheckoutSuccessContent";
 import styles from "./CheckoutDesktopPage.module.css";
@@ -20,6 +21,7 @@ type Step = 1 | 2 | 3;
 // CheckoutContext as mobile (form/delivery/payment/totals + the real
 // delivery-fee API call) so both platforms share one source of truth.
 export default function CheckoutDesktopPage() {
+  const dict = useDictionary();
   const {
     cartStatus,
     items,
@@ -40,9 +42,19 @@ export default function CheckoutDesktopPage() {
     setCoupon,
     total,
     orderNumber,
+    checkoutUrl,
     checkoutError,
     placeOrder,
   } = useCheckout();
+
+  // Mobile money orders get a checkoutUrl: send the browser to Enkap's
+  // hosted payment page instead of showing our own success screen, which
+  // only makes sense once the payment has actually gone through.
+  useEffect(() => {
+    if (orderNumber && checkoutUrl) {
+      window.location.href = checkoutUrl;
+    }
+  }, [orderNumber, checkoutUrl]);
 
   const [activeStep, setActiveStep] = useState<Step>(1);
   const [maxStepReached, setMaxStepReached] = useState<Step>(1);
@@ -82,7 +94,7 @@ export default function CheckoutDesktopPage() {
     setActiveStep(3);
   }
 
-  if (orderNumber) {
+  if (orderNumber && !checkoutUrl) {
     return (
       <div className={styles.page}>
         <Header cartCount={items.length} />
@@ -101,21 +113,21 @@ export default function CheckoutDesktopPage() {
       <div className={styles.page}>
         <Header />
         <main className={styles.gateMain}>
-          {cartStatus === "loading" && <p>Chargement...</p>}
+          {cartStatus === "loading" && <p>{dict.checkout.loading}</p>}
           {cartStatus === "loggedOut" && (
             <>
-              <p>Connectez-vous pour finaliser votre commande.</p>
-              <Link href="/connexion" className={styles.gateLink}>
-                Se connecter
-              </Link>
+              <p>{dict.checkout.loginPrompt}</p>
+              <LocaleLink href="/connexion" className={styles.gateLink}>
+                {dict.checkout.login}
+              </LocaleLink>
             </>
           )}
           {cartStatus === "empty" && (
             <>
-              <p>Votre panier est vide.</p>
-              <Link href="/cart" className={styles.gateLink}>
-                Voir le panier
-              </Link>
+              <p>{dict.checkout.emptyCart}</p>
+              <LocaleLink href="/cart" className={styles.gateLink}>
+                {dict.checkout.viewCart}
+              </LocaleLink>
             </>
           )}
         </main>
@@ -130,8 +142,8 @@ export default function CheckoutDesktopPage() {
 
       <main className={styles.main}>
         <div className={styles.headingRow}>
-          <h1 className={styles.title}>Finaliser votre commande</h1>
-          <h2 className={styles.summaryTitle}>Resumé de la commande</h2>
+          <h1 className={styles.title}>{dict.checkout.finalizeOrderTitle}</h1>
+          <h2 className={styles.summaryTitle}>{dict.checkout.orderSummaryTitle}</h2>
         </div>
 
         <div className={styles.layout}>
@@ -147,12 +159,12 @@ export default function CheckoutDesktopPage() {
                   ) : (
                     <span className={styles.stepNumber}>1</span>
                   )}
-                  <h3 className={step1Done ? styles.stepTitleDone : styles.stepTitle}>Adresse de livraison</h3>
+                  <h3 className={step1Done ? styles.stepTitleDone : styles.stepTitle}>{dict.checkout.addressTitle}</h3>
                 </div>
                 {step1Done && activeStep !== 1 && (
                   <button type="button" className={styles.modifyButton} onClick={() => setActiveStep(1)}>
                     <img src="/icon/checkout/pen.svg" alt="" className={styles.modifyIcon} />
-                    Modifier
+                    {dict.checkout.modify}
                   </button>
                 )}
               </div>
@@ -162,7 +174,7 @@ export default function CheckoutDesktopPage() {
                   <div className={styles.formGrid}>
                     <label className={styles.field}>
                       <span className={styles.label}>
-                        <span className={styles.required}>*</span>Nom
+                        <span className={styles.required}>*</span>{dict.checkout.nom}
                       </span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
@@ -170,7 +182,7 @@ export default function CheckoutDesktopPage() {
                           type="text"
                           value={form.nom}
                           onChange={(e) => setForm({ nom: e.target.value })}
-                          placeholder="Jean"
+                          placeholder={dict.checkout.namePlaceholder}
                           className={styles.input}
                         />
                       </div>
@@ -178,7 +190,7 @@ export default function CheckoutDesktopPage() {
 
                     <label className={styles.field}>
                       <span className={styles.label}>
-                        <span className={styles.required}>*</span>Prenom
+                        <span className={styles.required}>*</span>{dict.checkout.prenom}
                       </span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
@@ -186,7 +198,7 @@ export default function CheckoutDesktopPage() {
                           type="text"
                           value={form.prenom}
                           onChange={(e) => setForm({ prenom: e.target.value })}
-                          placeholder="Pierre"
+                          placeholder={dict.checkout.surnamePlaceholder}
                           className={styles.input}
                         />
                       </div>
@@ -194,7 +206,7 @@ export default function CheckoutDesktopPage() {
 
                     <label className={styles.field}>
                       <span className={styles.label}>
-                        <span className={styles.required}>*</span>N° Téléphone
+                        <span className={styles.required}>*</span>{dict.checkout.phoneLabel}
                       </span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-phone.svg" alt="" className={styles.inputIcon} />
@@ -202,21 +214,21 @@ export default function CheckoutDesktopPage() {
                           type="tel"
                           value={form.telephone}
                           onChange={(e) => setForm({ telephone: e.target.value })}
-                          placeholder="Ex: 677 47 22 14"
+                          placeholder={dict.checkout.phonePlaceholder}
                           className={styles.input}
                         />
                       </div>
                     </label>
 
                     <label className={styles.field}>
-                      <span className={styles.label}>E-mail (Facultatif)</span>
+                      <span className={styles.label}>{dict.checkout.emailOptionalLabel}</span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-mail.svg" alt="" className={styles.inputIcon} />
                         <input
                           type="email"
                           value={form.email}
                           onChange={(e) => setForm({ email: e.target.value })}
-                          placeholder="exemple@gmail.com"
+                          placeholder={dict.checkout.emailPlaceholder}
                           className={styles.input}
                         />
                       </div>
@@ -224,7 +236,7 @@ export default function CheckoutDesktopPage() {
 
                     <label className={styles.field}>
                       <span className={styles.label}>
-                        <span className={styles.required}>*</span>Ville
+                        <span className={styles.required}>*</span>{dict.checkout.villeLabel}
                       </span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
@@ -233,7 +245,7 @@ export default function CheckoutDesktopPage() {
                           onChange={(e) => setForm({ cityId: e.target.value, neighborhoodId: "" })}
                           className={styles.select}
                         >
-                          <option value="">Selectionez la ville</option>
+                          <option value="">{dict.checkout.selectVille}</option>
                           {cities.map((c) => (
                             <option key={c.id} value={c.id}>
                               {c.name}
@@ -245,7 +257,7 @@ export default function CheckoutDesktopPage() {
 
                     <label className={styles.field}>
                       <span className={styles.label}>
-                        <span className={styles.required}>*</span>Quartier
+                        <span className={styles.required}>*</span>{dict.checkout.quartierLabel}
                       </span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
@@ -255,7 +267,7 @@ export default function CheckoutDesktopPage() {
                           disabled={!form.cityId}
                           className={styles.select}
                         >
-                          <option value="">Selectionez le quartier</option>
+                          <option value="">{dict.checkout.selectQuartier}</option>
                           {neighborhoods.map((n) => (
                             <option key={n.id} value={n.id}>
                               {n.name}
@@ -267,7 +279,7 @@ export default function CheckoutDesktopPage() {
 
                     <label className={styles.field}>
                       <span className={styles.label}>
-                        <span className={styles.required}>*</span>Adresse
+                        <span className={styles.required}>*</span>{dict.checkout.addressLabel}
                       </span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
@@ -275,39 +287,39 @@ export default function CheckoutDesktopPage() {
                           type="text"
                           value={form.adresse}
                           onChange={(e) => setForm({ adresse: e.target.value })}
-                          placeholder="Rue, quartier précis, point de repère..."
+                          placeholder={dict.checkout.addressPlaceholder}
                           className={styles.input}
                         />
                       </div>
                     </label>
                   </div>
 
-                  <p className={styles.subheading}>Autres information facultative</p>
+                  <p className={styles.subheading}>{dict.checkout.otherInfoOptional}</p>
 
                   <div className={styles.formGrid}>
                     <label className={styles.field}>
-                      <span className={styles.label}>Contact WhatsApp</span>
+                      <span className={styles.label}>{dict.checkout.whatsappContactLabel}</span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-whatsapp.svg" alt="" className={styles.inputIcon} />
                         <input
                           type="tel"
                           value={form.whatsapp}
                           onChange={(e) => setForm({ whatsapp: e.target.value })}
-                          placeholder="Ex: 697 47 22 14"
+                          placeholder={dict.checkout.whatsappPlaceholder}
                           className={styles.input}
                         />
                       </div>
                     </label>
 
                     <label className={styles.field}>
-                      <span className={styles.label}>Deuxieme numéro de téléphone</span>
+                      <span className={styles.label}>{dict.checkout.secondaryPhoneLabel}</span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-phone.svg" alt="" className={styles.inputIcon} />
                         <input
                           type="tel"
                           value={whatsappSecondary}
                           onChange={(e) => setWhatsappSecondary(e.target.value)}
-                          placeholder="Ex: 677 47 22 14"
+                          placeholder={dict.checkout.phonePlaceholder}
                           className={styles.input}
                         />
                       </div>
@@ -315,8 +327,7 @@ export default function CheckoutDesktopPage() {
                   </div>
 
                   <p className={styles.note}>
-                    <strong>NB:</strong> Les champs précédés du symbole <span className={styles.required}>*</span>{" "}
-                    sont obligatoire
+                    <strong>{dict.checkout.requiredNoteLabel}</strong> {dict.checkout.requiredNoteText}
                   </p>
 
                   <button
@@ -325,7 +336,7 @@ export default function CheckoutDesktopPage() {
                     disabled={!isAddressComplete}
                     onClick={handleSaveAddress}
                   >
-                    Enregistrer et continuer
+                    {dict.checkout.saveContinue}
                   </button>
                 </div>
               )}
@@ -355,13 +366,13 @@ export default function CheckoutDesktopPage() {
                   ) : (
                     <span className={`${styles.stepNumber} ${!step1Done ? styles.stepNumberLocked : ""}`}>2</span>
                   )}
-                  <h3 className={step2Done ? styles.stepTitleDone : styles.stepTitle}>Méthode de livraison</h3>
+                  <h3 className={step2Done ? styles.stepTitleDone : styles.stepTitle}>{dict.checkout.deliveryStepTitle}</h3>
                 </div>
                 {!step1Done && <img src="/icon/checkout/lock.svg" alt="" className={styles.lockIcon} />}
                 {step2Done && activeStep !== 2 && (
                   <button type="button" className={styles.modifyButton} onClick={() => setActiveStep(2)}>
                     <img src="/icon/checkout/pen.svg" alt="" className={styles.modifyIcon} />
-                    Modifier
+                    {dict.checkout.modify}
                   </button>
                 )}
               </div>
@@ -384,17 +395,15 @@ export default function CheckoutDesktopPage() {
                         className={styles.radioIcon}
                       />
                       <div className={styles.deliveryCardBody}>
-                        <p className={styles.deliveryCardTitle}>Livraison à domicile</p>
-                        <p className={styles.deliveryCardHint}>
-                          Nous vous livrons chez vous / nous expédions dans votre ville
-                        </p>
+                        <p className={styles.deliveryCardTitle}>{dict.checkout.homeDelivery}</p>
+                        <p className={styles.deliveryCardHint}>{dict.checkout.homeDeliveryHintDesktop}</p>
                         <p className={styles.deliveryCardFee}>
-                          Frais :{" "}
+                          {dict.checkout.fee}{" "}
                           <span>
                             {deliveryMethod === "domicile" && deliveryStatus === "loading"
-                              ? "Calcul..."
+                              ? dict.checkout.calculating
                               : deliveryMethod === "domicile" && deliveryStatus === "error"
-                                ? "Indisponible"
+                                ? dict.checkout.unavailable
                                 : `+ ${formatPrice(deliveryMethod === "domicile" ? deliveryFee : 0)}`}
                           </span>
                         </p>
@@ -417,12 +426,10 @@ export default function CheckoutDesktopPage() {
                         className={styles.radioIcon}
                       />
                       <div className={styles.deliveryCardBody}>
-                        <p className={styles.deliveryCardTitle}>Retrait à Akwa</p>
-                        <p className={styles.deliveryCardHint}>
-                          Vous venez récuperer vos produit a akwa cogeni douche / A coté de Fokou douche
-                        </p>
+                        <p className={styles.deliveryCardTitle}>{dict.checkout.pickupTitleDesktop}</p>
+                        <p className={styles.deliveryCardHint}>{dict.checkout.pickupHintDesktop}</p>
                         <p className={styles.deliveryCardFee}>
-                          Frais : <span>{formatPrice(0)}</span>
+                          {dict.checkout.fee} <span>{formatPrice(0)}</span>
                         </p>
                       </div>
                       <img src="/icon/checkout/storefront.svg" alt="" className={styles.deliveryCardIcon} />
@@ -435,16 +442,17 @@ export default function CheckoutDesktopPage() {
                     disabled={!deliveryMethod}
                     onClick={handleValidateDelivery}
                   >
-                    Valider
+                    {dict.checkout.validateButton}
                   </button>
                 </div>
               )}
 
               {step2Done && activeStep !== 2 && (
                 <div className={styles.stepSummary}>
-                  <span>Quantité de produit: {totalQuantity}</span>
+                  <span>{dict.checkout.productQuantity(totalQuantity)}</span>
                   <span>
-                    Mode de livraison: {deliveryMethod === "domicile" ? "Livraison a domicile" : "Retrait en agence"}
+                    {dict.checkout.deliveryModeLabel}{" "}
+                    {deliveryMethod === "domicile" ? dict.checkout.homeDelivery : dict.checkout.pickupTitleMobile}
                   </span>
                 </div>
               )}
@@ -455,14 +463,14 @@ export default function CheckoutDesktopPage() {
               <div className={styles.stepHeader}>
                 <div className={styles.stepHeaderLeft}>
                   <span className={`${styles.stepNumber} ${!step2Done ? styles.stepNumberLocked : ""}`}>3</span>
-                  <h3 className={styles.stepTitle}>Mode de paiement</h3>
+                  <h3 className={styles.stepTitle}>{dict.checkout.paymentStepTitle}</h3>
                 </div>
                 {!step2Done && <img src="/icon/checkout/lock.svg" alt="" className={styles.lockIcon} />}
               </div>
 
               {step2Done && (
                 <div className={styles.stepBody}>
-                  {!paymentMethod && <p className={styles.paymentPrompt}>Veuillez sélectionner un mode paiement</p>}
+                  {!paymentMethod && <p className={styles.paymentPrompt}>{dict.checkout.selectPaymentPrompt}</p>}
 
                   <div className={styles.paymentCards}>
                     <button
@@ -472,7 +480,7 @@ export default function CheckoutDesktopPage() {
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src="/icon/checkout/payment-cash.png" alt="" className={styles.paymentCardIcon} />
-                      <p className={styles.paymentCardLabel}>Paiement a la livraison</p>
+                      <p className={styles.paymentCardLabel}>{dict.checkout.cashPaymentDesktop}</p>
                     </button>
 
                     <button
@@ -483,17 +491,17 @@ export default function CheckoutDesktopPage() {
                       <span className={styles.onlineIcons}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src="/icon/checkout/payment-orange.png" alt="Orange Money" className={styles.onlinePaymentIcon} />
-                        <span className={styles.onlineOu}>ou</span>
+                        <span className={styles.onlineOu}>{dict.checkout.or}</span>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src="/icon/checkout/payment-mtn.png" alt="MTN Mobile Money" className={styles.onlinePaymentIcon} />
                       </span>
-                      <p className={styles.paymentCardLabel}>Paiement en ligne</p>
+                      <p className={styles.paymentCardLabel}>{dict.checkout.onlinePayment}</p>
                     </button>
                   </div>
 
                   <p className={styles.securePayment}>
                     <img src="/icon/checkout/lock.svg" alt="" className={styles.secureLockIcon} />
-                    Paiement sécurisé
+                    {dict.checkout.securePayment}
                   </p>
                 </div>
               )}
@@ -501,20 +509,20 @@ export default function CheckoutDesktopPage() {
           </div>
 
           <aside className={styles.summary}>
-            <p className={styles.summaryHeaderLabel}>Total:</p>
+            <p className={styles.summaryHeaderLabel}>{dict.cart.summaryTotal}:</p>
             <p className={styles.summaryHeaderValue}>{formatPrice(total)}</p>
 
             <div className={styles.summaryRow}>
-              <span className={styles.summaryRowLabel}>Sous Total</span>
+              <span className={styles.summaryRowLabel}>{dict.checkout.subtotal}</span>
               <span className={styles.summaryRowValue}>{formatPrice(subtotal)}</span>
             </div>
             <div className={styles.summaryRow}>
-              <span className={styles.summaryRowLabel}>Livraison</span>
+              <span className={styles.summaryRowLabel}>{dict.cart.deliveryLabel}</span>
               <span className={styles.summaryRowValue}>{formatPrice(livraisonFee)}</span>
             </div>
             <div className={styles.summaryDivider} />
             <div className={styles.summaryRow}>
-              <span className={styles.summaryRowLabel}>Total</span>
+              <span className={styles.summaryRowLabel}>{dict.cart.summaryTotal}</span>
               <span className={styles.summaryRowValue}>{formatPrice(total)}</span>
             </div>
 
@@ -525,7 +533,7 @@ export default function CheckoutDesktopPage() {
                 onClick={() => setCouponOpen((v) => !v)}
                 aria-expanded={couponOpen}
               >
-                <span>Vous avez un coupon de réduction ?</span>
+                <span>{dict.cart.couponQuestion}</span>
                 <img
                   src="/icon/cart/coupon-chevron.svg"
                   alt=""
@@ -539,11 +547,11 @@ export default function CheckoutDesktopPage() {
                     type="text"
                     value={coupon}
                     onChange={(e) => setCoupon(e.target.value)}
-                    placeholder="Saisissez le code ici"
+                    placeholder={dict.cart.couponPlaceholder}
                     className={styles.couponInput}
                   />
                   <button type="button" className={styles.couponApply}>
-                    Appliquer
+                    {dict.cart.applyCoupon}
                     <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
                   </button>
                 </div>
@@ -556,15 +564,15 @@ export default function CheckoutDesktopPage() {
               disabled={!canPlaceOrder}
               onClick={handlePlaceOrder}
             >
-              {placing ? "Envoi..." : "Passer la commande"}
+              {placing ? dict.checkout.sendingButton : dict.cart.placeOrder}
             </button>
             {!canPlaceOrder && !placing && (
               <p className={styles.checkoutWarning}>
                 {!step1Done
-                  ? "Veuillez completer l'adresse de livraison"
+                  ? dict.checkout.completeAddressWarning
                   : !step2Done
-                    ? "Veuillez selectionner le mode de livraison"
-                    : "Veuillez sélectionner un mode paiement"}
+                    ? dict.checkout.selectDeliveryWarning
+                    : dict.checkout.selectPaymentPrompt}
               </p>
             )}
             {checkoutError && <p className={styles.checkoutWarning}>{checkoutError}</p>}

@@ -1,0 +1,142 @@
+.article {
+  width: 100%;
+  max-width: 820px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0 0 4px;
+}
+
+.lastUpdated {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0 0 20px;
+}
+
+.intro {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+
+.toc {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin: 20px 0 32px;
+}
+
+.tocTitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 0 10px;
+  color: var(--color-navy);
+}
+
+.tocList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tocLink {
+  font-size: 14px;
+  color: var(--color-primary);
+}
+
+.tocLink:hover {
+  text-decoration: underline;
+}
+
+.section {
+  padding-top: 28px;
+  margin-top: 28px;
+  border-top: 1px solid var(--color-border);
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.section:first-of-type {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.sectionHeading {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0 0 12px;
+}
+
+.subsection {
+  margin-top: 18px;
+}
+
+.subsectionHeading {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.paragraph {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.bullet {
+  position: relative;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.bullet::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.inlineLink {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.inlineLink:hover {
+  color: var(--color-primary-dark);
+}
+
+@media (min-width: 1024px) {
+  .title {
+    font-size: 34px;
+  }
+
+  .sectionHeading {
+    font-size: 22px;
+  }
+}

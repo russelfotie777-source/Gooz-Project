@@ -6,6 +6,7 @@ use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -19,8 +20,10 @@ class ProductController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        // Pricing lives on variants now, so filters/sorts that used to touch
+        // products.base_price go through the variants relation instead.
         $query = Product::query()
-            ->with(['brand', 'category', 'images'])
+            ->with(['brand', 'category', 'images', 'variants'])
             ->where('is_active', true);
 
         if ($categoryId = $request->query('category_id')) {
@@ -32,7 +35,7 @@ class ProductController extends Controller
         }
 
         if ($request->boolean('is_promotion', false)) {
-            $query->where('is_promotion', true);
+            $query->whereHas('variants', fn ($q) => $q->where('is_promotion', true));
         }
 
         if ($search = $request->query('q')) {
@@ -43,11 +46,11 @@ class ProductController extends Controller
         }
 
         if ($minPrice = $request->query('min_price')) {
-            $query->where('base_price', '>=', $minPrice);
+            $query->whereHas('variants', fn ($q) => $q->where('base_price', '>=', $minPrice));
         }
 
         if ($maxPrice = $request->query('max_price')) {
-            $query->where('base_price', '<=', $maxPrice);
+            $query->whereHas('variants', fn ($q) => $q->where('base_price', '<=', $maxPrice));
         }
 
         $sortBy = in_array($request->query('sort_by'), self::SORTABLE_COLUMNS, true)
@@ -55,7 +58,17 @@ class ProductController extends Controller
             : 'created_at';
         $sortDir = $request->query('sort_dir') === 'asc' ? 'asc' : 'desc';
 
-        $query->orderBy($sortBy, $sortDir);
+        if ($sortBy === 'base_price') {
+            $query->orderBy(
+                ProductVariant::select('base_price')
+                    ->whereColumn('product_id', 'products.id')
+                    ->orderBy('base_price')
+                    ->limit(1),
+                $sortDir
+            );
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
 
         $perPage = min((int) $request->query('per_page', 15), 50) ?: 15;
 

@@ -8,8 +8,10 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Stock;
 use App\Services\DeliveryFeeCalculator;
+use App\Services\Enkap\EnkapPaymentService;
 use App\Services\PushNotificationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -19,6 +21,7 @@ class CheckoutController extends Controller
     public function __construct(
         private readonly PushNotificationService $pushNotifications,
         private readonly DeliveryFeeCalculator $deliveryFeeCalculator,
+        private readonly EnkapPaymentService $enkapPayments,
     ) {}
 
     public function store(CheckoutRequest $request): OrderResource
@@ -101,6 +104,23 @@ class CheckoutController extends Controller
             "Votre commande {$order->order_reference} a bien été enregistrée.",
             ['order_id' => $order->id]
         );
+
+        // Card/mobile-money orders go through Enkap's hosted checkout page;
+        // the order itself is already committed above regardless of whether
+        // this succeeds, so a failure here doesn't lose the order — it just
+        // leaves payment.checkout_url null, which the frontend treats as
+        // "payment could not be started" and offers a retry (see
+        // PaymentController::retry).
+        if ($request->validated('payment_method') === 'mobile_money') {
+            try {
+                $this->enkapPayments->createOrder($order, $order->payment);
+            } catch (RuntimeException $e) {
+                Log::error('enkap_checkout_initiation_failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return new OrderResource($order->load(['items.product.brand', 'items.variant', 'payment', 'coupon', 'warehouse']));
     }

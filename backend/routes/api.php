@@ -28,16 +28,25 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\DeliveryEstimateController;
 use App\Http\Controllers\DeliveryQuoteController;
 use App\Http\Controllers\DeviceTokenController;
+use App\Http\Controllers\EnkapWebhookController;
 use App\Http\Controllers\NeighborhoodController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+
+    // Called by Enkap's servers directly — no Sanctum token to send, so
+    // this has to sit outside the auth:sanctum group. See
+    // EnkapWebhookController for why the notified status is re-verified
+    // rather than trusted as-is.
+    Route::put('/webhooks/enkap/{orderReference}', [EnkapWebhookController::class, 'handle']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -54,6 +63,10 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
+        // Bound by order_reference, not id: the customer lands back on the
+        // frontend return page carrying only the reference Enkap was given
+        // (see EnkapWebhookController's docblock for the matching webhook path).
+        Route::post('/orders/{order:order_reference}/payment/refresh', [PaymentController::class, 'refresh']);
 
         Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
 
@@ -69,6 +82,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/addresses', [AddressController::class, 'store']);
         Route::put('/addresses/{address}', [AddressController::class, 'update']);
         Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
+
+        Route::get('/tickets', [TicketController::class, 'index']);
+        Route::post('/tickets', [TicketController::class, 'store']);
     });
 
     Route::get('/products', [ProductController::class, 'index']);

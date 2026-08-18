@@ -1,4 +1,7 @@
+"use client";
+
 import type { Brand } from "@/lib/types";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
 import styles from "./BrandsSection.module.css";
 
 interface BrandsSectionProps {
@@ -6,9 +9,11 @@ interface BrandsSectionProps {
 }
 
 export default function BrandsSection({ brands }: BrandsSectionProps) {
+  const dict = useDictionary();
+
   return (
     <section className={styles.section}>
-      <h2 className={styles.title}>Les marques que nous proposons</h2>
+      <h2 className={styles.title}>{dict.home.brandsTitle}</h2>
       <div className={styles.track}>
         {brands.map((brand) => (
           <div className={styles.item} key={brand.id}>

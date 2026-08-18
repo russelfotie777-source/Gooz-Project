@@ -1,0 +1,44 @@
+.button {
+  display: none;
+  position: fixed;
+  right: 32px;
+  /* Stacks above the WhatsAppButton (bottom: 32px, 52px tall) with a gap. */
+  bottom: 98px;
+  z-index: 40;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  box-shadow: 0 8px 20px rgba(255, 149, 0, 0.35);
+  cursor: pointer;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.2s ease;
+  }
+
+  .button:hover {
+    background: var(--color-primary);
+  }
+
+  .visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}

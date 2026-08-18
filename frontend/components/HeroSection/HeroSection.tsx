@@ -1,5 +1,8 @@
-import Link from "next/link";
+"use client";
+
 import type { Category } from "@/lib/types";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import HeroBanner from "@/components/HeroBanner/HeroBanner";
 import styles from "./HeroSection.module.css";
 
@@ -11,15 +14,17 @@ interface HeroSectionProps {
 // card + the hero carousel + two stacked ad-banner slots. The mobile layout
 // only shows the hero banner (see HeroSection.module.css) — untouched.
 export default function HeroSection({ categories }: HeroSectionProps) {
+  const dict = useDictionary();
+
   return (
     <div className={styles.row}>
-      <aside className={styles.categoryCard} aria-label="Parcourir par catégorie">
+      <aside className={styles.categoryCard} aria-label={dict.home.browseByCategory}>
         <ul className={styles.categoryList}>
           {categories.map((category) => (
             <li key={category.id}>
-              <Link href={`/categories/${category.slug}`} className={styles.categoryLink}>
+              <LocaleLink href={`/categories/${category.slug}`} className={styles.categoryLink}>
                 {category.name}
-              </Link>
+              </LocaleLink>
             </li>
           ))}
         </ul>
