@@ -6,11 +6,17 @@ use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DeliveryController as AdminDeliveryController;
+use App\Http\Controllers\Admin\HomepageSectionController as AdminHomepageSectionController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
+use App\Http\Controllers\Admin\DeliverySettingController as AdminDeliverySettingController;
+use App\Http\Controllers\Admin\InventoryLedgerController as AdminInventoryLedgerController;
+use App\Http\Controllers\Admin\NeighborhoodController as AdminNeighborhoodController;
+use App\Http\Controllers\Admin\StockAdjustmentController as AdminStockAdjustmentController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
+use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
@@ -136,13 +142,24 @@ Route::prefix('v1')->group(function () {
         Route::delete('/brands/{brand}', [AdminBrandController::class, 'destroy']);
 
         Route::get('/admin/banners', [AdminBannerController::class, 'index']);
+        Route::get('/admin/banners/{banner}', [AdminBannerController::class, 'show']);
         Route::post('/banners', [AdminBannerController::class, 'store']);
         Route::put('/banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
     });
 
+    Route::middleware(['auth:sanctum', 'can:manage-homepage-sections'])->group(function () {
+        Route::get('/admin/homepage-sections', [AdminHomepageSectionController::class, 'index']);
+        Route::get('/admin/homepage-sections/{homepageSection}', [AdminHomepageSectionController::class, 'show']);
+        Route::post('/admin/homepage-sections', [AdminHomepageSectionController::class, 'store']);
+        Route::post('/admin/homepage-sections/reorder', [AdminHomepageSectionController::class, 'reorder']);
+        Route::put('/admin/homepage-sections/{homepageSection}', [AdminHomepageSectionController::class, 'update']);
+        Route::delete('/admin/homepage-sections/{homepageSection}', [AdminHomepageSectionController::class, 'destroy']);
+    });
+
     Route::middleware(['auth:sanctum', 'can:manage-coupons'])->group(function () {
         Route::get('/admin/coupons', [AdminCouponController::class, 'index']);
+        Route::get('/admin/coupons/{coupon}', [AdminCouponController::class, 'show']);
         Route::post('/admin/coupons', [AdminCouponController::class, 'store']);
         Route::put('/admin/coupons/{coupon}', [AdminCouponController::class, 'update']);
         Route::delete('/admin/coupons/{coupon}', [AdminCouponController::class, 'destroy']);
@@ -161,6 +178,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-deliveries'])->group(function () {
+        Route::get('/admin/deliveries', [AdminDeliveryController::class, 'index']);
         Route::post('/admin/orders/{order}/delivery', [AdminDeliveryController::class, 'store']);
     });
 
@@ -189,8 +207,43 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'can:manage-warehouses'])->group(function () {
         Route::get('/admin/warehouses', [AdminWarehouseController::class, 'index']);
+        Route::get('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'show']);
         Route::post('/admin/warehouses', [AdminWarehouseController::class, 'store']);
         Route::put('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'update']);
         Route::delete('/admin/warehouses/{warehouse}', [AdminWarehouseController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-suppliers'])->group(function () {
+        Route::get('/admin/suppliers', [AdminSupplierController::class, 'index']);
+        Route::get('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'show']);
+        Route::post('/admin/suppliers', [AdminSupplierController::class, 'store']);
+        Route::put('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'update']);
+        Route::delete('/admin/suppliers/{supplier}', [AdminSupplierController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-stock-adjustments'])->group(function () {
+        Route::get('/admin/stock-adjustments', [AdminStockAdjustmentController::class, 'index']);
+        Route::get('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'show']);
+        Route::post('/admin/stock-adjustments', [AdminStockAdjustmentController::class, 'store']);
+        Route::put('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'update']);
+        Route::delete('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:view-inventory-ledger'])->group(function () {
+        Route::get('/admin/inventory-ledgers', [AdminInventoryLedgerController::class, 'index']);
+        Route::get('/admin/inventory-ledgers/{inventoryLedger}', [AdminInventoryLedgerController::class, 'show']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-delivery-settings'])->group(function () {
+        Route::get('/admin/delivery-settings', [AdminDeliverySettingController::class, 'show']);
+        Route::put('/admin/delivery-settings', [AdminDeliverySettingController::class, 'update']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-neighborhoods'])->group(function () {
+        Route::get('/admin/neighborhoods', [AdminNeighborhoodController::class, 'index']);
+        Route::get('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'show']);
+        Route::post('/admin/neighborhoods', [AdminNeighborhoodController::class, 'store']);
+        Route::put('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'update']);
+        Route::delete('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'destroy']);
     });
 });
