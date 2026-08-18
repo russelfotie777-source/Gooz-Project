@@ -26,19 +26,19 @@ export interface DeliveryEstimate {
 export interface Brand {
   id: number;
   name: string;
+  slug: string;
   logo: string | null;
   description: string | null;
   country_origin: string | null;
 }
 
+/** Flat — categories no longer nest under a parent (backend dropped parent_id). */
 export interface Category {
   id: number;
   name: string;
   slug: string;
-  parent_id: number | null;
   image: string | null;
   is_active: boolean;
-  children: Category[];
 }
 
 export interface ProductImage {
@@ -50,10 +50,20 @@ export interface ProductImage {
 
 export interface ProductVariant {
   id: number;
+  product_id: number;
+  name: string | null;
+  /** Server-computed: name, else "size · color · material", else null. */
+  display_name: string | null;
   size: string | null;
   color: string | null;
   material: string | null;
-  additional_price: number;
+  base_price: number;
+  promo_price: number | null;
+  is_promotion: boolean;
+  /** Already computed server-side: promo_price if is_promotion, else base_price. Don't recompute. */
+  price: number;
+  cost_price: number | null;
+  tax_rate: number | null;
   barcode: string | null;
   is_active: boolean;
   images: ProductImage[];
@@ -78,19 +88,51 @@ export interface Product {
   id: number;
   name: string;
   description: string | null;
-  base_price: number;
-  promo_price: number | null;
-  /** Already computed server-side: promo_price if is_promotion, else base_price. Don't recompute. */
-  price: number;
+  /** Cheapest variant's effective price (promo if on sale, else base). Null if the product has no variants loaded/at all. */
+  price_from: number | null;
   reference: string;
   is_active: boolean;
-  is_promotion: boolean;
   brand?: Brand;
   category?: Category;
   images: ProductImage[];
   variants: ProductVariant[];
   stock_quantity?: number;
   created_at: string;
+}
+
+export interface Address {
+  id: number;
+  user_id: number;
+  label: string | null;
+  recipient_name: string;
+  recipient_phone: string;
+  country: string;
+  region: string | null;
+  ville: string;
+  quartier: string | null;
+  address_line: string | null;
+  postal_code: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type TicketPriority = "basse" | "moyenne" | "haute" | "urgente";
+export type TicketStatus = "ouvert" | "en_cours" | "résolu" | "fermé";
+
+export interface Ticket {
+  id: number;
+  user_id: number;
+  subject: string;
+  category: string;
+  priority: TicketPriority;
+  status: TicketStatus;
+  message: string | null;
+  assigned_to_id: number | null;
+  assigned_to: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CartItemLine {
@@ -125,6 +167,8 @@ export interface Warehouse {
  * internally; CheckoutContext maps between the two at submit time. */
 export type ApiDeliveryMethod = "livraison" | "retrait";
 export type ApiPaymentMethod = "carte" | "mobile_money" | "paypal" | "espèces";
+export type OrderStatus = "en_attente" | "confirmée" | "en_préparation" | "expédiée" | "livrée" | "annulée";
+export type PaymentStatus = "en_attente" | "payé" | "échoué" | "remboursé";
 
 export interface OrderItemLine {
   product: Product;
@@ -137,7 +181,7 @@ export interface OrderItemLine {
 export interface Order {
   id: number;
   order_reference: string;
-  status: string;
+  status: OrderStatus;
   total_amount: number;
   discount_amount: number;
   coupon_code: string | null;
@@ -149,7 +193,13 @@ export interface Order {
   shipping_longitude: number | null;
   warehouse: Warehouse | null;
   items: OrderItemLine[];
-  payment: { amount: number; payment_method: ApiPaymentMethod; payment_status: string };
+  payment: {
+    amount: number;
+    payment_method: ApiPaymentMethod;
+    payment_status: PaymentStatus;
+    /** Enkap's hosted checkout page — set only for "mobile_money" orders. */
+    checkout_url: string | null;
+  };
   delivery: { delivery_status: string; tracking_code: string } | null;
   created_at: string;
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import BottomNav from "@/components/BottomNav/BottomNav";
 import CartItems from "@/components/CartItems/CartItems";
 import { getCart } from "@/lib/api";
 import { getSession } from "@/lib/auth";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import type { Cart } from "@/lib/types";
 import styles from "./CartPage.module.css";
 
@@ -16,6 +17,7 @@ import styles from "./CartPage.module.css";
 // component reading the session token from localStorage — a logged-out
 // visitor sees a prompt to sign in instead of cart contents.
 export default function CartPage() {
+  const dict = useDictionary();
   const [status, setStatus] = useState<"loading" | "loggedOut" | "ready">("loading");
   const [cart, setCart] = useState<Cart | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -42,18 +44,18 @@ export default function CartPage() {
 
       <main className={styles.main}>
         <div className={styles.headingRow}>
-          <h1 className={styles.title}>Détails de votre panier</h1>
-          <h2 className={styles.summaryTitle}>Résumé de la commande</h2>
+          <h1 className={styles.title}>{dict.cart.title}</h1>
+          <h2 className={styles.summaryTitle}>{dict.cart.summaryTitle}</h2>
         </div>
 
-        {status === "loading" && <p className={styles.message}>Chargement du panier...</p>}
+        {status === "loading" && <p className={styles.message}>{dict.cart.loading}</p>}
 
         {status === "loggedOut" && (
           <div className={styles.message}>
-            <p>Connectez-vous pour voir votre panier.</p>
-            <Link href="/connexion" className={styles.loginLink}>
-              Se connecter
-            </Link>
+            <p>{dict.cart.loginPrompt}</p>
+            <LocaleLink href="/connexion" className={styles.loginLink}>
+              {dict.cart.login}
+            </LocaleLink>
           </div>
         )}
 

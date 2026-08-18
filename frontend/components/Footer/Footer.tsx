@@ -1,30 +1,21 @@
+"use client";
+
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
+import ScrollToTopButton from "./ScrollToTopButton";
 import styles from "./Footer.module.css";
 
-const SERVICE_LINKS = [
-  "Comment acheter sur Shopitech ?",
-  "Contactez-nous",
-  "Politique de retour",
-  "Centre d'aide",
-  "Frais de livraison",
-];
-
-const ABOUT_LINKS = [
-  "À propos",
-  "Politique de confidentialité",
-  "Conditions générales d'achat",
-  "Conditions générales d'utilisation",
-  "Tout sur la livraison",
-];
-
 export default function Footer() {
+  const dict = useDictionary();
+
   return (
     <footer className={styles.footer}>
       <div className={styles.columns}>
-        <FooterColumn title="Service client" links={SERVICE_LINKS} />
-        <FooterColumn title="Qui sommes-nous" links={ABOUT_LINKS} />
+        <FooterColumn title={dict.footer.customerService} links={dict.footer.serviceLinks} />
+        <FooterColumn title={dict.footer.aboutUs} links={dict.footer.aboutLinks} />
 
         <div className={styles.column}>
-          <p className={styles.columnTitle}>Suivez-nous aussi sur</p>
+          <p className={styles.columnTitle}>{dict.footer.followUs}</p>
           <div className={styles.socialRow}>
             <a href="#" className={styles.socialIcon} aria-label="Facebook">
               <img src="/icon/footer/social-facebook.svg" alt="" className={styles.socialGlyph} />
@@ -37,7 +28,7 @@ export default function Footer() {
             </a>
           </div>
 
-          <p className={styles.columnTitle}>Téléchargez notre app sur</p>
+          <p className={styles.columnTitle}>{dict.footer.downloadApp}</p>
           <div className={styles.storeRow}>
             <img src="/icon/footer/store-appstore.svg" alt="App Store" className={styles.storeBadge} />
             <img src="/icon/footer/store-playstore.svg" alt="Play Store" className={styles.storeBadge} />
@@ -47,7 +38,7 @@ export default function Footer() {
 
       <div className={styles.newsletterRow}>
         <div>
-          <p className={styles.columnTitle}>Méthode de paiement</p>
+          <p className={styles.columnTitle}>{dict.footer.paymentMethod}</p>
           <div className={styles.paymentRow}>
             <img src="/icon/footer/payment-mtn.png" alt="MTN Mobile Money" className={styles.paymentBadge} />
             <img src="/icon/footer/payment-orange.png" alt="Orange Money" className={styles.paymentBadge} />
@@ -59,35 +50,45 @@ export default function Footer() {
         </div>
 
         <form className={styles.newsletterForm}>
-          <p className={styles.columnTitle}>Rejoindre notre newsletter</p>
+          <p className={styles.columnTitle}>{dict.footer.newsletter}</p>
           <div className={styles.newsletterField}>
             <input
               type="email"
-              placeholder="Entrez votre adresse mail"
+              placeholder={dict.footer.newsletterPlaceholder}
               className={styles.newsletterInput}
             />
             <button type="submit" className={styles.newsletterButton}>
-              S'inscrire
+              {dict.footer.subscribe}
             </button>
           </div>
         </form>
       </div>
 
-      <p className={styles.copyright}>© {new Date().getFullYear()} Shopitech. Tous droits réservés.</p>
+      <p className={styles.copyright}>
+        © {new Date().getFullYear()} Shopitech. {dict.footer.copyright}
+      </p>
+
+      <ScrollToTopButton />
     </footer>
   );
 }
 
-function FooterColumn({ title, links }: { title: string; links: string[] }) {
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: readonly { label: string; href: string }[];
+}) {
   return (
     <div className={styles.column}>
       <p className={styles.columnTitle}>{title}</p>
       <ul className={styles.linkList}>
         {links.map((link) => (
-          <li key={link}>
-            <a href="#" className={styles.link}>
-              {link}
-            </a>
+          <li key={link.label}>
+            <LocaleLink href={link.href} className={styles.link}>
+              {link.label}
+            </LocaleLink>
           </li>
         ))}
       </ul>

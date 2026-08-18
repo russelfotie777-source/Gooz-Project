@@ -15,6 +15,10 @@ class PaymentResource extends JsonResource
             'payment_method' => $this->payment_method,
             'payment_status' => $this->payment_status,
             'transaction_reference' => $this->transaction_reference,
+            // Enkap's hosted checkout page — only set for online (mobile
+            // money) payments; the frontend redirects here right after
+            // checkout when present.
+            'checkout_url' => $this->checkout_url,
         ];
     }
 }

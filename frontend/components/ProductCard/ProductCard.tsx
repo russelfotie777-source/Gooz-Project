@@ -1,10 +1,12 @@
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { addCartItem } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
-import type { Product } from "@/lib/types";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { getDisplayVariant } from "@/lib/pricing";
+import type { Product, ProductVariant } from "@/lib/types";
 import styles from "./ProductCard.module.css";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder-product.svg";
@@ -22,9 +24,9 @@ function formatPrice(value: number): string {
   return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
 }
 
-function discountPercent(product: Product): number | null {
-  if (!product.is_promotion || !product.promo_price || product.base_price <= 0) return null;
-  const percent = Math.round((1 - product.promo_price / product.base_price) * 100);
+function discountPercent(variant: ProductVariant | null): number | null {
+  if (!variant || !variant.is_promotion || !variant.promo_price || variant.base_price <= 0) return null;
+  const percent = Math.round((1 - variant.promo_price / variant.base_price) * 100);
   return percent > 0 ? percent : null;
 }
 
@@ -34,11 +36,13 @@ export default function ProductCard({
   onAddToCart,
   onToggleWishlist,
 }: ProductCardProps) {
-  const router = useRouter();
+  const dict = useDictionary();
+  const router = useLocaleRouter();
   const [cartStatus, setCartStatus] = useState<"idle" | "adding" | "added">("idle");
   const primaryImage =
     product.images.find((img) => img.is_primary) ?? product.images[0];
-  const discount = discountPercent(product);
+  const displayVariant = getDisplayVariant(product);
+  const discount = discountPercent(displayVariant);
 
   // No `onAddToCart` override is used anywhere in the app today — this is
   // the real add-to-cart action (API.md §4 cart routes require auth, hence
@@ -58,7 +62,7 @@ export default function ProductCard({
 
     setCartStatus("adding");
     try {
-      const cart = await addCartItem(session.token, product.id, 1);
+      const cart = await addCartItem(session.token, product.id, 1, displayVariant?.id);
       notifyCartUpdated(cart.items.length);
       setCartStatus("added");
       window.setTimeout(() => setCartStatus("idle"), 2000);
@@ -70,7 +74,7 @@ export default function ProductCard({
   return (
     <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
-        <Link href={`/products/${product.id}`} className={styles.imageLink}>
+        <LocaleLink href={`/products/${product.id}`} className={styles.imageLink}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={primaryImage?.image_url ?? PLACEHOLDER_IMAGE}
@@ -82,12 +86,12 @@ export default function ProductCard({
               e.currentTarget.src = PLACEHOLDER_IMAGE;
             }}
           />
-        </Link>
+        </LocaleLink>
         {discount && <span className={styles.discountTag}>-{discount}%</span>}
         <button
           type="button"
           className={styles.wishlistButton}
-          aria-label="Ajouter aux favoris"
+          aria-label={dict.common.addToWishlist}
           onClick={() => onToggleWishlist?.(product)}
         >
           <HeartIcon />
@@ -95,23 +99,25 @@ export default function ProductCard({
       </div>
 
       <div className={styles.info}>
-        <Link href={`/products/${product.id}`} className={styles.infoLink}>
+        <LocaleLink href={`/products/${product.id}`} className={styles.infoLink}>
           <p className={styles.name}>{product.name}</p>
           {product.description && (
             <p className={styles.description}>{product.description}</p>
           )}
-        </Link>
+        </LocaleLink>
         <div className={styles.footer}>
           <span className={styles.priceGroup}>
-            {discount && (
-              <span className={styles.priceOriginal}>{formatPrice(product.base_price)}</span>
+            {discount && displayVariant && (
+              <span className={styles.priceOriginal}>{formatPrice(displayVariant.base_price)}</span>
             )}
-            <span className={styles.price}>{formatPrice(product.price)}</span>
+            <span className={styles.price}>
+              {product.price_from !== null ? formatPrice(product.price_from) : dict.common.priceUnavailable}
+            </span>
           </span>
           <button
             type="button"
             className={`${styles.cartButton} ${cartStatus === "added" ? styles.cartButtonAdded : ""}`}
-            aria-label="Ajouter au panier"
+            aria-label={dict.common.addToCart}
             disabled={cartStatus === "adding"}
             onClick={handleAddToCart}
           >
@@ -123,7 +129,7 @@ export default function ProductCard({
       {cartStatus === "added" && (
         <div className={styles.toast} role="status" aria-live="polite">
           <img src="/icon/product-detail/check-circle.svg" alt="" className={styles.toastIcon} />
-          Produit ajouté au panier !
+          {dict.common.addedToCart}
         </div>
       )}
     </article>

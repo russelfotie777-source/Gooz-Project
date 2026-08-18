@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ApiValidationError, login, register } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { initPushNotifications } from "@/lib/firebase/messaging";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import styles from "./AuthDesktopPage.module.css";
 
 interface AuthDesktopPageProps {
@@ -18,7 +20,8 @@ interface AuthDesktopPageProps {
 // some creative license on the headlines/quote (approved by the user), not
 // a literal translation of the Figma placeholder text.
 export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
-  const router = useRouter();
+  const dict = useDictionary();
+  const router = useLocaleRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -47,12 +50,13 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
           ? await login(phone, password, "Shopitech PWA (desktop)")
           : await register(name, phone, password, confirmPassword);
       saveSession({ user, token });
+      void initPushNotifications(token);
       router.push("/");
     } catch (err) {
       const message =
         err instanceof ApiValidationError
           ? (Object.values(err.errors)[0]?.[0] ?? err.message)
-          : "Une erreur est survenue. Réessayez.";
+          : dict.auth.genericError;
       setError(message);
       setLoading(false);
     }
@@ -66,15 +70,11 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
 
         <div className={styles.leftContent}>
           <h1 className={styles.leftHeadline}>
-            <span className={styles.leftHeadlineDark}>
-              {mode === "login" ? "Connectez-vous" : "Inscrivez-vous"}
-            </span>
+            <span className={styles.leftHeadlineDark}>{dict.auth.leftHeadlineDark(mode)}</span>
             <br />
-            et plongez dans
-            <br />
-            l&apos;univers du shopping.
+            {dict.auth.leftHeadlineRest}
           </h1>
-          <p className={styles.quote}>&quot;Construire ensemble une expérience qui compte.&quot;</p>
+          <p className={styles.quote}>{dict.auth.quote}</p>
         </div>
       </div>
 
@@ -96,16 +96,16 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
 
           <div className={styles.formWrap}>
           <h2 className={styles.formHeadline}>
-            Bonjour,
+            {dict.auth.hello}
             <br />
-            <span>{mode === "login" ? "ravi de vous revoir !" : "bienvenue parmi nous !"}</span>
+            <span>{mode === "login" ? dict.auth.welcomeBack : dict.auth.welcomeNew}</span>
           </h2>
 
           <form className={styles.form} onSubmit={handleSubmit}>
             {mode === "signup" && (
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Nom complet
+                  <span className={styles.required}>*</span>{dict.auth.fullName}
                 </span>
                 <input
                   type="text"
@@ -120,7 +120,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
 
             <label className={styles.field}>
               <span className={styles.label}>
-                <span className={styles.required}>*</span>Numéro de téléphone
+                <span className={styles.required}>*</span>{dict.auth.phoneNumber}
               </span>
               <input
                 type="tel"
@@ -134,7 +134,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
 
             <label className={styles.field}>
               <span className={styles.label}>
-                <span className={styles.required}>*</span>Mot de passe
+                <span className={styles.required}>*</span>{dict.auth.password}
               </span>
               <div className={styles.passwordBox}>
                 <input
@@ -149,7 +149,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
                   type="button"
                   className={styles.visibilityButton}
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  aria-label={showPassword ? dict.auth.hidePassword : dict.auth.showPassword}
                 >
                   <img src="/icon/auth/visibility.svg" alt="" className={styles.visibilityIcon} />
                 </button>
@@ -159,7 +159,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
             {mode === "signup" && (
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Confirmer le mot de passe
+                  <span className={styles.required}>*</span>{dict.auth.confirmPassword}
                 </span>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -180,12 +180,12 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
                   onChange={(e) => setRemember(e.target.checked)}
                   className={styles.checkbox}
                 />
-                Se souvenir de moi pendant 30 jours
+                {dict.auth.rememberMe}
               </label>
 
               {mode === "login" && (
                 <button type="button" className={styles.forgotButton}>
-                  Mot de passe oublié ?
+                  {dict.auth.forgotPassword}
                   <img src="/icon/auth/arrow-forward.svg" alt="" className={styles.forgotArrow} />
                 </button>
               )}
@@ -194,31 +194,31 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
             {error && <p className={styles.formError}>{error}</p>}
 
             <button type="submit" className={styles.submitButton} disabled={loading}>
-              <span>{loading ? "Connexion..." : mode === "login" ? "Se connecter" : "S'inscrire"}</span>
+              <span>{loading ? dict.auth.connecting : mode === "login" ? dict.auth.login : dict.auth.signup}</span>
             </button>
 
             <div className={styles.divider}>
               <span className={styles.dividerLine} />
-              <em className={styles.dividerLabel}>ou</em>
+              <em className={styles.dividerLabel}>{dict.auth.or}</em>
               <span className={styles.dividerLine} />
             </div>
 
             <div className={styles.snsRow}>
-              <button type="button" className={styles.snsButton} aria-label="Continuer avec Google">
+              <button type="button" className={styles.snsButton} aria-label={dict.auth.continueWithGoogle}>
                 <img src="/icon/auth/google.svg" alt="" className={styles.snsIcon} />
               </button>
-              <button type="button" className={styles.snsButtonFull} aria-label="Continuer avec Facebook">
+              <button type="button" className={styles.snsButtonFull} aria-label={dict.auth.continueWithFacebook}>
                 <img src="/icon/auth/facebook.svg" alt="" className={styles.snsIconFull} />
               </button>
-              <button type="button" className={styles.snsButtonFull} aria-label="Continuer avec Apple">
+              <button type="button" className={styles.snsButtonFull} aria-label={dict.auth.continueWithApple}>
                 <img src="/icon/auth/apple.svg" alt="" className={styles.snsIconFull} />
               </button>
             </div>
 
             <p className={styles.switchLine}>
-              {mode === "login" ? "Vous n'avez pas de compte ? " : "Vous avez déjà un compte ? "}
+              {mode === "login" ? dict.auth.dontHaveAccount : dict.auth.alreadyHaveAccount}
               <a href={targetHref} className={styles.switchLink} onClick={handleSwitch}>
-                {mode === "login" ? "Inscrivez-vous" : "Connectez-vous"}
+                {mode === "login" ? dict.auth.signUpLink : dict.auth.signInLink}
               </a>
             </p>
           </form>

@@ -1,44 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { addCartItem, ApiValidationError, getCities, getDeliveryEstimate, getNeighborhoods } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { getDisplayVariant } from "@/lib/pricing";
 import type { City, Neighborhood, Product } from "@/lib/types";
 import styles from "./ProductDetail.module.css";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder-product.svg";
 
-const FEATURES = [
-  {
-    icon: "/icon/product-detail/feature-delivery.png",
-    label: "Livraison rapide",
-    text: "Recevez vos commandes dans un délai inférieur ou égal à 72h.",
-  },
-  {
-    icon: "/icon/product-detail/feature-payment.png",
-    label: "Paiement sécurisé",
-    text: "Paiement par MTN/Orange Money ou cash à la livraison.",
-  },
-  {
-    icon: "/icon/product-detail/feature-support.png",
-    label: "Service après-vente",
-    text: "Tous les produits sur Shopitech sont vérifiés et garantis.",
-  },
-  {
-    icon: "/icon/product-detail/feature-prime.svg",
-    label: "Shopitech prime",
-    text: "Votre fidélité est récompensée par l'excellence.",
-  },
+const FEATURE_ICONS = [
+  "/icon/product-detail/feature-delivery.png",
+  "/icon/product-detail/feature-payment.png",
+  "/icon/product-detail/feature-support.png",
+  "/icon/product-detail/feature-prime.svg",
 ];
 
-const MOODS = [
-  { id: "very-dissatisfied", icon: "/icon/product-detail/mood-very-dissatisfied.svg", label: "Déçu" },
-  { id: "worried", icon: "/icon/product-detail/mood-worried.svg", label: "Pas convaincu" },
-  { id: "content", icon: "/icon/product-detail/mood-content.svg", label: "Correct" },
-  { id: "calm", icon: "/icon/product-detail/mood-calm.svg", label: "Bien" },
-  { id: "happy", icon: "/icon/product-detail/mood-happy.svg", label: "Très bien" },
+const MOOD_DEFS = [
+  { id: "very-dissatisfied", icon: "/icon/product-detail/mood-very-dissatisfied.svg", key: "veryDissatisfied" },
+  { id: "worried", icon: "/icon/product-detail/mood-worried.svg", key: "worried" },
+  { id: "content", icon: "/icon/product-detail/mood-content.svg", key: "content" },
+  { id: "calm", icon: "/icon/product-detail/mood-calm.svg", key: "calm" },
+  { id: "happy", icon: "/icon/product-detail/mood-happy.svg", key: "happy" },
 ] as const;
 
 function formatPrice(value: number): string {
@@ -55,7 +41,10 @@ interface ProductDetailProps {
 const GALLERY_SIZE = 3;
 
 export default function ProductDetail({ product }: ProductDetailProps) {
-  const router = useRouter();
+  const dict = useDictionary();
+  const router = useLocaleRouter();
+  const FEATURES = dict.product.features.map((f, i) => ({ ...f, icon: FEATURE_ICONS[i] }));
+  const MOODS = MOOD_DEFS.map((m) => ({ ...m, label: dict.product.moods[m.key] }));
   const baseImages =
     product.images.length > 0
       ? product.images
@@ -66,6 +55,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     ...baseImages[i % baseImages.length],
     id: i,
   }));
+  // No size/color picker exists yet (see the "Ajouter au panier" comment
+  // below) — the cheapest variant is the one whose price is shown and the
+  // one sent to the cart, so the two always agree.
+  const displayVariant = getDisplayVariant(product);
   const [activeImage, setActiveImage] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const [cities, setCities] = useState<City[]>([]);
@@ -97,19 +90,21 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     setAddStatus("adding");
     setAddMessage(null);
     try {
-      const cart = await addCartItem(session.token, product.id, 1);
+      const cart = await addCartItem(session.token, product.id, 1, displayVariant?.id);
       notifyCartUpdated(cart.items.length);
       if (goToCart) {
         router.push("/cart");
         return;
       }
       setAddStatus("added");
-      setAddMessage("Ajouté au panier !");
+      setAddMessage(dict.product.addedToCartMessage);
       window.setTimeout(() => setAddStatus("idle"), 1800);
     } catch (err) {
       setAddStatus("error");
       setAddMessage(
-        err instanceof ApiValidationError ? (Object.values(err.errors)[0]?.[0] ?? err.message) : "Une erreur est survenue."
+        err instanceof ApiValidationError
+          ? (Object.values(err.errors)[0]?.[0] ?? err.message)
+          : dict.product.genericError
       );
       window.setTimeout(() => setAddStatus("idle"), 2500);
     }
@@ -204,7 +199,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   type="button"
                   className={`${styles.dot} ${index === activeImage ? styles.dotActive : ""}`}
                   onClick={() => goToImage(index)}
-                  aria-label={`Voir l'image ${index + 1}`}
+                  aria-label={dict.product.viewImage(index + 1)}
                 />
               ))}
             </div>
@@ -217,7 +212,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 type="button"
                 className={`${styles.thumbnail} ${index === activeImage ? styles.thumbnailActive : ""}`}
                 onClick={() => goToImage(index)}
-                aria-label={`Voir l'image ${index + 1}`}
+                aria-label={dict.product.viewImage(index + 1)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={image.image_url} alt="" className={styles.thumbnailImage} />
@@ -236,10 +231,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   {inStock ? (
                     <img src="/icon/product-detail/check-circle.svg" alt="" className={styles.stockIcon} />
                   ) : null}
-                  {inStock ? "En Stock" : "Rupture de stock"}
+                  {inStock ? dict.product.inStock : dict.product.outOfStock}
                 </span>
 
-                <span className={styles.rating} aria-label="Note du produit">
+                <span className={styles.rating} aria-label={dict.product.productRating}>
                   {Array.from({ length: 5 }, (_, i) => (
                     <img key={i} src="/icon/product-detail/star.svg" alt="" className={styles.star} />
                   ))}
@@ -247,25 +242,25 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </div>
 
               <div className={styles.metaLine}>
-                <span className={styles.metaLabel}>Catégorie :</span>
+                <span className={styles.metaLabel}>{dict.product.category}</span>
                 <span className={styles.metaValue}>{product.category?.name ?? "—"}</span>
               </div>
               <div className={styles.metaLine}>
-                <span className={styles.metaLabel}>Origine :</span>
+                <span className={styles.metaLabel}>{dict.product.origin}</span>
                 <span className={styles.metaValue}>{product.brand?.country_origin ?? "—"}</span>
               </div>
 
               <p className={styles.price}>
-                {formatPrice(product.price)}
-                {product.is_promotion && product.promo_price && (
-                  <span className={styles.specialPriceTag}>prix spécial</span>
+                {product.price_from !== null ? formatPrice(product.price_from) : dict.common.priceUnavailable}
+                {displayVariant?.is_promotion && displayVariant.promo_price && (
+                  <span className={styles.specialPriceTag}>{dict.product.specialPrice}</span>
                 )}
               </p>
 
               <div className={styles.descriptionBlock}>
-                <h2 className={styles.descriptionTitle}>À propos du produit</h2>
+                <h2 className={styles.descriptionTitle}>{dict.product.aboutProduct}</h2>
                 <p className={styles.description}>
-                  {product.description ?? "Aucune description disponible."}
+                  {product.description ?? dict.product.noDescription}
                 </p>
               </div>
 
@@ -277,14 +272,14 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   onClick={() => handleAddToCart(true)}
                 >
                   <img src="/icon/product-detail/basket-add.svg" alt="" className={styles.buyIcon} />
-                  <span className={styles.buyButtonLabelDesktop}>Acheter</span>
-                  <span className={styles.buyButtonLabelMobile}>Acheter maintenant</span>
+                  <span className={styles.buyButtonLabelDesktop}>{dict.product.buyNow}</span>
+                  <span className={styles.buyButtonLabelMobile}>{dict.product.buyNowMobile}</span>
                 </button>
 
                 <button
                   type="button"
                   className={styles.quickAddButton}
-                  aria-label="Ajouter au panier"
+                  aria-label={dict.common.addToCart}
                   disabled={!inStock || addStatus === "adding"}
                   onClick={() => handleAddToCart(false)}
                 >
@@ -302,12 +297,12 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             <div className={styles.deliveryBox}>
               <p className={styles.deliveryPrompt}>
                 <img src="/icon/product-detail/location.svg" alt="" className={styles.locationIcon} />
-                Où souhaitez-vous être livré
+                {dict.product.deliveryPrompt}
               </p>
 
               <label className={styles.selectField}>
                 <select value={cityId} onChange={(e) => setCityId(e.target.value)} className={styles.select}>
-                  <option value="">Sélectionnez la ville</option>
+                  <option value="">{dict.product.selectCity}</option>
                   {cities.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -324,7 +319,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   disabled={!cityId}
                   className={styles.select}
                 >
-                  <option value="">Sélectionnez le quartier</option>
+                  <option value="">{dict.product.selectNeighborhood}</option>
                   {neighborhoods.map((n) => (
                     <option key={n.id} value={n.id}>
                       {n.name}
@@ -335,23 +330,23 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </label>
 
               <div className={styles.deliveryCost}>
-                <span>Coût :</span>
+                <span>{dict.product.cost}</span>
                 <span className={styles.deliveryCostValue}>
                   {pickup
                     ? formatPrice(0)
                     : deliveryStatus === "loading"
-                      ? "Calcul en cours..."
+                      ? dict.product.calculating
                       : deliveryStatus === "error"
-                        ? "Indisponible pour le moment"
+                        ? dict.product.unavailable
                         : deliveryFee !== null
                           ? formatPrice(deliveryFee)
-                          : "Calculé à la livraison"}
+                          : dict.product.calculatedAtDelivery}
                 </span>
               </div>
 
               <div className={styles.orDivider}>
                 <span className={styles.orLine} />
-                <span>ou</span>
+                <span>{dict.product.or}</span>
                 <span className={styles.orLine} />
               </div>
 
@@ -360,7 +355,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 className={`${styles.pickupButton} ${pickup ? styles.pickupButtonActive : ""}`}
                 onClick={() => setPickup((v) => !v)}
               >
-                <span className={styles.pickupLabel}>Récupérer en agence</span>
+                <span className={styles.pickupLabel}>{dict.product.pickupAtStore}</span>
               </button>
             </div>
           </div>
@@ -388,7 +383,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             onClick={() => toggleAccordion("details")}
             aria-expanded={openAccordion === "details"}
           >
-            <span>Détails du produit</span>
+            <span>{dict.product.productDetails}</span>
             <img
               src="/icon/product-detail/chevron-down.svg"
               alt=""
@@ -397,9 +392,11 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           </button>
           {openAccordion === "details" && (
             <div className={styles.accordionBody}>
-              <p>Référence : {product.reference}</p>
+              <p>
+                {dict.product.reference} {product.reference}
+              </p>
               {product.variants.length > 0 && (
-                <p>{product.variants.length} variante(s) disponible(s)</p>
+                <p>{dict.product.variantsAvailable(product.variants.length)}</p>
               )}
             </div>
           )}
@@ -412,7 +409,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             onClick={() => toggleAccordion("info")}
             aria-expanded={openAccordion === "info"}
           >
-            <span>Plus d&apos;information</span>
+            <span>{dict.product.moreInfo}</span>
             <img
               src="/icon/product-detail/chevron-down.svg"
               alt=""
@@ -421,15 +418,17 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           </button>
           {openAccordion === "info" && (
             <div className={styles.accordionBody}>
-              <p>Marque : {product.brand?.name ?? "—"}</p>
-              <p>Retours acceptés sous 7 jours, produit non utilisé et dans son emballage d&apos;origine.</p>
+              <p>
+                {dict.product.brand} {product.brand?.name ?? "—"}
+              </p>
+              <p>{dict.product.returnsPolicy}</p>
             </div>
           )}
         </div>
       </div>
 
       <div className={styles.reviews}>
-        <h2 className={styles.reviewsTitle}>Quel est votre niveau de satisfaction ?</h2>
+        <h2 className={styles.reviewsTitle}>{dict.product.satisfactionTitle}</h2>
         <div className={styles.moods}>
           {MOODS.map((m) => (
             <button
@@ -446,21 +445,21 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         </div>
 
         <h2 className={styles.reviewsTitle}>
-          Laissez un commentaire <span className={styles.optional}>(Facultatif)</span>
+          {dict.product.leaveComment} <span className={styles.optional}>{dict.product.optional}</span>
         </h2>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Votre avis nous intéresse..."
+          placeholder={dict.product.commentPlaceholder}
           className={styles.commentInput}
         />
 
         <div className={styles.reviewActions}>
           <button type="button" className={styles.cancelButton} onClick={() => { setMood(null); setComment(""); }}>
-            Annuler
+            {dict.product.cancel}
           </button>
           <button type="button" className={styles.submitButton}>
-            Soumettre
+            {dict.product.submit}
           </button>
         </div>
       </div>

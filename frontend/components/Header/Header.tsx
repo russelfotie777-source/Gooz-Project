@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { getCart, logout as apiLogout } from "@/lib/api";
 import { clearSession, getSession } from "@/lib/auth";
 import { notifyCartUpdated, onCartUpdated } from "@/lib/cartEvents";
+import type { Locale } from "@/lib/i18n/config";
+import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { splitName } from "@/lib/name";
 import type { User } from "@/lib/types";
 import styles from "./Header.module.css";
@@ -20,29 +23,37 @@ interface HeaderProps {
   variant?: "default" | "detail" | "cart";
 }
 
-const CATEGORIES = [
-  { id: "promotion", label: "PROMOTION !!!", icon: "/icon/header/promotion.svg" },
-  { id: "best-seller-1", label: "BEST SELLER", icon: "/icon/header/best-seller-1.svg" },
-  { id: "best-seller-2", label: "BEST SELLER", icon: "/icon/header/best-seller-2.svg" },
-  { id: "electromenager", label: "ELECTROMENAGER", icon: "/icon/header/electromenager.svg" },
-  { id: "securite", label: "SECURITE", icon: "/icon/header/securite.svg" },
-  { id: "informatique", label: "INFORMATIQUE", icon: "/icon/header/informatique.svg" },
+const LANGUAGES = [
+  { code: "fr" as Locale, label: "FR", Flag: FranceFlag },
+  { code: "en" as Locale, label: "ENG", Flag: UkFlag },
 ];
 
-const LANGUAGES = [
-  { code: "FR", label: "FR", Flag: FranceFlag },
-  { code: "EN", label: "ENG", Flag: UkFlag },
-] as const;
-
 export default function Header({ cartCount: cartCountProp = 0, variant = "default" }: HeaderProps) {
+  const dict = useDictionary();
+  const lang = useLang();
+  const pathname = usePathname();
+  const rawRouter = useRouter();
+  const router = useLocaleRouter();
+
+  const CATEGORIES = dict.header.quickCategories.map((label, i) => ({
+    id: ["promotion", "best-seller-1", "best-seller-2", "electromenager", "securite", "informatique"][i],
+    label,
+    icon: [
+      "/icon/header/promotion.svg",
+      "/icon/header/best-seller-1.svg",
+      "/icon/header/best-seller-2.svg",
+      "/icon/header/electromenager.svg",
+      "/icon/header/securite.svg",
+      "/icon/header/informatique.svg",
+    ][i],
+  }));
+
   const [query, setQuery] = useState("");
   const mobileSearchRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
-  const [language, setLanguage] = useState<(typeof LANGUAGES)[number]["code"]>("FR");
   const [langOpen, setLangOpen] = useState(false);
   const langWrapperRef = useRef<HTMLDivElement>(null);
-  const activeLanguage = LANGUAGES.find((l) => l.code === language) ?? LANGUAGES[0];
+  const activeLanguage = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
 
   // Pages render this with a prop seeded from mock/server data (see e.g.
   // CartPage's comments). Once a real session exists, the actual cart count
@@ -75,8 +86,28 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     notifyCartUpdated(0);
   }
 
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    router.push(`/recherche?q=${encodeURIComponent(trimmed)}`);
+  }
+
   const userNameParts = user ? splitName(user.name) : null;
-  const displayName = userNameParts ? userNameParts.prenom || userNameParts.nom || "Mon compte" : "Mon compte";
+  const displayName = userNameParts
+    ? userNameParts.prenom || userNameParts.nom || dict.header.myAccount
+    : dict.header.myAccount;
+
+  // Swaps only the leading /fr or /en segment of the current URL and
+  // remembers the choice in a cookie so the proxy (proxy.ts) redirects here
+  // next time too, instead of falling back to the browser's Accept-Language.
+  function switchLanguage(newLang: Locale) {
+    setLangOpen(false);
+    if (newLang === lang) return;
+    document.cookie = `shopitech-locale=${newLang}; path=/; max-age=31536000`;
+    const rest = pathname.startsWith(`/${lang}`) ? pathname.slice(`/${lang}`.length) : pathname;
+    rawRouter.push(`/${newLang}${rest || ""}`);
+  }
 
   useEffect(() => {
     if (!langOpen) return;
@@ -113,7 +144,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
         <div className={styles.desktopSticky}>
           <div className={styles.mainRow}>
-            <button type="button" className={styles.menuButton} aria-label="Menu">
+            <button type="button" className={styles.menuButton} aria-label={dict.header.menu}>
               <img src="/icon/header/hamburger.svg" alt="" className={styles.menuIcon} />
             </button>
 
@@ -123,16 +154,16 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               className={styles.logo}
             />
 
-            <form className={styles.searchForm} role="search">
+            <form className={styles.searchForm} role="search" onSubmit={handleSearchSubmit}>
               <input
                 type="search"
-                placeholder="Rechercher un produit"
+                placeholder={dict.header.searchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className={styles.searchInput}
               />
               <button type="submit" className={styles.searchButton}>
-                Rechercher
+                {dict.header.searchButton}
               </button>
             </form>
 
@@ -161,10 +192,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                         <button
                           type="button"
                           className={styles.langOption}
-                          onClick={() => {
-                            setLanguage(l.code);
-                            setLangOpen(false);
-                          }}
+                          onClick={() => switchLanguage(l.code)}
                         >
                           <l.Flag className={styles.langFlag} />
                           {l.label}
@@ -176,7 +204,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               </div>
 
               <div className={styles.accountWrapper}>
-                <button type="button" className={styles.accountButton} aria-haspopup="menu">
+                <LocaleLink href="/compte" className={styles.accountButton} aria-haspopup="menu">
                   <span className={styles.accountAvatar}>
                     <img src="/icon/header/user.svg" alt="" className={styles.accountAvatarIcon} />
                   </span>
@@ -186,42 +214,42 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                     alt=""
                     className={`${styles.dropdownChevron} ${styles.chevronLight}`}
                   />
-                </button>
+                </LocaleLink>
 
                 <ul className={styles.accountDropdown} role="menu">
                   {user ? (
                     <li>
                       <button type="button" className={styles.accountMenuItem} onClick={handleLogout}>
                         <LogoutIcon className={`${styles.accountMenuIcon} ${styles.accountMenuIconDanger}`} />
-                        Déconnexion
+                        {dict.header.logout}
                       </button>
                     </li>
                   ) : (
                     <>
                       <li>
-                        <Link href="/connexion" className={styles.accountMenuItem}>
+                        <LocaleLink href="/connexion" className={styles.accountMenuItem}>
                           <LoginIcon className={styles.accountMenuIcon} />
-                          Connexion
-                        </Link>
+                          {dict.header.login}
+                        </LocaleLink>
                       </li>
                       <li>
-                        <Link href="/inscription" className={styles.accountMenuItem}>
+                        <LocaleLink href="/inscription" className={styles.accountMenuItem}>
                           <SignupIcon className={styles.accountMenuIcon} />
-                          Inscription
-                        </Link>
+                          {dict.header.signup}
+                        </LocaleLink>
                       </li>
                     </>
                   )}
                   <li>
                     <button type="button" className={styles.accountMenuItem}>
                       <HelpIcon className={styles.accountMenuIcon} />
-                      Centre d&apos;aide
+                      {dict.header.helpCenter}
                     </button>
                   </li>
                 </ul>
               </div>
 
-              <Link href="/cart" className={styles.cartButton} aria-label="Panier">
+              <LocaleLink href="/cart" className={styles.cartButton} aria-label={dict.header.cart}>
                 <span className={styles.cartIconWrapper}>
                   <img src="/icon/header/cart.svg" alt="" className={styles.cartIcon} />
                   {cartCount > 0 && (
@@ -231,12 +259,12 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                     </span>
                   )}
                 </span>
-                <span className={styles.cartLabel}>Panier</span>
-              </Link>
+                <span className={styles.cartLabel}>{dict.header.cart}</span>
+              </LocaleLink>
             </div>
           </div>
 
-          <nav className={styles.categoriesBar} aria-label="Catégories rapides">
+          <nav className={styles.categoriesBar} aria-label={dict.header.categories}>
             {CATEGORIES.map((cat) => (
               <button key={cat.id} type="button" className={styles.categoryButton}>
                 <img src={cat.icon} alt="" className={styles.categoryIcon} />
@@ -256,15 +284,20 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               <button
                 type="button"
                 className={styles.mobileBackButton}
-                aria-label="Retour"
+                aria-label={dict.header.back}
                 onClick={() => router.back()}
               >
                 <img src="/icon/product-detail/back.svg" alt="" className={styles.mobileBackIcon} />
               </button>
 
-              <p className={styles.mobileTitle}>Shopitech Catalogue.</p>
+              <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
 
-              <button type="button" className={styles.mobileDetailSearchButton} aria-label="Rechercher">
+              <button
+                type="button"
+                className={styles.mobileDetailSearchButton}
+                aria-label={dict.header.search}
+                onClick={() => router.push("/recherche")}
+              >
                 <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchIcon} />
               </button>
             </div>
@@ -276,15 +309,15 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               <button
                 type="button"
                 className={styles.mobileBackButton}
-                aria-label="Retour"
+                aria-label={dict.header.back}
                 onClick={() => router.back()}
               >
                 <img src="/icon/product-detail/back.svg" alt="" className={styles.mobileBackIcon} />
               </button>
 
-              <p className={styles.mobileTitle}>Mon Panier.</p>
+              <p className={styles.mobileTitle}>{dict.header.cartTitle}</p>
 
-              <button type="button" className={styles.mobileInfoButton} aria-label="Informations">
+              <button type="button" className={styles.mobileInfoButton} aria-label={dict.header.info}>
                 <img src="/icon/cart/info.svg" alt="" className={styles.mobileInfoIcon} />
               </button>
             </div>
@@ -297,28 +330,28 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
             <div className={styles.mobileSticky}>
               <div className={styles.mobileTopRow}>
-                <button type="button" className={styles.mobileMenuButton} aria-label="Menu">
+                <button type="button" className={styles.mobileMenuButton} aria-label={dict.header.menu}>
                   <img src="/icon/header-mobile/menu.svg" alt="" className={styles.mobileMenuIcon} />
                 </button>
 
-                <p className={styles.mobileTitle}>Shopitech Catalogue.</p>
+                <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
 
                 <button
                   type="button"
                   className={styles.mobileSearchButton}
-                  aria-label="Rechercher"
+                  aria-label={dict.header.search}
                   onClick={() => mobileSearchRef.current?.focus()}
                 >
                   <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchIcon} />
                 </button>
               </div>
 
-              <form className={styles.mobileSearchForm} role="search">
+              <form className={styles.mobileSearchForm} role="search" onSubmit={handleSearchSubmit}>
                 <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchFormIcon} />
                 <input
                   ref={mobileSearchRef}
                   type="search"
-                  placeholder="Rechercher un produit..."
+                  placeholder={dict.header.searchPlaceholderMobile}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className={styles.mobileSearchInput}

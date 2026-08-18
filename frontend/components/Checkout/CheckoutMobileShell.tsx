@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import Header from "@/components/Header/Header";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useCheckout } from "./CheckoutContext";
 import styles from "./CheckoutMobileShell.module.css";
 
@@ -30,6 +31,7 @@ export default function CheckoutMobileShell({
   continueDisabled,
   onContinue,
 }: CheckoutMobileShellProps) {
+  const dict = useDictionary();
   const { total, cartStatus } = useCheckout();
 
   if (cartStatus !== "ready") {
@@ -38,21 +40,21 @@ export default function CheckoutMobileShell({
         <Header variant="cart" />
         <main className={styles.main}>
           <div className={styles.gate}>
-            {cartStatus === "loading" && <p>Chargement...</p>}
+            {cartStatus === "loading" && <p>{dict.checkout.loading}</p>}
             {cartStatus === "loggedOut" && (
               <>
-                <p>Connectez-vous pour finaliser votre commande.</p>
-                <Link href="/connexion" className={styles.gateLink}>
-                  Se connecter
-                </Link>
+                <p>{dict.checkout.loginPrompt}</p>
+                <LocaleLink href="/connexion" className={styles.gateLink}>
+                  {dict.checkout.login}
+                </LocaleLink>
               </>
             )}
             {cartStatus === "empty" && (
               <>
-                <p>Votre panier est vide.</p>
-                <Link href="/cart" className={styles.gateLink}>
-                  Voir le panier
-                </Link>
+                <p>{dict.checkout.emptyCart}</p>
+                <LocaleLink href="/cart" className={styles.gateLink}>
+                  {dict.checkout.viewCart}
+                </LocaleLink>
               </>
             )}
           </div>
@@ -67,15 +69,15 @@ export default function CheckoutMobileShell({
 
       <main className={styles.main}>
         <div className={styles.stepIndicator}>
-          <img src="/icon/checkout/step-location.svg" alt="Adresse" className={styles.stepIcon} />
+          <img src="/icon/checkout/step-location.svg" alt={dict.checkout.stepAddress} className={styles.stepIcon} />
           <span className={`${styles.stepDash} ${step > 1 ? styles.stepDashActive : ""}`} />
           <img
             src={step >= 2 ? "/icon/checkout/step-shipping-active.svg" : "/icon/checkout/step-shipping.svg"}
-            alt="Livraison"
+            alt={dict.checkout.stepDelivery}
             className={styles.stepIcon}
           />
           <span className={`${styles.stepDash} ${step > 2 ? styles.stepDashActive : ""}`} />
-          <img src="/icon/checkout/step-card.svg" alt="Paiement" className={styles.stepIcon} />
+          <img src="/icon/checkout/step-card.svg" alt={dict.checkout.stepPayment} className={styles.stepIcon} />
         </div>
 
         {children}
@@ -83,7 +85,7 @@ export default function CheckoutMobileShell({
 
       <div className={styles.totalBar}>
         <div className={styles.totalRow}>
-          <span className={styles.totalLabel}>Total :</span>
+          <span className={styles.totalLabel}>{dict.checkout.totalLabel}</span>
           <span className={styles.totalValue}>{formatPrice(total)}</span>
         </div>
         <button

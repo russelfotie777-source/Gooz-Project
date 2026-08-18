@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import styles from "./CheckoutConfirmationStep.module.css";
 
 interface CheckoutSuccessContentProps {
@@ -10,26 +13,27 @@ interface CheckoutSuccessContentProps {
 // instead of navigating away (each has its own CheckoutProvider instance, so
 // a shared route/context wouldn't carry the desktop order number across).
 export default function CheckoutSuccessContent({ orderNumber }: CheckoutSuccessContentProps) {
+  const dict = useDictionary();
+
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Bravooo !!!</h1>
-      <p className={styles.subtitle}>Votre commande a été transmise avec succès</p>
+      <h1 className={styles.title}>{dict.checkout.success.title}</h1>
+      <p className={styles.subtitle}>{dict.checkout.success.subtitle}</p>
 
       <img src="/icon/checkout/success-basket.svg" alt="" className={styles.icon} />
 
-      <p className={styles.orderLabel}>votre numéro de commande est le :</p>
+      <p className={styles.orderLabel}>{dict.checkout.success.orderLabel}</p>
       <p className={styles.orderNumber}>{orderNumber}</p>
 
       <p className={styles.contact}>
-        En cas de besoin d&apos;aide, d&apos;information ou de service contactez nous au{" "}
-        <span className={styles.contactNumber}>670 25 14 47</span>
+        {dict.checkout.success.contactPrefix} <span className={styles.contactNumber}>670 25 14 47</span>
       </p>
 
-      <Link href="/" className={styles.homeButton}>
+      <LocaleLink href="/" className={styles.homeButton}>
         <img src="/icon/checkout/arrow-left.svg" alt="" className={styles.homeArrow} />
-        Retour à l&apos;accueil
+        {dict.checkout.success.backHome}
         <img src="/icon/cart/arrow-right.svg" alt="" className={styles.homeArrowFlipped} />
-      </Link>
+      </LocaleLink>
     </div>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ApiValidationError, login, register } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { initPushNotifications } from "@/lib/firebase/messaging";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import styles from "./AuthMobileFlow.module.css";
 
 interface AuthMobileFlowProps {
@@ -16,7 +18,8 @@ interface AuthMobileFlowProps {
 // native-scroll-as-gesture technique already used for the ProductDetail
 // image gallery, so swipe-up / swipe-sideways both come for free.
 export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
-  const router = useRouter();
+  const dict = useDictionary();
+  const router = useLocaleRouter();
   const viewportRef = useRef<HTMLDivElement>(null);
   const formsTrackRef = useRef<HTMLDivElement>(null);
   const [formMode, setFormMode] = useState<"login" | "signup">(initialMode);
@@ -63,12 +66,13 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
     try {
       const { user, token } = await login(loginPhone, loginPassword, "Shopitech PWA (mobile)");
       saveSession({ user, token });
+      void initPushNotifications(token);
       router.push("/compte");
     } catch (err) {
       const message =
         err instanceof ApiValidationError
           ? (Object.values(err.errors)[0]?.[0] ?? err.message)
-          : "Une erreur est survenue. Réessayez.";
+          : dict.auth.genericError;
       setLoginError(message);
       setLoginLoading(false);
     }
@@ -81,12 +85,13 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
     try {
       const { user, token } = await register(signupName, signupPhone, signupPassword, signupConfirmPassword);
       saveSession({ user, token });
+      void initPushNotifications(token);
       router.push("/compte");
     } catch (err) {
       const message =
         err instanceof ApiValidationError
           ? (Object.values(err.errors)[0]?.[0] ?? err.message)
-          : "Une erreur est survenue. Réessayez.";
+          : dict.auth.genericError;
       setSignupError(message);
       setSignupLoading(false);
     }
@@ -104,19 +109,19 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
 
       <section className={styles.welcomeSlide}>
         <h1 className={styles.welcomeHeadline}>
-          <span className={styles.welcomeHeadlineDark}>Swipe up</span> to
-          <span className={styles.welcomeHeadlineLight}> explore the word of shopping.</span>
+          <span className={styles.welcomeHeadlineDark}>{dict.auth.welcomeSwipeDark}</span>
+          <span className={styles.welcomeHeadlineLight}>{dict.auth.welcomeSwipeLight}</span>
         </h1>
 
-        <button type="button" className={styles.swipeHint} onClick={openSheet} aria-label="Se connecter / S'inscrire">
+        <button type="button" className={styles.swipeHint} onClick={openSheet} aria-label={dict.header.login}>
           <img src="/icon/auth/chevron-up-triple.svg" alt="" className={styles.swipeChevron} />
         </button>
       </section>
 
       <section className={styles.formsSlide}>
         <div className={styles.formsHeader}>
-          <p className={styles.formsHello}>Hello.</p>
-          <p className={styles.formsWelcome}>{formMode === "login" ? "Welcome back!" : "Welcome!"}</p>
+          <p className={styles.formsHello}>{dict.auth.hello}</p>
+          <p className={styles.formsWelcome}>{formMode === "login" ? dict.auth.welcomeBack : dict.auth.welcomeNew}</p>
         </div>
 
         <div className={styles.sheet}>
@@ -125,11 +130,11 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
 
           <div className={styles.formsTrack} ref={formsTrackRef} onScroll={handleFormsScroll}>
             <form className={styles.formSlide} onSubmit={handleLoginSubmit}>
-              <p className={styles.sheetTitle}>Enter to your account</p>
+              <p className={styles.sheetTitle}>{dict.auth.enterAccount}</p>
 
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Phone number
+                  <span className={styles.required}>*</span>{dict.auth.phoneNumber}
                 </span>
                 <input
                   type="tel"
@@ -143,14 +148,14 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
 
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Password
+                  <span className={styles.required}>*</span>{dict.auth.password}
                 </span>
                 <div className={styles.passwordBox}>
                   <input
                     type={showLoginPassword ? "text" : "password"}
                     required
                     autoComplete="current-password"
-                    placeholder="Enter your password..."
+                    placeholder={dict.auth.enterPasswordPlaceholder}
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     className={styles.passwordInput}
@@ -159,7 +164,7 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
                     type="button"
                     className={styles.visibilityButton}
                     onClick={() => setShowLoginPassword((v) => !v)}
-                    aria-label={showLoginPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                    aria-label={showLoginPassword ? dict.auth.hidePassword : dict.auth.showPassword}
                   >
                     <img src="/icon/auth/visibility.svg" alt="" className={styles.visibilityIcon} />
                   </button>
@@ -167,29 +172,29 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
               </label>
 
               <button type="button" className={styles.forgotLink}>
-                forgot password?
+                {dict.auth.forgotPassword}
               </button>
 
               {loginError && <p className={styles.formError}>{loginError}</p>}
 
               <button type="submit" className={styles.submitButton} disabled={loginLoading}>
-                <span>{loginLoading ? "Connexion..." : "Login"}</span>
+                <span>{loginLoading ? dict.auth.connecting : dict.auth.login}</span>
               </button>
 
               <p className={styles.switchLine}>
-                Don&apos;t have an account ?{" "}
+                {dict.auth.dontHaveAccount}
                 <button type="button" className={styles.switchLink} onClick={() => goToForm("signup")}>
-                  Sign up
+                  {dict.auth.signUpLink}
                 </button>
               </p>
             </form>
 
             <form className={styles.formSlide} onSubmit={handleSignupSubmit}>
-              <p className={styles.sheetTitle}>Create your account</p>
+              <p className={styles.sheetTitle}>{dict.auth.createAccount}</p>
 
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Full name
+                  <span className={styles.required}>*</span>{dict.auth.fullName}
                 </span>
                 <input
                   type="text"
@@ -203,7 +208,7 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
 
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Phone number
+                  <span className={styles.required}>*</span>{dict.auth.phoneNumber}
                 </span>
                 <input
                   type="tel"
@@ -217,14 +222,14 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
 
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Password
+                  <span className={styles.required}>*</span>{dict.auth.password}
                 </span>
                 <div className={styles.passwordBox}>
                   <input
                     type={showSignupPassword ? "text" : "password"}
                     required
                     autoComplete="new-password"
-                    placeholder="Enter your password..."
+                    placeholder={dict.auth.enterPasswordPlaceholder}
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
                     className={styles.passwordInput}
@@ -233,7 +238,7 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
                     type="button"
                     className={styles.visibilityButton}
                     onClick={() => setShowSignupPassword((v) => !v)}
-                    aria-label={showSignupPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                    aria-label={showSignupPassword ? dict.auth.hidePassword : dict.auth.showPassword}
                   >
                     <img src="/icon/auth/visibility.svg" alt="" className={styles.visibilityIcon} />
                   </button>
@@ -242,13 +247,13 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
 
               <label className={styles.field}>
                 <span className={styles.label}>
-                  <span className={styles.required}>*</span>Confirm password
+                  <span className={styles.required}>*</span>{dict.auth.confirmPassword}
                 </span>
                 <input
                   type={showSignupPassword ? "text" : "password"}
                   required
                   autoComplete="new-password"
-                  placeholder="Confirm your password..."
+                  placeholder={dict.auth.confirmPasswordPlaceholder}
                   value={signupConfirmPassword}
                   onChange={(e) => setSignupConfirmPassword(e.target.value)}
                   className={styles.input}
@@ -258,13 +263,13 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
               {signupError && <p className={styles.formError}>{signupError}</p>}
 
               <button type="submit" className={styles.submitButton} disabled={signupLoading}>
-                <span>{signupLoading ? "Création..." : "Sign up"}</span>
+                <span>{signupLoading ? dict.auth.creating : dict.auth.signup}</span>
               </button>
 
               <p className={styles.switchLine}>
-                Already have an account ?{" "}
+                {dict.auth.alreadyHaveAccount}
                 <button type="button" className={styles.switchLink} onClick={() => goToForm("login")}>
-                  Sign in
+                  {dict.auth.signInLink}
                 </button>
               </p>
             </form>

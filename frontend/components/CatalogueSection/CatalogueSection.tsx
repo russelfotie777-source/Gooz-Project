@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Category, Product } from "@/lib/types";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CatalogueSection.module.css";
 
@@ -12,11 +13,11 @@ interface CatalogueSectionProps {
 
 const PAGE_SIZE = 8;
 
-const PRICE_RANGES = [
-  { id: "under-10000", label: "Moins de 10 000 FCFA", min: 0, max: 9999 },
-  { id: "10000-25000", label: "10 000 - 25 000 FCFA", min: 10000, max: 25000 },
-  { id: "25000-50000", label: "25 000 - 50 000 FCFA", min: 25000, max: 50000 },
-  { id: "over-50000", label: "Plus de 50 000 FCFA", min: 50001, max: Infinity },
+const PRICE_RANGE_DEFS = [
+  { id: "under-10000", key: "under10000", min: 0, max: 9999 },
+  { id: "10000-25000", key: "10000to25000", min: 10000, max: 25000 },
+  { id: "25000-50000", key: "25000to50000", min: 25000, max: 50000 },
+  { id: "over-50000", key: "over50000", min: 50001, max: Infinity },
 ] as const;
 
 function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
@@ -27,6 +28,11 @@ function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
 }
 
 export default function CatalogueSection({ products, categories }: CatalogueSectionProps) {
+  const dict = useDictionary();
+  const PRICE_RANGES = PRICE_RANGE_DEFS.map((r) => ({
+    ...r,
+    label: dict.home.catalogue.priceRanges[r.key],
+  }));
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [priceRangeId, setPriceRangeId] = useState<string | null>(null);
   const [selectedBrandIds, setSelectedBrandIds] = useState<Set<number>>(new Set());
@@ -61,7 +67,8 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
     () =>
       products.filter((product) => {
         if (activeCategoryId && product.category?.id !== activeCategoryId) return false;
-        if (priceRange && (product.price < priceRange.min || product.price > priceRange.max)) {
+        const price = product.price_from ?? 0;
+        if (priceRange && (price < priceRange.min || price > priceRange.max)) {
           return false;
         }
         if (selectedBrandIds.size > 0 && (!product.brand || !selectedBrandIds.has(product.brand.id))) {
@@ -112,20 +119,20 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Catalogue</h2>
+        <h2 className={styles.title}>{dict.home.catalogue.title}</h2>
         <button
           type="button"
           className={styles.filterToggle}
           onClick={() => setFiltersOpen((v) => !v)}
         >
-          Filtres
+          {dict.home.catalogue.filters}
         </button>
       </div>
 
       <div className={styles.layout}>
         <aside className={`${styles.filters} ${filtersOpen ? styles.filtersOpen : ""}`}>
           <FilterGroup
-            label="Catégorie"
+            label={dict.home.catalogue.category}
             open={openGroup === "category"}
             onToggle={() => toggleGroup("category")}
           >
@@ -136,7 +143,7 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
                   className={`${styles.filterItem} ${activeCategoryId === null ? styles.filterItemActive : ""}`}
                   onClick={() => selectCategory(null)}
                 >
-                  Toutes les catégories
+                  {dict.home.catalogue.allCategories}
                 </button>
               </li>
               {categories.map((category) => (
@@ -153,7 +160,11 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
             </ul>
           </FilterGroup>
 
-          <FilterGroup label="Prix" open={openGroup === "price"} onToggle={() => toggleGroup("price")}>
+          <FilterGroup
+            label={dict.home.catalogue.price}
+            open={openGroup === "price"}
+            onToggle={() => toggleGroup("price")}
+          >
             <ul className={styles.filterList}>
               {PRICE_RANGES.map((range) => (
                 <li key={range.id}>
@@ -171,7 +182,11 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
           </FilterGroup>
 
           {brands.length > 0 && (
-            <FilterGroup label="Marque" open={openGroup === "brand"} onToggle={() => toggleGroup("brand")}>
+            <FilterGroup
+              label={dict.home.catalogue.brand}
+              open={openGroup === "brand"}
+              onToggle={() => toggleGroup("brand")}
+            >
               <ul className={styles.filterList}>
                 {brands.map((brand) => (
                   <li key={brand.id}>
@@ -190,7 +205,11 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
           )}
 
           {colors.length > 0 && (
-            <FilterGroup label="Couleur" open={openGroup === "color"} onToggle={() => toggleGroup("color")}>
+            <FilterGroup
+              label={dict.home.catalogue.color}
+              open={openGroup === "color"}
+              onToggle={() => toggleGroup("color")}
+            >
               <ul className={styles.filterList}>
                 {colors.map((color) => (
                   <li key={color}>
@@ -216,7 +235,7 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
             ))}
           </div>
         ) : (
-          <p className={styles.emptyState}>Aucun produit ne correspond à ces filtres.</p>
+          <p className={styles.emptyState}>{dict.home.catalogue.noResults}</p>
         )}
       </div>
 
@@ -227,7 +246,7 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
             className={styles.pageArrow}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            aria-label="Page précédente"
+            aria-label={dict.home.catalogue.previousPage}
           >
             ‹
           </button>
@@ -246,7 +265,7 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
             className={styles.pageArrow}
             onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
             disabled={currentPage === pageCount}
-            aria-label="Page suivante"
+            aria-label={dict.home.catalogue.nextPage}
           >
             ›
           </button>

@@ -1,5 +1,8 @@
-import Link from "next/link";
+"use client";
+
 import type { Category } from "@/lib/types";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import styles from "./CategoryList.module.css";
 
 interface CategoryListProps {
@@ -17,19 +20,21 @@ const IMAGES: Record<string, string> = {
 };
 
 export default function CategoryList({ categories }: CategoryListProps) {
+  const dict = useDictionary();
+
   return (
-    <nav className={styles.wrapper} aria-label="Catégories">
+    <nav className={styles.wrapper} aria-label={dict.home.categoriesNav}>
       <ul className={styles.list}>
         {categories.map((category) => (
           <li key={category.id} className={styles.item}>
-            <Link href={`/categories/${category.slug}`} className={styles.button}>
+            <LocaleLink href={`/categories/${category.slug}`} className={styles.button}>
               <span className={styles.iconCircle}>
                 {IMAGES[category.slug] && (
                   <img src={IMAGES[category.slug]} alt="" className={styles.iconImage} />
                 )}
               </span>
               <span className={styles.label}>{category.name}</span>
-            </Link>
+            </LocaleLink>
           </li>
         ))}
       </ul>

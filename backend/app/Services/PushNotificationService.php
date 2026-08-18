@@ -4,32 +4,41 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PushNotificationService
 {
+    public function __construct(private readonly FirebaseMessaging $messaging) {}
+
     /**
-     * Sends a push notification to every device registered for a user.
-     *
-     * No FCM/OneSignal credentials are configured yet, so this currently
-     * only logs the attempt. Once a provider is set up, replace the body
-     * of this method with the actual HTTP call — every call site in the
-     * app already passes the right title/body/data, so nothing else needs
-     * to change.
+     * Sends a push notification to every device registered for a user, and
+     * prunes any device token FCM reports as stale (app uninstalled, token
+     * rotated) so it isn't retried on the next notification.
      */
     public function sendToUser(User $user, string $title, string $body, array $data = []): void
     {
-        $tokens = $user->deviceTokens()->pluck('token');
+        $deviceTokens = $user->deviceTokens()->get();
 
-        if ($tokens->isEmpty()) {
+        if ($deviceTokens->isEmpty()) {
             return;
         }
 
-        Log::info('push_notification', [
-            'user_id' => $user->id,
-            'tokens' => $tokens->all(),
-            'title' => $title,
-            'body' => $body,
-            'data' => $data,
-        ]);
+        foreach ($deviceTokens as $deviceToken) {
+            try {
+                $result = $this->messaging->send($deviceToken->token, $title, $body, $data);
+            } catch (Throwable $e) {
+                Log::error('push_notification_failed', [
+                    'user_id' => $user->id,
+                    'device_token_id' => $deviceToken->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                continue;
+            }
+
+            if ($result['invalidToken']) {
+                $deviceToken->delete();
+            }
+        }
     }
 }

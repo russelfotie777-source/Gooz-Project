@@ -17,7 +17,7 @@ export default async function HomePage() {
     getProducts({ per_page: 50 }),
   ]);
 
-  const saleProducts = products.filter((p) => p.is_promotion);
+  const saleProducts = products.filter((p) => p.variants.some((v) => v.is_promotion));
   const popularProducts = products.slice(0, 4);
   const recommendedProducts = products.slice(4, 8);
 
@@ -30,16 +30,16 @@ export default async function HomePage() {
 
         <HeroSection categories={categories} />
 
-        <ProductSection title="En Solde" products={saleProducts} cardLayout="row" />
+        <ProductSection titleKey="saleTitle" products={saleProducts} cardLayout="row" />
 
-        <ProductSection title="Produits Populaire" products={popularProducts} cardLayout="row" />
+        <ProductSection titleKey="popularTitle" products={popularProducts} cardLayout="row" />
 
         <CatalogueSection products={products} categories={categories} />
 
         <PromoBanner />
 
         <ProductSection
-          title="Les bonnes affaires pour vous"
+          titleKey="dealsTitle"
           products={saleProducts}
           cardLayout="column"
         />
@@ -47,7 +47,7 @@ export default async function HomePage() {
         <BrandsSection brands={brands} />
 
         <ProductSection
-          title="Les produits recommandés"
+          titleKey="recommendedTitle"
           products={recommendedProducts}
           cardLayout="column"
         />

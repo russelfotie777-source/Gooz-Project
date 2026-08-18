@@ -38,14 +38,14 @@ export default async function CategoryPage({ categorySlug }: CategoryPageProps) 
       <main className={styles.main}>
         <HeroSection categories={categories} />
 
-        <ProductSection title="Meilleures ventes" products={bestSellers} cardLayout="row" />
+        <ProductSection titleKey="bestSellersTitle" products={bestSellers} cardLayout="row" />
 
         <CategoryResults categoryName={category.name} products={categoryProducts} />
 
         <PromoBanner />
 
         <ProductSection
-          title="Les produits recommandés"
+          titleKey="recommendedTitle"
           products={recommendedProducts}
           cardLayout="column"
         />

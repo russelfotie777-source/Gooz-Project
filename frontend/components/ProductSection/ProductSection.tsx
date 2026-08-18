@@ -2,20 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./ProductSection.module.css";
 
 interface ProductSectionProps {
-  title: string;
+  titleKey: "saleTitle" | "popularTitle" | "bestSellersTitle" | "dealsTitle" | "recommendedTitle";
   products: Product[];
   cardLayout?: "row" | "column";
 }
 
 export default function ProductSection({
-  title,
+  titleKey,
   products,
   cardLayout = "row",
 }: ProductSectionProps) {
+  const dict = useDictionary();
+  const title = dict.home[titleKey];
   const trackRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
 
@@ -55,7 +58,7 @@ export default function ProductSection({
             <button
               type="button"
               className={`${styles.navButton} ${styles.navButtonPrev}`}
-              aria-label="Précédent"
+              aria-label={dict.common.previous}
               onClick={() => scroll(-1)}
             >
               <img
@@ -67,7 +70,7 @@ export default function ProductSection({
             <button
               type="button"
               className={`${styles.navButton} ${styles.navButtonNext}`}
-              aria-label="Suivant"
+              aria-label={dict.common.next}
               onClick={() => scroll(1)}
             >
               <img src="/icon/product-section/nav-arrow.svg" alt="" className={styles.navIcon} />

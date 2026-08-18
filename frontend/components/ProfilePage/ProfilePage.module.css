@@ -181,6 +181,10 @@
   margin: 0;
 }
 
+.rowTitleDanger {
+  color: #e0433c;
+}
+
 .rowSubtitle {
   font-family: var(--font-body);
   font-size: 11px;

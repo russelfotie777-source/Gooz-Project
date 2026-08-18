@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import CheckoutMobileShell from "./CheckoutMobileShell";
 import { useCheckout } from "./CheckoutContext";
 import styles from "./CheckoutPaymentStep.module.css";
@@ -11,7 +12,8 @@ function formatPrice(value: number): string {
 }
 
 export default function CheckoutPaymentStep() {
-  const router = useRouter();
+  const dict = useDictionary();
+  const router = useLocaleRouter();
   const {
     subtotal,
     deliveryMethod,
@@ -22,6 +24,7 @@ export default function CheckoutPaymentStep() {
     setCoupon,
     total,
     orderNumber,
+    checkoutUrl,
     checkoutError,
     placeOrder,
   } = useCheckout();
@@ -32,12 +35,20 @@ export default function CheckoutPaymentStep() {
   // Navigate only once orderNumber has actually committed to context state —
   // pushing immediately after calling placeOrder() races the confirmation
   // page's own "no order yet" redirect guard, since router.push can run
-  // before the setOrderNumber update has flushed.
+  // before the setOrderNumber update has flushed. Mobile money orders get a
+  // checkoutUrl too: send the browser to Enkap's hosted payment page instead
+  // of straight to our own confirmation page, which only makes sense once
+  // the payment has actually gone through.
   useEffect(() => {
-    if (placing && orderNumber) {
+    if (!placing || !orderNumber) return;
+
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+    } else {
       router.push("/checkout/confirmation");
     }
-  }, [placing, orderNumber, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placing, orderNumber, checkoutUrl]);
 
   async function handleOrder() {
     setPlacing(true);
@@ -51,32 +62,32 @@ export default function CheckoutPaymentStep() {
   return (
     <CheckoutMobileShell
       step={3}
-      continueLabel={placing ? "Envoi..." : "Commander"}
+      continueLabel={placing ? dict.checkout.sendingButton : dict.checkout.orderButton}
       continueDisabled={!paymentMethod || placing}
       onContinue={handleOrder}
     >
       <div className={styles.summaryCard}>
         <div className={styles.summaryRow}>
-          <span>Sous total</span>
+          <span>{dict.checkout.subtotal}</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span>Réduction</span>
+          <span>{dict.checkout.discount}</span>
           <span>{formatPrice(0)}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span>Livraison (Expédition)</span>
+          <span>{dict.checkout.deliveryExpedition}</span>
           <span>{formatPrice(livraison)}</span>
         </div>
         <div className={styles.divider} />
         <div className={`${styles.summaryRow} ${styles.summaryTotalRow}`}>
-          <span>Total :</span>
+          <span>{dict.checkout.totalLabel}</span>
           <span>{formatPrice(total)}</span>
         </div>
       </div>
 
       <div>
-        <h1 className={styles.title}>Methode de paiement</h1>
+        <h1 className={styles.title}>{dict.checkout.paymentMethodTitle}</h1>
 
         <button
           type="button"
@@ -88,7 +99,7 @@ export default function CheckoutPaymentStep() {
             alt=""
             className={styles.radioIcon}
           />
-          <span className={styles.paymentLabel}>Paiement cash à la livraison</span>
+          <span className={styles.paymentLabel}>{dict.checkout.cashPaymentMobile}</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon/checkout/payment-cash.png" alt="" className={styles.paymentIcon} />
         </button>
@@ -103,11 +114,11 @@ export default function CheckoutPaymentStep() {
             alt=""
             className={styles.radioIcon}
           />
-          <span className={styles.paymentLabel}>Paiement en ligne</span>
+          <span className={styles.paymentLabel}>{dict.checkout.onlinePayment}</span>
           <span className={styles.onlineIcons}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icon/checkout/payment-orange.png" alt="Orange Money" className={styles.onlineIcon} />
-            <span className={styles.onlineOu}>ou</span>
+            <span className={styles.onlineOu}>{dict.checkout.or}</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icon/checkout/payment-mtn.png" alt="MTN Mobile Money" className={styles.onlineIcon} />
           </span>
@@ -115,17 +126,17 @@ export default function CheckoutPaymentStep() {
       </div>
 
       <div>
-        <p className={styles.couponLabel}>Vous avez un coupon de réduction?</p>
+        <p className={styles.couponLabel}>{dict.cart.couponQuestion}</p>
         <div className={styles.couponRow}>
           <input
             type="text"
             value={coupon}
             onChange={(e) => setCoupon(e.target.value)}
-            placeholder="Saisissez le code ici"
+            placeholder={dict.cart.couponPlaceholder}
             className={styles.couponInput}
           />
           <button type="button" className={styles.couponApply}>
-            Appliquer
+            {dict.cart.applyCoupon}
             <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
           </button>
         </div>

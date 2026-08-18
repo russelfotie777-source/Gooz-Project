@@ -1,0 +1,59 @@
+.button {
+  position: fixed;
+  right: 20px;
+  bottom: calc(var(--bottom-nav-height) + 20px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
+  animation: waShake 6s ease-in-out infinite;
+}
+
+.button:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 10px 24px rgba(37, 211, 102, 0.5);
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-white);
+}
+
+/* Idles at rest for most of the 6s cycle, wiggles briefly at the start of
+   each loop — an attention-grabbing nudge "from time to time" rather than a
+   constant animation. */
+@keyframes waShake {
+  0%,
+  12%,
+  100% {
+    transform: rotate(0deg);
+  }
+  2%,
+  6% {
+    transform: rotate(-14deg);
+  }
+  4%,
+  8% {
+    transform: rotate(14deg);
+  }
+  10% {
+    transform: rotate(-6deg);
+  }
+  11% {
+    transform: rotate(4deg);
+  }
+}
+
+@media (min-width: 1024px) {
+  .button {
+    right: 32px;
+    bottom: 32px;
+  }
+}

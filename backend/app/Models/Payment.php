@@ -13,12 +13,16 @@ class Payment extends Model
         'payment_method',
         'payment_status',
         'transaction_reference',
+        'checkout_url',
+        'provider_status',
+        'provider_response',
     ];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'provider_response' => 'array',
         ];
     }
 

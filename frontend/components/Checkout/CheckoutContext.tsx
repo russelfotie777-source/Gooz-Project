@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { splitName } from "@/lib/name";
 import type { ApiPaymentMethod, CartItemLine, City, Neighborhood, Warehouse } from "@/lib/types";
 
@@ -62,6 +63,8 @@ interface CheckoutContextValue {
   setCoupon: (value: string) => void;
   total: number;
   orderNumber: string | null;
+  /** Enkap's hosted payment page — set only for "online" orders once created. */
+  checkoutUrl: string | null;
   checkoutError: string | null;
   placeOrder: () => Promise<void>;
 }
@@ -76,6 +79,7 @@ const CheckoutContext = createContext<CheckoutContextValue | null>(null);
 // preview) doubles as `shipping_latitude`/`shipping_longitude` since there's
 // no map-pin/geolocation picker in this UI.
 export function CheckoutProvider({ children }: { children: React.ReactNode }) {
+  const dict = useDictionary();
   const [cartStatus, setCartStatus] = useState<CartStatus>("loading");
   const [items, setItems] = useState<CartItemLine[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -88,6 +92,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [coupon, setCoupon] = useState("");
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -157,7 +162,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
       if (deliveryMethod === "domicile") {
         const neighborhood = neighborhoods.find((n) => String(n.id) === form.neighborhoodId);
         const city = cities.find((c) => String(c.id) === form.cityId);
-        if (!neighborhood) throw new Error("Quartier invalide.");
+        if (!neighborhood) throw new Error(dict.checkout.invalidNeighborhood);
 
         payload = {
           delivery_method: "livraison",
@@ -169,7 +174,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
           ...(coupon.trim() ? { coupon_code: coupon.trim() } : {}),
         };
       } else {
-        if (!warehouse) throw new Error("Aucun point de retrait disponible.");
+        if (!warehouse) throw new Error(dict.checkout.noPickupPoint);
 
         payload = {
           delivery_method: "retrait",
@@ -182,13 +187,16 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
 
       const order = await apiPlaceOrder(session.token, payload);
       setOrderNumber(order.order_reference);
+      setCheckoutUrl(order.payment.checkout_url);
       // The backend deactivates the cart on a successful checkout (API.md
       // §6) — a fresh empty one is created lazily on the next add — so the
       // header badge should reset to 0 rather than wait for its own refetch.
       notifyCartUpdated(0);
     } catch (err) {
       setCheckoutError(
-        err instanceof ApiValidationError ? (Object.values(err.errors)[0]?.[0] ?? err.message) : "Une erreur est survenue lors de la commande."
+        err instanceof ApiValidationError
+          ? (Object.values(err.errors)[0]?.[0] ?? err.message)
+          : dict.checkout.genericOrderError
       );
       throw err;
     }
@@ -227,6 +235,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
       setCoupon,
       total,
       orderNumber,
+      checkoutUrl,
       checkoutError,
       placeOrder,
     }),
@@ -247,6 +256,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
       coupon,
       total,
       orderNumber,
+      checkoutUrl,
       checkoutError,
     ]
   );
