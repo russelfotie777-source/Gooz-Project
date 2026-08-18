@@ -12,9 +12,15 @@ class NeighborhoodResource extends JsonResource
         return [
             'id' => $this->id,
             'city_id' => $this->city_id,
+            'city' => $this->whenLoaded('city', fn () => [
+                'id' => $this->city->id,
+                'name' => $this->city->name,
+            ]),
             'name' => $this->name,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -16,6 +16,11 @@ class WarehouseController extends Controller
         return WarehouseResource::collection(Warehouse::query()->latest()->get());
     }
 
+    public function show(Warehouse $warehouse): WarehouseResource
+    {
+        return new WarehouseResource($warehouse);
+    }
+
     public function store(StoreWarehouseRequest $request): WarehouseResource
     {
         $warehouse = Warehouse::create($request->validated());

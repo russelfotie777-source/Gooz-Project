@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\DeliverySetting;
 use App\Models\Warehouse;
 use RuntimeException;
 
@@ -54,15 +55,17 @@ class DeliveryFeeCalculator
 
     private function feeForDistance(float $distanceKm, int $itemCount): float
     {
-        $billableDistance = max(0, $distanceKm - config('delivery.free_radius_km'));
-        $extraItems = max(0, $itemCount - config('delivery.free_item_count'));
+        $settings = DeliverySetting::current();
 
-        $fee = config('delivery.base_fee')
-            + $billableDistance * config('delivery.price_per_km')
-            + $extraItems * config('delivery.price_per_extra_item');
+        $billableDistance = max(0, $distanceKm - $settings->free_radius_km);
+        $extraItems = max(0, $itemCount - $settings->free_item_count);
 
-        $fee = max($fee, config('delivery.min_fee'));
-        $fee = min($fee, config('delivery.max_fee'));
+        $fee = $settings->base_fee
+            + $billableDistance * $settings->price_per_km
+            + $extraItems * $settings->price_per_extra_item;
+
+        $fee = max($fee, $settings->min_fee);
+        $fee = min($fee, $settings->max_fee);
 
         return round($fee, 2);
     }

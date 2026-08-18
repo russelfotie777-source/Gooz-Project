@@ -22,6 +22,11 @@ type Delivery = {
   delivery_boy: DeliveryBoy | null;
   delivery_status: string;
   tracking_code: string | null;
+  created_at: string;
+  shipped_at: string | null;
+  out_for_delivery_at: string | null;
+  delivered_at: string | null;
+  failed_at: string | null;
 };
 
 type Payment = {
@@ -69,6 +74,16 @@ const PAYMENT_STYLES: Record<string, string> = {
   remboursé: "bg-white/5 text-white/50",
 };
 
+const DELIVERY_STATUSES = ["en_attente", "pris_en_charge", "en_transit", "livré", "échec"];
+
+const DELIVERY_STATUS_STYLES: Record<string, string> = {
+  en_attente: "bg-amber-500/10 text-amber-400",
+  pris_en_charge: "bg-brand-blue/10 text-brand-blue",
+  en_transit: "bg-sky-500/10 text-sky-400",
+  livré: "bg-emerald-500/10 text-emerald-400",
+  échec: "bg-red-500/10 text-red-400",
+};
+
 function formatXAF(value: number): string {
   return `${Number(value).toLocaleString("fr-FR")} XAF`;
 }
@@ -105,6 +120,7 @@ export default function OrderDetailPage() {
   const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoy[]>([]);
   const [assigning, setAssigning] = useState(false);
   const [selectedDeliveryBoy, setSelectedDeliveryBoy] = useState("");
+  const [deliveryStatusSaving, setDeliveryStatusSaving] = useState(false);
 
   function load() {
     apiFetch<{ data: Order }>(`/admin/orders/${orderId}`)
@@ -130,6 +146,22 @@ export default function OrderDetailPage() {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour du statut.");
     } finally {
       setStatusSaving(false);
+    }
+  }
+
+  async function handleDeliveryStatusChange(status: string) {
+    if (!order?.delivery) return;
+    setDeliveryStatusSaving(true);
+    try {
+      await apiFetch(`/deliveries/${order.delivery.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ delivery_status: status }),
+      });
+      load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Échec de la mise à jour du statut de livraison.");
+    } finally {
+      setDeliveryStatusSaving(false);
     }
   }
 
@@ -255,9 +287,20 @@ export default function OrderDetailPage() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <Field label="Statut de livraison">
               {order.delivery ? (
-                <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-white/70">
-                  {order.delivery.delivery_status}
-                </span>
+                <select
+                  value={order.delivery.delivery_status}
+                  disabled={deliveryStatusSaving}
+                  onChange={(e) => handleDeliveryStatusChange(e.target.value)}
+                  className={`rounded-full border-0 px-2.5 py-1 text-xs font-medium outline-none ${
+                    DELIVERY_STATUS_STYLES[order.delivery.delivery_status] ?? "bg-white/5 text-white/60"
+                  }`}
+                >
+                  {DELIVERY_STATUSES.map((s) => (
+                    <option key={s} value={s} className="bg-[#12141c] text-white">
+                      {s}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 "Non assignée"
               )}
@@ -294,6 +337,24 @@ export default function OrderDetailPage() {
                 </button>
               </div>
             </div>
+
+            {order.delivery && (
+              <div className="sm:col-span-3">
+                <p className="mb-3 text-xs text-white/40">Chronologie</p>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-4">
+                  <Field label="Assignée le">{formatDate(order.delivery.created_at)}</Field>
+                  <Field label="Expédiée le">
+                    {order.delivery.shipped_at ? formatDate(order.delivery.shipped_at) : "—"}
+                  </Field>
+                  <Field label="Mise en livraison le">
+                    {order.delivery.out_for_delivery_at ? formatDate(order.delivery.out_for_delivery_at) : "—"}
+                  </Field>
+                  <Field label="Livrée le">
+                    {order.delivery.delivered_at ? formatDate(order.delivery.delivered_at) : "—"}
+                  </Field>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Section>

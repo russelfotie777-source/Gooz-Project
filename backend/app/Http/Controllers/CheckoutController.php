@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Order\CheckoutRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Coupon;
+use App\Models\InventoryLedger;
 use App\Models\Order;
 use App\Models\Stock;
 use App\Services\DeliveryFeeCalculator;
@@ -40,6 +41,7 @@ class CheckoutController extends Controller
         $order = DB::transaction(function () use ($cart, $request) {
             $subtotal = 0;
             $lines = [];
+            $ledgerEntries = [];
 
             foreach ($cart->items as $item) {
                 if (! $item->variant) {
@@ -48,7 +50,10 @@ class CheckoutController extends Controller
                     ]);
                 }
 
-                $this->decrementStock($item->product_id, $item->product_variant_id, $item->quantity);
+                array_push(
+                    $ledgerEntries,
+                    ...$this->decrementStock($item->product_id, $item->product_variant_id, $item->quantity)
+                );
 
                 $unitPrice = $item->variant->effectivePrice();
 
@@ -86,6 +91,15 @@ class CheckoutController extends Controller
             ]);
 
             $order->items()->createMany($lines);
+
+            foreach ($ledgerEntries as $entry) {
+                InventoryLedger::create($entry + [
+                    'movement_type' => 'order',
+                    'reference_type' => Order::class,
+                    'reference_id' => $order->id,
+                    'actor_id' => $request->user()->id,
+                ]);
+            }
 
             $order->payment()->create([
                 'amount' => $total,
@@ -173,7 +187,10 @@ class CheckoutController extends Controller
         return [$coupon, $discount];
     }
 
-    private function decrementStock(int $productId, ?int $variantId, int $quantity): void
+    /**
+     * @return array<int, array<string, mixed>> partial InventoryLedger rows (movement_type/reference/actor filled in by the caller)
+     */
+    private function decrementStock(int $productId, ?int $variantId, int $quantity): array
     {
         $stocks = Stock::query()
             ->where('product_id', $productId)
@@ -187,6 +204,7 @@ class CheckoutController extends Controller
             ->get();
 
         $remaining = $quantity;
+        $entries = [];
 
         foreach ($stocks as $stock) {
             if ($remaining <= 0) {
@@ -196,8 +214,23 @@ class CheckoutController extends Controller
             $take = min($stock->quantity_available - $stock->quantity_reserved, $remaining);
 
             if ($take > 0) {
+                $before = $stock->quantity_available;
                 $stock->decrement('quantity_available', $take);
                 $remaining -= $take;
+
+                $entries[] = [
+                    'warehouse_id' => $stock->warehouse_id,
+                    'product_id' => $productId,
+                    'product_variant_id' => $variantId,
+                    'quantity_delta' => -$take,
+                    'reserved_delta' => 0,
+                    'quantity_before' => $before,
+                    'quantity_after' => $before - $take,
+                    'reserved_before' => $stock->quantity_reserved,
+                    'reserved_after' => $stock->quantity_reserved,
+                    'reason' => null,
+                    'meta' => null,
+                ];
             }
         }
 
@@ -206,5 +239,7 @@ class CheckoutController extends Controller
                 'stock' => ['Stock insuffisant pour un des articles du panier.'],
             ]);
         }
+
+        return $entries;
     }
 }
