@@ -2,25 +2,39 @@
 
 import { useMemo, useState } from "react";
 import type { Product } from "@/lib/types";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CategoryResults.module.css";
 
 interface CategoryResultsProps {
+  /** The category's display name — or, in "search" mode, the raw query
+   * string, which is wrapped in the translated "Results for ..." heading. */
   categoryName: string;
   products: Product[];
+  /** "search" swaps the empty-state wording and the heading format ("no
+   * product matches your search" / "Results for ..." instead of the plain
+   * category name) — same filter/sort/pagination UI either way. */
+  mode?: "category" | "search";
 }
 
 const PAGE_SIZE = 9;
 
 type SortOption = "" | "price-asc" | "price-desc" | "name-asc";
 
-const SORT_LABELS: Record<Exclude<SortOption, "">, string> = {
-  "price-asc": "Prix croissant",
-  "price-desc": "Prix décroissant",
-  "name-asc": "Nom (A-Z)",
-};
-
-export default function CategoryResults({ categoryName, products }: CategoryResultsProps) {
+export default function CategoryResults({ categoryName, products, mode = "category" }: CategoryResultsProps) {
+  const dict = useDictionary();
+  const isEmptySearch = mode === "search" && categoryName.trim() === "";
+  const noResultsMessage = isEmptySearch
+    ? dict.search.emptyPrompt
+    : mode === "search"
+      ? dict.search.noResults
+      : dict.category.noResults;
+  const heading = mode === "search" ? (isEmptySearch ? dict.header.search : dict.search.resultsFor(categoryName)) : categoryName;
+  const SORT_LABELS: Record<Exclude<SortOption, "">, string> = {
+    "price-asc": dict.category.sortPriceAsc,
+    "price-desc": dict.category.sortPriceDesc,
+    "name-asc": dict.category.sortNameAsc,
+  };
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [appliedRange, setAppliedRange] = useState<{ min: number | null; max: number | null }>({
@@ -33,16 +47,17 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
 
   const filtered = useMemo(() => {
     const byPrice = products.filter((product) => {
-      if (appliedRange.min !== null && product.price < appliedRange.min) return false;
-      if (appliedRange.max !== null && product.price > appliedRange.max) return false;
+      const price = product.price_from ?? 0;
+      if (appliedRange.min !== null && price < appliedRange.min) return false;
+      if (appliedRange.max !== null && price > appliedRange.max) return false;
       return true;
     });
 
     if (!sort) return byPrice;
 
     const sorted = [...byPrice];
-    if (sort === "price-asc") sorted.sort((a, b) => a.price - b.price);
-    else if (sort === "price-desc") sorted.sort((a, b) => b.price - a.price);
+    if (sort === "price-asc") sorted.sort((a, b) => (a.price_from ?? 0) - (b.price_from ?? 0));
+    else if (sort === "price-desc") sorted.sort((a, b) => (b.price_from ?? 0) - (a.price_from ?? 0));
     else if (sort === "name-asc") sorted.sort((a, b) => a.name.localeCompare(b.name));
     return sorted;
   }, [products, appliedRange, sort]);
@@ -62,11 +77,11 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
   return (
     <section className={styles.section}>
       <div className={styles.resultBar}>
-        <p className={styles.count}>{filtered.length} produits trouvés</p>
-        <h1 className={styles.pageTitle}>{categoryName}</h1>
+        <p className={styles.count}>{dict.category.resultsFound(filtered.length)}</p>
+        <h1 className={styles.pageTitle}>{heading}</h1>
 
         <label className={styles.sort}>
-          <span>Trier par :</span>
+          <span>{dict.category.sortBy}</span>
           <select
             className={styles.sortSelect}
             value={sort}
@@ -75,7 +90,7 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
               setPage(1);
             }}
           >
-            <option value="">Défaut</option>
+            <option value="">{dict.category.sortDefault}</option>
             {Object.entries(SORT_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -89,17 +104,17 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
           className={styles.filterToggle}
           onClick={() => setFiltersOpen((v) => !v)}
         >
-          Filtres
+          {dict.category.filters}
         </button>
       </div>
 
       <div className={styles.layout}>
         <aside className={`${styles.filters} ${filtersOpen ? styles.filtersOpen : ""}`}>
-          <p className={styles.filterTitle}>Filtres</p>
+          <p className={styles.filterTitle}>{dict.category.filters}</p>
 
           <div className={styles.priceRow}>
             <label className={styles.priceField}>
-              <span>Prix min</span>
+              <span>{dict.category.priceMin}</span>
               <input
                 type="number"
                 min={0}
@@ -109,7 +124,7 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
               />
             </label>
             <label className={styles.priceField}>
-              <span>Prix max</span>
+              <span>{dict.category.priceMax}</span>
               <input
                 type="number"
                 min={0}
@@ -121,7 +136,7 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
           </div>
 
           <button type="button" className={styles.filterButton} onClick={applyPriceFilter}>
-            Filtrer
+            {dict.category.applyFilter}
           </button>
         </aside>
 
@@ -132,7 +147,7 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
             ))}
           </div>
         ) : (
-          <p className={styles.emptyState}>Aucun produit ne correspond à ces filtres.</p>
+          <p className={styles.emptyState}>{noResultsMessage}</p>
         )}
       </div>
 
@@ -143,7 +158,7 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
             className={styles.pageArrow}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            aria-label="Page précédente"
+            aria-label={dict.category.previousPage}
           >
             ‹
           </button>
@@ -162,7 +177,7 @@ export default function CategoryResults({ categoryName, products }: CategoryResu
             className={styles.pageArrow}
             onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
             disabled={currentPage === pageCount}
-            aria-label="Page suivante"
+            aria-label={dict.category.nextPage}
           >
             ›
           </button>

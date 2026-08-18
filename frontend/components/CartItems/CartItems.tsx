@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { ApiValidationError, removeCartItem, updateCartItem } from "@/lib/api";
 import { notifyCartUpdated } from "@/lib/cartEvents";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import type { CartItemLine } from "@/lib/types";
 import styles from "./CartItems.module.css";
 
@@ -20,6 +21,7 @@ function formatPrice(value: number): string {
 }
 
 export default function CartItems({ initialItems, initialTotal, token }: CartItemsProps) {
+  const dict = useDictionary();
   const [items, setItems] = useState(initialItems);
   const [subtotal, setSubtotal] = useState(initialTotal);
   const [pendingId, setPendingId] = useState<number | null>(null);
@@ -41,7 +43,11 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
       setSubtotal(cart.total);
       notifyCartUpdated(cart.items.length);
     } catch (err) {
-      setError(err instanceof ApiValidationError ? (Object.values(err.errors)[0]?.[0] ?? err.message) : "Une erreur est survenue.");
+      setError(
+        err instanceof ApiValidationError
+          ? (Object.values(err.errors)[0]?.[0] ?? err.message)
+          : dict.cart.genericError
+      );
     } finally {
       setPendingId(null);
     }
@@ -57,7 +63,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
       setSubtotal(remaining.reduce((sum, item) => sum + item.line_total, 0));
       notifyCartUpdated(remaining.length);
     } catch {
-      setError("Impossible de supprimer cet article. Réessayez.");
+      setError(dict.cart.removeError);
     } finally {
       setPendingId(null);
     }
@@ -69,7 +75,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
   if (items.length === 0) {
     return (
       <div className={styles.empty}>
-        <p>Votre panier est vide.</p>
+        <p>{dict.cart.empty}</p>
       </div>
     );
   }
@@ -113,20 +119,20 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
                     <button
                       type="button"
                       className={styles.deleteButton}
-                      aria-label="Supprimer"
+                      aria-label={dict.cart.delete}
                       disabled={isPending}
                       onClick={() => removeItem(item.id)}
                     >
                       <img src="/icon/cart/delete.svg" alt="" className={styles.deleteIconMobile} />
                       <img src="/icon/cart/delete-red.svg" alt="" className={styles.deleteIconDesktop} />
-                      <span className={styles.deleteLabel}>Supprimer</span>
+                      <span className={styles.deleteLabel}>{dict.cart.delete}</span>
                     </button>
 
                     <div className={styles.quantity}>
                       <button
                         type="button"
                         className={styles.quantityButtonMinus}
-                        aria-label="Diminuer la quantité"
+                        aria-label={dict.cart.decreaseQty}
                         disabled={isPending}
                         onClick={() => updateQuantity(item.id, -1)}
                       >
@@ -137,7 +143,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
                       <button
                         type="button"
                         className={styles.quantityButtonPlus}
-                        aria-label="Augmenter la quantité"
+                        aria-label={dict.cart.increaseQty}
                         disabled={isPending}
                         onClick={() => updateQuantity(item.id, 1)}
                       >
@@ -156,31 +162,31 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
       {/* Mobile — fixed Total + checkout bar (Figma node 554:267) */}
       <div className={styles.mobileTotalBar}>
         <div className={styles.mobileTotalRow}>
-          <span className={styles.mobileTotalLabel}>Total :</span>
+          <span className={styles.mobileTotalLabel}>{dict.cart.mobileTotalLabel}</span>
           <span className={styles.mobileTotalValue}>{formatPrice(total)}</span>
         </div>
-        <Link href="/checkout/adresse" className={styles.mobileCheckoutButton}>
-          Finalisez votre commande
+        <LocaleLink href="/checkout/adresse" className={styles.mobileCheckoutButton}>
+          {dict.cart.checkoutButton}
           <img src="/icon/cart/arrow-right.svg" alt="" className={styles.mobileCheckoutArrow} />
-        </Link>
+        </LocaleLink>
       </div>
 
       {/* Desktop — order summary sidebar (Figma node 1668:2283) */}
       <aside className={styles.summary}>
-        <p className={styles.summaryHeaderLabel}>Total:</p>
+        <p className={styles.summaryHeaderLabel}>{dict.cart.summaryTotal}:</p>
         <p className={styles.summaryHeaderValue}>{formatPrice(total)}</p>
 
         <div className={styles.summaryRow}>
-          <span className={styles.summaryRowLabel}>Sous Total</span>
+          <span className={styles.summaryRowLabel}>{dict.cart.subtotalLabel}</span>
           <span className={styles.summaryRowValue}>{formatPrice(subtotal)}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryRowLabel}>Livraison</span>
+          <span className={styles.summaryRowLabel}>{dict.cart.deliveryLabel}</span>
           <span className={styles.summaryRowValue}>{formatPrice(deliveryFee)}</span>
         </div>
         <div className={styles.summaryDivider} />
         <div className={styles.summaryRow}>
-          <span className={styles.summaryRowLabel}>Total</span>
+          <span className={styles.summaryRowLabel}>{dict.cart.summaryTotal}</span>
           <span className={styles.summaryRowValue}>{formatPrice(total)}</span>
         </div>
 
@@ -191,7 +197,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
             onClick={() => setCouponOpen((v) => !v)}
             aria-expanded={couponOpen}
           >
-            <span>Vous avez un coupon de réduction ?</span>
+            <span>{dict.cart.couponQuestion}</span>
             <img
               src="/icon/cart/coupon-chevron.svg"
               alt=""
@@ -205,20 +211,20 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
                 type="text"
                 value={coupon}
                 onChange={(e) => setCoupon(e.target.value)}
-                placeholder="Saisissez le code ici"
+                placeholder={dict.cart.couponPlaceholder}
                 className={styles.couponInput}
               />
               <button type="button" className={styles.couponApply}>
-                Appliquer
+                {dict.cart.applyCoupon}
                 <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
               </button>
             </div>
           )}
         </div>
 
-        <Link href="/checkout" className={styles.checkoutButton}>
-          Passer la commande
-        </Link>
+        <LocaleLink href="/checkout" className={styles.checkoutButton}>
+          {dict.cart.placeOrder}
+        </LocaleLink>
       </aside>
     </div>
   );

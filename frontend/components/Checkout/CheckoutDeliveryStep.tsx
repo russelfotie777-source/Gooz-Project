@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import CheckoutMobileShell from "./CheckoutMobileShell";
 import { useCheckout } from "./CheckoutContext";
 import styles from "./CheckoutDeliveryStep.module.css";
@@ -12,18 +13,19 @@ function formatPrice(value: number): string {
 }
 
 export default function CheckoutDeliveryStep() {
-  const router = useRouter();
+  const dict = useDictionary();
+  const router = useLocaleRouter();
   const { items, deliveryMethod, setDeliveryMethod, deliveryFee, deliveryStatus, warehouse } = useCheckout();
 
   return (
     <CheckoutMobileShell
       step={2}
-      continueLabel="Continuez"
+      continueLabel={dict.checkout.continueButton}
       continueDisabled={!deliveryMethod}
       onContinue={() => router.push("/checkout/paiement")}
     >
       <div>
-        <h1 className={styles.title}>Résumé de votre panier</h1>
+        <h1 className={styles.title}>{dict.checkout.cartSummaryTitle}</h1>
         <div className={styles.summaryCard}>
           {items.map((item) => {
             const image = item.product.images.find((img) => img.is_primary) ?? item.product.images[0];
@@ -52,7 +54,7 @@ export default function CheckoutDeliveryStep() {
       </div>
 
       <div>
-        <h1 className={styles.title}>Lieux de livraison</h1>
+        <h1 className={styles.title}>{dict.checkout.deliveryPlaceTitle}</h1>
         <div className={styles.methods}>
           <button
             type="button"
@@ -68,15 +70,15 @@ export default function CheckoutDeliveryStep() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icon/checkout/delivery-home-photo.png" alt="" className={styles.methodPhoto} />
             </div>
-            <p className={styles.methodLabel}>Livraison à domicile</p>
-            <p className={styles.methodHint}>Nous vous livrons</p>
+            <p className={styles.methodLabel}>{dict.checkout.homeDelivery}</p>
+            <p className={styles.methodHint}>{dict.checkout.homeDeliveryHintMobile}</p>
             <p className={styles.methodFee}>
-              Frais :{" "}
+              {dict.checkout.fee}{" "}
               <span className={styles.methodFeeValue}>
                 {deliveryMethod === "domicile" && deliveryStatus === "loading"
-                  ? "Calcul..."
+                  ? dict.checkout.calculating
                   : deliveryMethod === "domicile" && deliveryStatus === "error"
-                    ? "Indisponible"
+                    ? dict.checkout.unavailable
                     : deliveryMethod === "domicile"
                       ? formatPrice(deliveryFee)
                       : "—"}
@@ -97,10 +99,10 @@ export default function CheckoutDeliveryStep() {
               />
               <img src="/icon/checkout/storefront.svg" alt="" className={styles.methodIcon} />
             </div>
-            <p className={styles.methodLabel}>Retrait en agence</p>
-            <p className={styles.methodHint}>{warehouse ? warehouse.name : "Retrait en agence"}</p>
+            <p className={styles.methodLabel}>{dict.checkout.pickupTitleMobile}</p>
+            <p className={styles.methodHint}>{warehouse ? warehouse.name : dict.checkout.pickupTitleMobile}</p>
             <p className={styles.methodFee}>
-              Frais : <span className={styles.methodFeeValue}>{formatPrice(0)}</span>
+              {dict.checkout.fee} <span className={styles.methodFeeValue}>{formatPrice(0)}</span>
             </p>
           </button>
         </div>

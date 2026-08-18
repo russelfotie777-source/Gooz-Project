@@ -1,12 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import CheckoutMobileShell from "./CheckoutMobileShell";
 import { useCheckout } from "./CheckoutContext";
 import styles from "./CheckoutAddressStep.module.css";
 
 export default function CheckoutAddressStep() {
-  const router = useRouter();
+  const dict = useDictionary();
+  const router = useLocaleRouter();
   const { form, setForm, isAddressComplete, cities, neighborhoods: allNeighborhoods } = useCheckout();
 
   const neighborhoods = form.cityId
@@ -16,16 +18,16 @@ export default function CheckoutAddressStep() {
   return (
     <CheckoutMobileShell
       step={1}
-      continueLabel="Continuez"
+      continueLabel={dict.checkout.continueButton}
       continueDisabled={!isAddressComplete}
       onContinue={() => router.push("/checkout/livraison")}
     >
       <div className={styles.card}>
-        <h1 className={styles.title}>Adresse de livraison</h1>
+        <h1 className={styles.title}>{dict.checkout.addressTitle}</h1>
 
         <label className={styles.field}>
           <span className={styles.label}>
-            <span className={styles.required}>*</span>Nom
+            <span className={styles.required}>*</span>{dict.checkout.nom}
           </span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
@@ -33,7 +35,7 @@ export default function CheckoutAddressStep() {
               type="text"
               value={form.nom}
               onChange={(e) => setForm({ nom: e.target.value })}
-              placeholder="Jean"
+              placeholder={dict.checkout.namePlaceholder}
               className={styles.input}
             />
           </div>
@@ -41,7 +43,7 @@ export default function CheckoutAddressStep() {
 
         <label className={styles.field}>
           <span className={styles.label}>
-            <span className={styles.required}>*</span>Prenom
+            <span className={styles.required}>*</span>{dict.checkout.prenom}
           </span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
@@ -49,7 +51,7 @@ export default function CheckoutAddressStep() {
               type="text"
               value={form.prenom}
               onChange={(e) => setForm({ prenom: e.target.value })}
-              placeholder="Pierre"
+              placeholder={dict.checkout.surnamePlaceholder}
               className={styles.input}
             />
           </div>
@@ -57,7 +59,7 @@ export default function CheckoutAddressStep() {
 
         <label className={styles.field}>
           <span className={styles.label}>
-            <span className={styles.required}>*</span>N° Téléphone
+            <span className={styles.required}>*</span>{dict.checkout.phoneLabel}
           </span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-phone.svg" alt="" className={styles.inputIcon} />
@@ -65,35 +67,35 @@ export default function CheckoutAddressStep() {
               type="tel"
               value={form.telephone}
               onChange={(e) => setForm({ telephone: e.target.value })}
-              placeholder="Ex: 677 47 22 14"
+              placeholder={dict.checkout.phonePlaceholder}
               className={styles.input}
             />
           </div>
         </label>
 
         <label className={styles.field}>
-          <span className={styles.label}>N° WhatsApp</span>
+          <span className={styles.label}>{dict.checkout.whatsappLabel}</span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-whatsapp.svg" alt="" className={styles.inputIcon} />
             <input
               type="tel"
               value={form.whatsapp}
               onChange={(e) => setForm({ whatsapp: e.target.value })}
-              placeholder="Ex: 697 47 22 14"
+              placeholder={dict.checkout.whatsappPlaceholder}
               className={styles.input}
             />
           </div>
         </label>
 
         <label className={styles.field}>
-          <span className={styles.label}>E-mail</span>
+          <span className={styles.label}>{dict.checkout.emailLabel}</span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-mail.svg" alt="" className={styles.inputIcon} />
             <input
               type="email"
               value={form.email}
               onChange={(e) => setForm({ email: e.target.value })}
-              placeholder="example@gmail.com"
+              placeholder={dict.checkout.emailPlaceholder}
               className={styles.input}
             />
           </div>
@@ -101,7 +103,7 @@ export default function CheckoutAddressStep() {
 
         <label className={styles.field}>
           <span className={styles.label}>
-            <span className={styles.required}>*</span>Adresse
+            <span className={styles.required}>*</span>{dict.checkout.addressLabel}
           </span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
@@ -109,7 +111,7 @@ export default function CheckoutAddressStep() {
               type="text"
               value={form.adresse}
               onChange={(e) => setForm({ adresse: e.target.value })}
-              placeholder="Rue, quartier précis, point de repère..."
+              placeholder={dict.checkout.addressPlaceholder}
               className={styles.input}
             />
           </div>
@@ -117,7 +119,7 @@ export default function CheckoutAddressStep() {
 
         <label className={styles.field}>
           <span className={styles.label}>
-            <span className={styles.required}>*</span>Ville
+            <span className={styles.required}>*</span>{dict.checkout.villeLabel}
           </span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
@@ -126,7 +128,7 @@ export default function CheckoutAddressStep() {
               onChange={(e) => setForm({ cityId: e.target.value, neighborhoodId: "" })}
               className={styles.select}
             >
-              <option value="">Selectionez la ville</option>
+              <option value="">{dict.checkout.selectVille}</option>
               {cities.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -139,7 +141,7 @@ export default function CheckoutAddressStep() {
 
         <label className={styles.field}>
           <span className={styles.label}>
-            <span className={styles.required}>*</span>Quartier
+            <span className={styles.required}>*</span>{dict.checkout.quartierLabel}
           </span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
@@ -149,7 +151,7 @@ export default function CheckoutAddressStep() {
               disabled={!form.cityId}
               className={styles.select}
             >
-              <option value="">Selectionez le quartier</option>
+              <option value="">{dict.checkout.selectQuartier}</option>
               {neighborhoods.map((n) => (
                 <option key={n.id} value={n.id}>
                   {n.name}
@@ -161,8 +163,7 @@ export default function CheckoutAddressStep() {
         </label>
 
         <p className={styles.note}>
-          <strong>NB:</strong> Les champs précédés du symbole <span className={styles.required}>*</span> sont
-          obligatoire
+          <strong>{dict.checkout.requiredNoteLabel}</strong> {dict.checkout.requiredNoteText}
         </p>
       </div>
     </CheckoutMobileShell>

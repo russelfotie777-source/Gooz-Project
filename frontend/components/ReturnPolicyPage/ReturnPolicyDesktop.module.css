@@ -1,0 +1,18 @@
+.page {
+  display: none;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+@media (min-width: 1024px) {
+  .page {
+    display: flex;
+  }
+}
+
+.main {
+  display: flex;
+  justify-content: center;
+  padding: 48px 5% 80px;
+}

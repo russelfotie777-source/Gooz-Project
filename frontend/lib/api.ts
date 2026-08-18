@@ -1,4 +1,5 @@
 import type {
+  Address,
   ApiPaymentMethod,
   AuthResponse,
   Brand,
@@ -13,6 +14,8 @@ import type {
   Product,
   ProductImage,
   ProductVariant,
+  Ticket,
+  TicketPriority,
   User,
   Warehouse,
 } from "./types";
@@ -113,6 +116,26 @@ export async function getMe(token: string): Promise<User> {
   return data;
 }
 
+// Irreversible: anonymizes the account server-side and revokes every token
+// (see AuthController::destroy) — requires the current password as a final
+// identity check, so a stolen/left-open session alone can't trigger it.
+export async function deleteAccount(token: string, password: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/me`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ password }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiValidationError(body?.message ?? `API /me -> ${res.status}`, body?.errors ?? {});
+  }
+}
+
 // Laravel returns `decimal` columns as strings (e.g. "20000.00") to avoid
 // float precision loss — coerce them here so the rest of the app can treat
 // Product/ProductVariant prices as the `number` the types declare.
@@ -123,7 +146,11 @@ function normalizeImage(raw: ProductImage): ProductImage {
 function normalizeVariant(raw: ProductVariant): ProductVariant {
   return {
     ...raw,
-    additional_price: Number(raw.additional_price),
+    base_price: Number(raw.base_price),
+    promo_price: raw.promo_price !== null ? Number(raw.promo_price) : null,
+    price: Number(raw.price),
+    cost_price: raw.cost_price !== null ? Number(raw.cost_price) : null,
+    tax_rate: raw.tax_rate !== null ? Number(raw.tax_rate) : null,
     images: (raw.images ?? []).map(normalizeImage),
   };
 }
@@ -131,27 +158,10 @@ function normalizeVariant(raw: ProductVariant): ProductVariant {
 function normalizeProduct(raw: Product): Product {
   return {
     ...raw,
-    base_price: Number(raw.base_price),
-    promo_price: raw.promo_price !== null ? Number(raw.promo_price) : null,
-    price: Number(raw.price),
+    price_from: raw.price_from !== null && raw.price_from !== undefined ? Number(raw.price_from) : null,
     images: raw.images ?? [],
     variants: (raw.variants ?? []).map(normalizeVariant),
   };
-}
-
-function normalizeCategory(raw: Category): Category {
-  return {
-    ...raw,
-    children: (raw.children ?? []).map(normalizeCategory),
-  };
-}
-
-// `/categories` only returns active root categories, with their subcategories
-// nested under `children` (see API.md §3). None of the category lists in this
-// app render a hierarchy — they're flat bubble/sidebar lists — so flatten the
-// tree here to surface every category (root and child) from the database.
-function flattenCategories(categories: Category[]): Category[] {
-  return categories.flatMap((category) => [category, ...flattenCategories(category.children)]);
 }
 
 export interface GetProductsParams {
@@ -187,7 +197,7 @@ export async function getProduct(id: number): Promise<Product> {
 
 export async function getCategories(): Promise<Category[]> {
   const { data } = await apiFetch<ApiCollection<Category>>("/categories");
-  return flattenCategories(data.map(normalizeCategory));
+  return data;
 }
 
 export async function getBrands(): Promise<Brand[]> {
@@ -356,4 +366,108 @@ export async function placeOrder(token: string, payload: CheckoutPayload): Promi
     body: JSON.stringify(payload),
   });
   return normalizeOrder(data);
+}
+
+export async function getOrders(token: string): Promise<Order[]> {
+  const { data } = await authedFetch<ApiCollection<Order>>("/orders", token);
+  return data.map(normalizeOrder);
+}
+
+export async function getOrder(token: string, orderId: number): Promise<Order> {
+  const { data } = await authedFetch<ApiResource<Order>>(`/orders/${orderId}`, token);
+  return normalizeOrder(data);
+}
+
+// Re-checks a mobile-money order's payment status with Enkap (or retries
+// creating the Enkap order if that step failed during checkout). Called
+// from the payment-return page the customer lands back on after Enkap.
+export async function refreshOrderPayment(token: string, orderReference: string): Promise<Order> {
+  const { data } = await authedFetch<ApiResource<Order>>(
+    `/orders/${orderReference}/payment/refresh`,
+    token,
+    { method: "POST" }
+  );
+  return normalizeOrder(data);
+}
+
+export type AddressPayload = {
+  label?: string | null;
+  recipient_name: string;
+  recipient_phone: string;
+  country?: string;
+  region?: string | null;
+  ville: string;
+  quartier?: string | null;
+  address_line?: string | null;
+  postal_code?: string | null;
+  is_default?: boolean;
+};
+
+export async function getAddresses(token: string): Promise<Address[]> {
+  const { data } = await authedFetch<ApiCollection<Address>>("/addresses", token);
+  return data;
+}
+
+export async function createAddress(token: string, payload: AddressPayload): Promise<Address> {
+  const { data } = await authedFetch<ApiResource<Address>>("/addresses", token, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return data;
+}
+
+export async function updateAddress(
+  token: string,
+  addressId: number,
+  payload: Partial<AddressPayload>
+): Promise<Address> {
+  const { data } = await authedFetch<ApiResource<Address>>(`/addresses/${addressId}`, token, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return data;
+}
+
+export async function deleteAddress(token: string, addressId: number): Promise<void> {
+  await authedFetch<void>(`/addresses/${addressId}`, token, { method: "DELETE" });
+}
+
+export type TicketPayload = {
+  subject: string;
+  category: string;
+  priority: TicketPriority;
+  message?: string | null;
+};
+
+export async function getMyTickets(token: string): Promise<Ticket[]> {
+  const { data } = await authedFetch<ApiCollection<Ticket>>("/tickets", token);
+  return data;
+}
+
+export async function createTicket(token: string, payload: TicketPayload): Promise<Ticket> {
+  const { data } = await authedFetch<ApiResource<Ticket>>("/tickets", token, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return data;
+}
+
+export type DevicePlatform = "android" | "ios" | "web";
+
+export async function registerDeviceToken(
+  token: string,
+  deviceToken: string,
+  platform: DevicePlatform
+): Promise<void> {
+  await authedFetch<void>("/device-tokens", token, {
+    method: "POST",
+    body: JSON.stringify({ token: deviceToken, platform }),
+  });
+}
+
+export async function unregisterDeviceToken(token: string, deviceToken: string): Promise<void> {
+  await authedFetch<void>("/device-tokens", token, {
+    method: "DELETE",
+    body: JSON.stringify({ token: deviceToken }),
+  });
 }

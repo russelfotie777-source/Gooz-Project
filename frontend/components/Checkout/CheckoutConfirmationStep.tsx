@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { useCheckout } from "./CheckoutContext";
 import CheckoutSuccessContent from "./CheckoutSuccessContent";
 
 export default function CheckoutConfirmationStep() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { orderNumber } = useCheckout();
 
   useEffect(() => {
     if (!orderNumber) {
       router.replace("/checkout/adresse");
     }
-  }, [orderNumber, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderNumber]);
 
   if (!orderNumber) return null;
 

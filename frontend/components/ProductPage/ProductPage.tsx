@@ -25,7 +25,7 @@ export default function ProductPage({ product, recommendedProducts }: ProductPag
         <ProductDetail product={product} />
 
         <ProductSection
-          title="Produits recommandés"
+          titleKey="recommendedTitle"
           products={recommendedProducts}
           cardLayout="column"
         />
