@@ -15,9 +15,14 @@ class BannerController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $banners = Banner::query()->orderBy('position')->get();
+        $banners = Banner::query()->with('product')->orderBy('position')->get();
 
         return BannerResource::collection($banners);
+    }
+
+    public function show(Banner $banner): BannerResource
+    {
+        return new BannerResource($banner->load('product'));
     }
 
     public function store(StoreBannerRequest $request): BannerResource
@@ -27,10 +32,11 @@ class BannerController extends Controller
         $data['image'] = Storage::disk('public')->url(
             $request->file('image')->store('banners', 'public')
         );
+        $data['position'] = ((int) Banner::max('position')) + 1;
 
         $banner = Banner::create($data);
 
-        return new BannerResource($banner->fresh());
+        return new BannerResource($banner->fresh('product'));
     }
 
     public function update(UpdateBannerRequest $request, Banner $banner): BannerResource
@@ -51,7 +57,7 @@ class BannerController extends Controller
 
         $banner->update($data);
 
-        return new BannerResource($banner->fresh());
+        return new BannerResource($banner->fresh('product'));
     }
 
     public function destroy(Banner $banner)

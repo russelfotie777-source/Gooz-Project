@@ -12,9 +12,15 @@ class BannerResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'description' => $this->description,
             'image' => $this->image,
             'link_url' => $this->link_url,
+            'link_type' => $this->link_type,
+            'product' => new ProductResource($this->whenLoaded('product')),
+            'location' => $this->location,
             'position' => $this->position,
+            'starts_at' => $this->starts_at,
+            'ends_at' => $this->ends_at,
             'is_active' => $this->is_active,
         ];
     }
