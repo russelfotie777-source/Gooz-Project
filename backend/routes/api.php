@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProductImageController as AdminProductImageContro
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Admin\CartSettingController as AdminCartSettingController;
 use App\Http\Controllers\Admin\CompanyProfileController as AdminCompanyProfileController;
+use App\Http\Controllers\Admin\RolePermissionController as AdminRolePermissionController;
 use App\Http\Controllers\Admin\DeliverySettingController as AdminDeliverySettingController;
 use App\Http\Controllers\Admin\InventoryLedgerController as AdminInventoryLedgerController;
 use App\Http\Controllers\Admin\NeighborhoodController as AdminNeighborhoodController;
@@ -221,11 +222,16 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'can:manage-users'])->group(function () {
         Route::get('/admin/users', [AdminUserController::class, 'index']);
+        Route::post('/admin/users', [AdminUserController::class, 'store']);
         Route::get('/admin/users/{user}', [AdminUserController::class, 'show']);
+        Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
         Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole']);
         Route::patch('/admin/users/{user}/status', [AdminUserController::class, 'updateStatus']);
         Route::patch('/admin/users/{user}/verify-phone', [AdminUserController::class, 'verifyPhone']);
         Route::post('/admin/users/{user}/tickets', [AdminTicketController::class, 'store']);
+
+        Route::get('/admin/role-permissions', [AdminRolePermissionController::class, 'index']);
+        Route::put('/admin/role-permissions', [AdminRolePermissionController::class, 'update']);
 
         Route::get('/admin/tickets', [AdminTicketController::class, 'index']);
         Route::get('/admin/tickets/{ticket}', [AdminTicketController::class, 'show']);

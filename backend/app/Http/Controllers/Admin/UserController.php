@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\StoreStaffUserRequest;
 use App\Http\Requests\User\UpdateUserRoleRequest;
 use App\Http\Requests\User\UpdateUserStatusRequest;
 use App\Http\Resources\UserResource;
@@ -10,6 +11,7 @@ use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -40,6 +42,32 @@ class UserController extends Controller
             ->count('shipping_address');
 
         return new UserResource($user);
+    }
+
+    public function store(StoreStaffUserRequest $request): UserResource
+    {
+        $user = User::create([
+            'name' => $request->validated('name'),
+            'phone' => $request->validated('phone'),
+            'password' => Hash::make($request->validated('password')),
+        ]);
+
+        // 'role' is deliberately excluded from User::$fillable (see
+        // updateRole()) so it must be set directly rather than mass-assigned.
+        $user->role = $request->validated('role');
+        $user->save();
+
+        return new UserResource($user);
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        abort_if($user->id === $request->user()->id, 422, 'Vous ne pouvez pas supprimer votre propre compte.');
+
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json(null, 204);
     }
 
     public function updateRole(UpdateUserRoleRequest $request, User $user): UserResource
