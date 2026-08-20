@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import CheckoutMobileShell from "./CheckoutMobileShell";
+import CheckoutRedirectingContent from "./CheckoutRedirectingContent";
 import { useCheckout } from "./CheckoutContext";
 import styles from "./CheckoutPaymentStep.module.css";
 
@@ -15,6 +16,7 @@ export default function CheckoutPaymentStep() {
   const dict = useDictionary();
   const router = useLocaleRouter();
   const {
+    isAddressComplete,
     subtotal,
     deliveryMethod,
     deliveryFee,
@@ -22,33 +24,48 @@ export default function CheckoutPaymentStep() {
     setPaymentMethod,
     coupon,
     setCoupon,
+    couponStatus,
+    couponError,
+    discountAmount,
+    applyCoupon,
     total,
     orderNumber,
     checkoutUrl,
-    checkoutError,
     placeOrder,
   } = useCheckout();
   const [placing, setPlacing] = useState(false);
 
   const livraison = deliveryMethod === "domicile" ? deliveryFee : 0;
 
-  // Navigate only once orderNumber has actually committed to context state —
-  // pushing immediately after calling placeOrder() races the confirmation
-  // page's own "no order yet" redirect guard, since router.push can run
-  // before the setOrderNumber update has flushed. Mobile money orders get a
-  // checkoutUrl too: send the browser to Enkap's hosted payment page instead
-  // of straight to our own confirmation page, which only makes sense once
-  // the payment has actually gone through.
+  // Reaching this step directly (typed URL, or stepping back after already
+  // moving on) without the prerequisite steps used to fail silently —
+  // placeOrder() just returns early with no message when deliveryMethod
+  // isn't set (see CheckoutContext), leaving the "Envoi..." button stuck.
+  // Bouncing back to the missing step here means placeOrder() is never even
+  // reachable in that state.
   useEffect(() => {
-    if (!placing || !orderNumber) return;
-
-    if (checkoutUrl) {
-      window.location.href = checkoutUrl;
-    } else {
-      router.push("/checkout/confirmation");
+    if (!isAddressComplete) {
+      router.replace("/checkout/adresse");
+    } else if (!deliveryMethod) {
+      router.replace("/checkout/livraison");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placing, orderNumber, checkoutUrl]);
+  }, [isAddressComplete, deliveryMethod, router]);
+
+  // Runs on every mount, not just right after a successful placeOrder() call
+  // in this same component instance: orderNumber is restored from
+  // sessionStorage even after a full reload (e.g. the browser's back button
+  // after being sent to Enkap), so this also closes off the "back + click
+  // Commander again" double-order risk — once orderNumber exists, the
+  // payment form itself never renders again (see the early returns below).
+  useEffect(() => {
+    if (orderNumber && !checkoutUrl) {
+      // The reference lives in the URL itself, not just in sessionStorage —
+      // a refresh, a bookmarked/shared link, or sessionStorage being cleared
+      // all still land on the right confirmation instead of bouncing back
+      // to step 1.
+      router.replace(`/checkout/confirmation/${encodeURIComponent(orderNumber)}`);
+    }
+  }, [orderNumber, checkoutUrl, router]);
 
   async function handleOrder() {
     setPlacing(true);
@@ -59,11 +76,17 @@ export default function CheckoutPaymentStep() {
     }
   }
 
+  if (orderNumber && checkoutUrl) {
+    return <CheckoutRedirectingContent checkoutUrl={checkoutUrl} />;
+  }
+
+  if (!isAddressComplete || !deliveryMethod || orderNumber) return null;
+
   return (
     <CheckoutMobileShell
       step={3}
       continueLabel={placing ? dict.checkout.sendingButton : dict.checkout.orderButton}
-      continueDisabled={!paymentMethod || placing}
+      continueDisabled={!paymentMethod || placing || Boolean(orderNumber)}
       onContinue={handleOrder}
     >
       <div className={styles.summaryCard}>
@@ -73,7 +96,7 @@ export default function CheckoutPaymentStep() {
         </div>
         <div className={styles.summaryRow}>
           <span>{dict.checkout.discount}</span>
-          <span>{formatPrice(0)}</span>
+          <span>{formatPrice(discountAmount)}</span>
         </div>
         <div className={styles.summaryRow}>
           <span>{dict.checkout.deliveryExpedition}</span>
@@ -135,14 +158,19 @@ export default function CheckoutPaymentStep() {
             placeholder={dict.cart.couponPlaceholder}
             className={styles.couponInput}
           />
-          <button type="button" className={styles.couponApply}>
-            {dict.cart.applyCoupon}
+          <button
+            type="button"
+            className={styles.couponApply}
+            onClick={applyCoupon}
+            disabled={!coupon.trim() || couponStatus === "checking"}
+          >
+            {couponStatus === "checking" ? dict.cart.couponChecking : dict.cart.applyCoupon}
             <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
           </button>
         </div>
+        {couponStatus === "applied" && <p className={styles.couponSuccess}>{dict.cart.couponApplied}</p>}
+        {couponStatus === "invalid" && couponError && <p className={styles.error}>{couponError}</p>}
       </div>
-
-      {checkoutError && <p className={styles.error}>{checkoutError}</p>}
     </CheckoutMobileShell>
   );
 }

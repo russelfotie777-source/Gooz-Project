@@ -157,6 +157,33 @@
   gap: clamp(13px, 1.2vw, 17px);
 }
 
+.modeTabs {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background: #f4f4f6;
+  border-radius: 10px;
+}
+
+.modeTab {
+  flex: 1;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: clamp(12px, 0.8vw, 13.5px);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.modeTabActive {
+  background: var(--color-white);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -228,9 +255,31 @@
   color: var(--color-text-muted);
 }
 
+.visibilityIconWrapper {
+  position: relative;
+  display: flex;
+  width: clamp(16px, 1.1vw, 19px);
+  height: clamp(16px, 1.1vw, 19px);
+}
+
 .visibilityIcon {
   width: clamp(16px, 1.1vw, 19px);
   height: clamp(16px, 1.1vw, 19px);
+}
+
+/* No dedicated "hidden password" icon asset exists yet — a diagonal strike
+   over the existing eye icon is a cheap, unambiguous way to distinguish the
+   two states until a proper eye-slash icon is added to the design system. */
+.visibilityIconCrossed::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 50%;
+  height: 2px;
+  background: currentColor;
+  color: var(--color-text);
+  transform: translateY(-50%) rotate(-45deg);
 }
 
 .bottomRow {
@@ -402,6 +451,18 @@
 .snsIconFull {
   width: 100%;
   height: 100%;
+}
+
+.snsButton:disabled,
+.snsButtonFull:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.snsButton:disabled:hover,
+.snsButtonFull:disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .switchLine {

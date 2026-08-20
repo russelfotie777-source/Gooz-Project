@@ -1,11 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { ApiValidationError, login, register } from "@/lib/api";
+import { ApiValidationError, login, register, socialLogin } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
-import { initPushNotifications } from "@/lib/firebase/messaging";
+import { notifyLogin } from "@/lib/authEvents";
+import {
+  EmailAuthError,
+  registerWithEmail,
+  signInWithEmail,
+  SocialSignInCancelledError,
+  signInWithFacebook,
+  signInWithGoogle,
+} from "@/lib/firebase/auth";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { useFocusOnError } from "@/lib/useFocusOnError";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 import styles from "./AuthDesktopPage.module.css";
 
 interface AuthDesktopPageProps {
@@ -22,8 +32,10 @@ interface AuthDesktopPageProps {
 export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
   const dict = useDictionary();
   const router = useLocaleRouter();
+  const [authMode, setAuthMode] = useState<"phone" | "email">("phone");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +43,9 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
   const [exiting, setExiting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [socialLoading, setSocialLoading] = useState<"google" | "facebook" | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const errorRef = useFocusOnError<HTMLParagraphElement>(error);
 
   const targetHref = mode === "login" ? "/inscription" : "/connexion";
 
@@ -40,25 +55,81 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
     window.setTimeout(() => router.push(targetHref), 260);
   }
 
+  function mapEmailAuthError(code: string): string {
+    switch (code) {
+      case "auth/email-already-in-use":
+        return dict.auth.emailInUse;
+      case "auth/weak-password":
+        return dict.auth.weakPassword;
+      case "auth/invalid-email":
+        return dict.auth.invalidEmail;
+      case "auth/wrong-password":
+      case "auth/user-not-found":
+      case "auth/invalid-credential":
+        return dict.auth.emailAuthError;
+      default:
+        return dict.auth.genericError;
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (mode === "signup" && password !== confirmPassword) {
+      setError(dict.auth.passwordMismatch);
+      return;
+    }
+
     setLoading(true);
     try {
+      if (authMode === "email") {
+        const idToken =
+          mode === "login" ? await signInWithEmail(email, password) : await registerWithEmail(email, password, name);
+        const { user, token } = await socialLogin(idToken, "Shopitech PWA (desktop)");
+        saveSession({ user, token });
+        notifyLogin();
+        router.push("/compte");
+        return;
+      }
+
       const { user, token } =
         mode === "login"
           ? await login(phone, password, "Shopitech PWA (desktop)")
           : await register(name, phone, password, confirmPassword);
       saveSession({ user, token });
-      void initPushNotifications(token);
-      router.push("/");
+      notifyLogin();
+      router.push("/compte");
     } catch (err) {
+      const message =
+        err instanceof EmailAuthError
+          ? mapEmailAuthError(err.code)
+          : err instanceof ApiValidationError
+            ? (Object.values(err.errors)[0]?.[0] ?? err.message)
+            : dict.auth.genericError;
+      setError(message);
+      setLoading(false);
+    }
+  }
+
+  async function handleSocialSignIn(providerId: "google" | "facebook") {
+    setError(null);
+    setSocialLoading(providerId);
+    try {
+      const idToken = await (providerId === "google" ? signInWithGoogle() : signInWithFacebook());
+      const { user, token } = await socialLogin(idToken, "Shopitech PWA (desktop)");
+      saveSession({ user, token });
+      notifyLogin();
+      router.push("/compte");
+    } catch (err) {
+      if (err instanceof SocialSignInCancelledError) return;
       const message =
         err instanceof ApiValidationError
           ? (Object.values(err.errors)[0]?.[0] ?? err.message)
-          : dict.auth.genericError;
+          : dict.auth.socialError;
       setError(message);
-      setLoading(false);
+    } finally {
+      setSocialLoading(null);
     }
   }
 
@@ -102,6 +173,27 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
           </h2>
 
           <form className={styles.form} onSubmit={handleSubmit}>
+            <div className={styles.modeTabs} role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === "phone"}
+                className={`${styles.modeTab} ${authMode === "phone" ? styles.modeTabActive : ""}`}
+                onClick={() => setAuthMode("phone")}
+              >
+                {dict.auth.phoneTab}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === "email"}
+                className={`${styles.modeTab} ${authMode === "email" ? styles.modeTabActive : ""}`}
+                onClick={() => setAuthMode("email")}
+              >
+                {dict.auth.emailTab}
+              </button>
+            </div>
+
             {mode === "signup" && (
               <label className={styles.field}>
                 <span className={styles.label}>
@@ -118,19 +210,35 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
               </label>
             )}
 
-            <label className={styles.field}>
-              <span className={styles.label}>
-                <span className={styles.required}>*</span>{dict.auth.phoneNumber}
-              </span>
-              <input
-                type="tel"
-                required
-                autoComplete="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={styles.input}
-              />
-            </label>
+            {authMode === "phone" ? (
+              <label className={styles.field}>
+                <span className={styles.label}>
+                  <span className={styles.required}>*</span>{dict.auth.phoneNumber}
+                </span>
+                <input
+                  type="tel"
+                  required
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={styles.input}
+                />
+              </label>
+            ) : (
+              <label className={styles.field}>
+                <span className={styles.label}>
+                  <span className={styles.required}>*</span>{dict.auth.emailAddress}
+                </span>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={styles.input}
+                />
+              </label>
+            )}
 
             <label className={styles.field}>
               <span className={styles.label}>
@@ -151,7 +259,11 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? dict.auth.hidePassword : dict.auth.showPassword}
                 >
-                  <img src="/icon/auth/visibility.svg" alt="" className={styles.visibilityIcon} />
+                  <span
+                    className={`${styles.visibilityIconWrapper} ${showPassword ? "" : styles.visibilityIconCrossed}`}
+                  >
+                    <img src="/icon/auth/visibility.svg" alt="" className={styles.visibilityIcon} />
+                  </span>
                 </button>
               </div>
             </label>
@@ -183,15 +295,19 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
                 {dict.auth.rememberMe}
               </label>
 
-              {mode === "login" && (
-                <button type="button" className={styles.forgotButton}>
+              {mode === "login" && authMode === "email" && (
+                <button type="button" className={styles.forgotButton} onClick={() => setForgotOpen(true)}>
                   {dict.auth.forgotPassword}
                   <img src="/icon/auth/arrow-forward.svg" alt="" className={styles.forgotArrow} />
                 </button>
               )}
             </div>
 
-            {error && <p className={styles.formError}>{error}</p>}
+            {error && (
+              <p ref={errorRef} tabIndex={-1} className={styles.formError} role="alert">
+                {error}
+              </p>
+            )}
 
             <button type="submit" className={styles.submitButton} disabled={loading}>
               <span>{loading ? dict.auth.connecting : mode === "login" ? dict.auth.login : dict.auth.signup}</span>
@@ -204,13 +320,31 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
             </div>
 
             <div className={styles.snsRow}>
-              <button type="button" className={styles.snsButton} aria-label={dict.auth.continueWithGoogle}>
+              <button
+                type="button"
+                className={styles.snsButton}
+                aria-label={dict.auth.continueWithGoogle}
+                disabled={socialLoading !== null}
+                onClick={() => handleSocialSignIn("google")}
+              >
                 <img src="/icon/auth/google.svg" alt="" className={styles.snsIcon} />
               </button>
-              <button type="button" className={styles.snsButtonFull} aria-label={dict.auth.continueWithFacebook}>
+              <button
+                type="button"
+                className={styles.snsButtonFull}
+                aria-label={dict.auth.continueWithFacebook}
+                disabled={socialLoading !== null}
+                onClick={() => handleSocialSignIn("facebook")}
+              >
                 <img src="/icon/auth/facebook.svg" alt="" className={styles.snsIconFull} />
               </button>
-              <button type="button" className={styles.snsButtonFull} aria-label={dict.auth.continueWithApple}>
+              <button
+                type="button"
+                className={styles.snsButtonFull}
+                aria-label={dict.auth.continueWithApple}
+                title={dict.auth.appleComingSoon}
+                disabled
+              >
                 <img src="/icon/auth/apple.svg" alt="" className={styles.snsIconFull} />
               </button>
             </div>
@@ -225,6 +359,8 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} initialEmail={email} />
     </div>
   );
 }

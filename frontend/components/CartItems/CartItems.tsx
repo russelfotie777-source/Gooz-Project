@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ApiValidationError, removeCartItem, updateCartItem } from "@/lib/api";
+import { ApiValidationError, removeCartItem, updateCartItem, validateCoupon } from "@/lib/api";
 import { notifyCartUpdated } from "@/lib/cartEvents";
+import { persistCouponCode, readPersistedCouponCode } from "@/lib/coupon";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { showToast } from "@/lib/toast";
 import type { CartItemLine } from "@/lib/types";
 import styles from "./CartItems.module.css";
 
@@ -25,9 +27,43 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
   const [items, setItems] = useState(initialItems);
   const [subtotal, setSubtotal] = useState(initialTotal);
   const [pendingId, setPendingId] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(null);
   const [couponOpen, setCouponOpen] = useState(true);
-  const [coupon, setCoupon] = useState("");
+  const [coupon, setCoupon] = useState(readPersistedCouponCode);
+  const [couponStatus, setCouponStatus] = useState<"idle" | "checking" | "applied" | "invalid">("idle");
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+
+  function handleCouponChange(value: string) {
+    setCoupon(value);
+    setCouponStatus("idle");
+    setCouponError(null);
+    setDiscountAmount(0);
+  }
+
+  async function applyCoupon() {
+    const trimmed = coupon.trim();
+    if (!trimmed) return;
+
+    setCouponStatus("checking");
+    setCouponError(null);
+
+    try {
+      const result = await validateCoupon(token, trimmed, subtotal);
+      setDiscountAmount(result.discount_amount);
+      setCouponStatus("applied");
+      // Carries the code over to checkout, which has no other way to know
+      // about it (cart and checkout don't otherwise share state) — see
+      // lib/coupon.ts.
+      persistCouponCode(trimmed);
+    } catch (err) {
+      setDiscountAmount(0);
+      setCouponStatus("invalid");
+      setCouponError(
+        err instanceof ApiValidationError ? (Object.values(err.errors)[0]?.[0] ?? err.message) : dict.cart.genericError
+      );
+    }
+  }
 
   async function updateQuantity(id: number, delta: number) {
     const current = items.find((item) => item.id === id);
@@ -35,7 +71,6 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
     const quantity = Math.max(1, current.quantity + delta);
     if (quantity === current.quantity) return;
 
-    setError(null);
     setPendingId(id);
     try {
       const cart = await updateCartItem(token, id, quantity);
@@ -43,10 +78,11 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
       setSubtotal(cart.total);
       notifyCartUpdated(cart.items.length);
     } catch (err) {
-      setError(
+      showToast(
         err instanceof ApiValidationError
           ? (Object.values(err.errors)[0]?.[0] ?? err.message)
-          : dict.cart.genericError
+          : dict.cart.genericError,
+        "error"
       );
     } finally {
       setPendingId(null);
@@ -54,7 +90,6 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
   }
 
   async function removeItem(id: number) {
-    setError(null);
     setPendingId(id);
     try {
       await removeCartItem(token, id);
@@ -63,14 +98,19 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
       setSubtotal(remaining.reduce((sum, item) => sum + item.line_total, 0));
       notifyCartUpdated(remaining.length);
     } catch {
-      setError(dict.cart.removeError);
+      showToast(dict.cart.removeError, "error");
     } finally {
       setPendingId(null);
+      setConfirmingDeleteId(null);
     }
   }
 
-  const deliveryFee = 0;
-  const total = subtotal + deliveryFee;
+  // Delivery isn't knowable here — it depends on an address/pickup choice
+  // that only exists from the checkout flow onward (see
+  // CheckoutContext.setDeliveryMethod). Showing a hard "0 FCFA" here used to
+  // imply free delivery; this total is the subtotal (minus any applied
+  // coupon) only, on purpose.
+  const total = Math.max(0, subtotal - discountAmount);
 
   if (items.length === 0) {
     return (
@@ -83,11 +123,14 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
   return (
     <div className={styles.layout}>
       <div className={styles.list}>
-        {error && <p className={styles.error}>{error}</p>}
-
         {items.map((item) => {
           const image = item.product.images.find((img) => img.is_primary) ?? item.product.images[0];
           const isPending = pendingId === item.id;
+          const isConfirmingDelete = confirmingDeleteId === item.id;
+          const availableStock = item.variant?.stock_quantity ?? item.product.stock_quantity;
+          const isOutOfStock = typeof availableStock === "number" && availableStock <= 0;
+          const isLowStock = typeof availableStock === "number" && availableStock > 0 && availableStock <= 5;
+          const atStockCap = typeof availableStock === "number" && item.quantity >= availableStock;
 
           return (
             <div key={item.id} className={styles.card}>
@@ -112,46 +155,72 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
                   </p>
                 </div>
 
+                {isOutOfStock && <p className={styles.stockWarning}>{dict.cart.outOfStock}</p>}
+                {!isOutOfStock && isLowStock && (
+                  <p className={styles.stockNote}>{dict.cart.lowStockRemaining(availableStock)}</p>
+                )}
+
                 <div className={styles.priceRow}>
                   <p className={styles.price}>{formatPrice(item.line_total)}</p>
 
-                  <div className={styles.bottomRow}>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      aria-label={dict.cart.delete}
-                      disabled={isPending}
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <img src="/icon/cart/delete.svg" alt="" className={styles.deleteIconMobile} />
-                      <img src="/icon/cart/delete-red.svg" alt="" className={styles.deleteIconDesktop} />
-                      <span className={styles.deleteLabel}>{dict.cart.delete}</span>
-                    </button>
-
-                    <div className={styles.quantity}>
+                  {isConfirmingDelete ? (
+                    <div className={styles.confirmRow}>
+                      <span className={styles.confirmText}>{dict.cart.confirmDelete}</span>
                       <button
                         type="button"
-                        className={styles.quantityButtonMinus}
-                        aria-label={dict.cart.decreaseQty}
+                        className={styles.confirmYes}
                         disabled={isPending}
-                        onClick={() => updateQuantity(item.id, -1)}
+                        onClick={() => removeItem(item.id)}
                       >
-                        <img src="/icon/cart/remove.svg" alt="" className={styles.quantityIconMobile} />
-                        <img src="/icon/cart/remove-white.svg" alt="" className={styles.quantityIconDesktop} />
+                        {dict.cart.confirmDeleteYes}
                       </button>
-                      <span className={styles.quantityValue}>{item.quantity}</span>
                       <button
                         type="button"
-                        className={styles.quantityButtonPlus}
-                        aria-label={dict.cart.increaseQty}
-                        disabled={isPending}
-                        onClick={() => updateQuantity(item.id, 1)}
+                        className={styles.confirmCancel}
+                        onClick={() => setConfirmingDeleteId(null)}
                       >
-                        <img src="/icon/cart/add.svg" alt="" className={styles.quantityIconMobile} />
-                        <img src="/icon/cart/add-white.svg" alt="" className={styles.quantityIconDesktop} />
+                        {dict.cart.cancel}
                       </button>
                     </div>
-                  </div>
+                  ) : (
+                    <div className={styles.bottomRow}>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        aria-label={dict.cart.delete}
+                        disabled={isPending}
+                        onClick={() => setConfirmingDeleteId(item.id)}
+                      >
+                        <img src="/icon/cart/delete.svg" alt="" className={styles.deleteIconMobile} />
+                        <img src="/icon/cart/delete-red.svg" alt="" className={styles.deleteIconDesktop} />
+                        <span className={styles.deleteLabel}>{dict.cart.delete}</span>
+                      </button>
+
+                      <div className={styles.quantity}>
+                        <button
+                          type="button"
+                          className={styles.quantityButtonMinus}
+                          aria-label={dict.cart.decreaseQty}
+                          disabled={isPending}
+                          onClick={() => updateQuantity(item.id, -1)}
+                        >
+                          <img src="/icon/cart/remove.svg" alt="" className={styles.quantityIconMobile} />
+                          <img src="/icon/cart/remove-white.svg" alt="" className={styles.quantityIconDesktop} />
+                        </button>
+                        <span className={styles.quantityValue}>{item.quantity}</span>
+                        <button
+                          type="button"
+                          className={styles.quantityButtonPlus}
+                          aria-label={dict.cart.increaseQty}
+                          disabled={isPending || atStockCap}
+                          onClick={() => updateQuantity(item.id, 1)}
+                        >
+                          <img src="/icon/cart/add.svg" alt="" className={styles.quantityIconMobile} />
+                          <img src="/icon/cart/add-white.svg" alt="" className={styles.quantityIconDesktop} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -180,9 +249,15 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
           <span className={styles.summaryRowLabel}>{dict.cart.subtotalLabel}</span>
           <span className={styles.summaryRowValue}>{formatPrice(subtotal)}</span>
         </div>
+        {discountAmount > 0 && (
+          <div className={styles.summaryRow}>
+            <span className={styles.summaryRowLabel}>{dict.cart.discountLabel}</span>
+            <span className={styles.summaryRowValue}>-{formatPrice(discountAmount)}</span>
+          </div>
+        )}
         <div className={styles.summaryRow}>
           <span className={styles.summaryRowLabel}>{dict.cart.deliveryLabel}</span>
-          <span className={styles.summaryRowValue}>{formatPrice(deliveryFee)}</span>
+          <span className={styles.summaryRowValue}>{dict.cart.deliveryEstimatedNote}</span>
         </div>
         <div className={styles.summaryDivider} />
         <div className={styles.summaryRow}>
@@ -210,16 +285,23 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
               <input
                 type="text"
                 value={coupon}
-                onChange={(e) => setCoupon(e.target.value)}
+                onChange={(e) => handleCouponChange(e.target.value)}
                 placeholder={dict.cart.couponPlaceholder}
                 className={styles.couponInput}
               />
-              <button type="button" className={styles.couponApply}>
-                {dict.cart.applyCoupon}
+              <button
+                type="button"
+                className={styles.couponApply}
+                onClick={applyCoupon}
+                disabled={!coupon.trim() || couponStatus === "checking"}
+              >
+                {couponStatus === "checking" ? dict.cart.couponChecking : dict.cart.applyCoupon}
                 <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
               </button>
             </div>
           )}
+          {couponStatus === "applied" && <p className={styles.couponSuccess}>{dict.cart.couponApplied}</p>}
+          {couponStatus === "invalid" && couponError && <p className={styles.error}>{couponError}</p>}
         </div>
 
         <LocaleLink href="/checkout" className={styles.checkoutButton}>

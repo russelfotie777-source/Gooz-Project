@@ -9,6 +9,20 @@
   padding: 20px;
 }
 
+.bannerWithImage {
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0) 100%);
+}
+
 .content {
   position: relative;
   z-index: 2;

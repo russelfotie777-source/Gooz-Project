@@ -1,9 +1,16 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import TicketModal from "@/components/TicketModal/TicketModal";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import styles from "./SupportButton.module.css";
+
+// /connexion and /inscription shouldn't show this — see WhatsAppButton for
+// the same exclusion and why.
+function isHiddenOnPathname(pathname: string | null): boolean {
+  return pathname != null && /\/(connexion|inscription)$/.test(pathname);
+}
 
 // Desktop-only floating button (mirrors WhatsAppButton's fixed-corner style,
 // stacked above it + ScrollToTopButton) that opens the ticket-creation
@@ -12,7 +19,10 @@ import styles from "./SupportButton.module.css";
 // user's request, to avoid crowding the WhatsApp/scroll-to-top corner.
 export default function SupportButton() {
   const dict = useDictionary();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  if (isHiddenOnPathname(pathname)) return null;
 
   return (
     <>

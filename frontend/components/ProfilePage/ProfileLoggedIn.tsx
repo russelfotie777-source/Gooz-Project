@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import DeleteAccountModal from "@/components/DeleteAccountModal/DeleteAccountModal";
+import EditProfileModal from "@/components/EditProfileModal/EditProfileModal";
+import LogoutConfirmModal from "@/components/LogoutConfirmModal/LogoutConfirmModal";
 import TicketModal from "@/components/TicketModal/TicketModal";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
@@ -12,12 +14,15 @@ interface ProfileLoggedInProps {
   user: User;
   onLogout: () => void;
   onToggleLanguage: () => void;
+  onProfileUpdated: (user: User) => void;
 }
 
-export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage }: ProfileLoggedInProps) {
+export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage, onProfileUpdated }: ProfileLoggedInProps) {
   const dict = useDictionary();
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const ACCOUNT_ROWS = [
     {
@@ -31,6 +36,7 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage }: Pr
       iconClassName: "iconTilted",
       title: dict.profile.paymentHistory,
       subtitle: dict.profile.paymentHistorySubtitle,
+      href: "/paiements",
     },
     {
       icon: "/icon/profile/delivery-truck-bolt.svg",
@@ -52,10 +58,10 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage }: Pr
       title: dict.profile.contactUs,
       onClick: () => setTicketModalOpen(true),
     },
-    { icon: "/icon/profile/quiz.svg", title: dict.profile.helpNeeds },
+    { icon: "/icon/profile/quiz.svg", title: dict.profile.helpNeeds, href: "/aide" },
     { icon: "/icon/profile/security.svg", title: dict.profile.privacyPolicy, href: "/politique-confidentialite" },
     { icon: "/icon/profile/verified.svg", title: dict.profile.termsOfUse, href: "/conditions-utilisation" },
-    { icon: "/icon/profile/logout.svg", title: dict.profile.logout, onClick: onLogout },
+    { icon: "/icon/profile/logout.svg", title: dict.profile.logout, onClick: () => setLogoutModalOpen(true) },
   ];
 
   return (
@@ -67,7 +73,12 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage }: Pr
           <p className={styles.userName}>{user.name}</p>
           <p className={styles.userEmail}>{user.phone}</p>
         </div>
-        <button type="button" className={styles.editButton} aria-label={dict.profile.editProfile}>
+        <button
+          type="button"
+          className={styles.editButton}
+          aria-label={dict.profile.editProfile}
+          onClick={() => setEditModalOpen(true)}
+        >
           <img src="/icon/profile/person-edit.svg" alt="" className={styles.editIcon} />
         </button>
       </div>
@@ -159,6 +170,20 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage }: Pr
 
       <TicketModal open={ticketModalOpen} onClose={() => setTicketModalOpen(false)} />
       <DeleteAccountModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} />
+      <EditProfileModal
+        open={editModalOpen}
+        user={user}
+        onClose={() => setEditModalOpen(false)}
+        onUpdated={onProfileUpdated}
+      />
+      <LogoutConfirmModal
+        open={logoutModalOpen}
+        onCancel={() => setLogoutModalOpen(false)}
+        onConfirm={() => {
+          setLogoutModalOpen(false);
+          onLogout();
+        }}
+      />
     </>
   );
 }

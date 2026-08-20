@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import CompletePhoneModal from "@/components/CompletePhoneModal/CompletePhoneModal";
 import DeleteAccountModal from "@/components/DeleteAccountModal/DeleteAccountModal";
+import EditProfileModal from "@/components/EditProfileModal/EditProfileModal";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
+import LogoutConfirmModal from "@/components/LogoutConfirmModal/LogoutConfirmModal";
 import TicketModal from "@/components/TicketModal/TicketModal";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
@@ -18,9 +21,11 @@ import styles from "./ProfileDesktop.module.css";
 // language logic with the mobile ProfilePage via useProfileSession.
 export default function ProfileDesktop() {
   const dict = useDictionary();
-  const { user, handleLogout, toggleLanguage } = useProfileSession();
+  const { user, handleLogout, toggleLanguage, updateUser } = useProfileSession();
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const TILES = [
     {
@@ -34,6 +39,7 @@ export default function ProfileDesktop() {
       tilted: true,
       title: dict.profile.paymentHistory,
       subtitle: dict.profile.paymentHistorySubtitle,
+      href: "/paiements",
     },
     {
       icon: "/icon/profile/delivery-truck-bolt.svg",
@@ -49,7 +55,7 @@ export default function ProfileDesktop() {
       label: dict.profile.contactUs,
       onClick: () => setTicketModalOpen(true),
     },
-    { icon: "/icon/profile/quiz.svg", label: dict.profile.helpNeeds },
+    { icon: "/icon/profile/quiz.svg", label: dict.profile.helpNeeds, href: "/aide" },
     { icon: "/icon/profile/security.svg", label: dict.profile.privacyPolicy, href: "/politique-confidentialite" },
     { icon: "/icon/profile/verified.svg", label: dict.profile.termsOfUse, href: "/conditions-utilisation" },
   ];
@@ -127,7 +133,7 @@ export default function ProfileDesktop() {
                   </button>
                 </nav>
 
-                <button type="button" className={styles.logoutButton} onClick={handleLogout}>
+                <button type="button" className={styles.logoutButton} onClick={() => setLogoutModalOpen(true)}>
                   <LogoutIcon className={styles.logoutIcon} />
                   {dict.profile.logout}
                 </button>
@@ -172,7 +178,12 @@ export default function ProfileDesktop() {
                     <p className={styles.overviewName}>{user.name}</p>
                     <p className={styles.overviewPhone}>{user.phone}</p>
                   </div>
-                  <button type="button" className={styles.editButton} aria-label={dict.profile.editProfile}>
+                  <button
+                    type="button"
+                    className={styles.editButton}
+                    aria-label={dict.profile.editProfile}
+                    onClick={() => setEditModalOpen(true)}
+                  >
                     <img src="/icon/profile/person-edit.svg" alt="" className={styles.editIcon} />
                   </button>
                 </div>
@@ -279,6 +290,23 @@ export default function ProfileDesktop() {
 
       <TicketModal open={ticketModalOpen} onClose={() => setTicketModalOpen(false)} />
       <DeleteAccountModal open={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} />
+      {user && (
+        <EditProfileModal
+          open={editModalOpen}
+          user={user}
+          onClose={() => setEditModalOpen(false)}
+          onUpdated={updateUser}
+        />
+      )}
+      <LogoutConfirmModal
+        open={logoutModalOpen}
+        onCancel={() => setLogoutModalOpen(false)}
+        onConfirm={() => {
+          setLogoutModalOpen(false);
+          handleLogout();
+        }}
+      />
+      <CompletePhoneModal user={user} onUpdated={updateUser} />
     </div>
   );
 }

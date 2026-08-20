@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useCheckout } from "./CheckoutContext";
-import CheckoutSuccessContent from "./CheckoutSuccessContent";
+import CheckoutConfirmationVerified from "./CheckoutConfirmationVerified";
+import CheckoutRedirectingContent from "./CheckoutRedirectingContent";
 import styles from "./CheckoutDesktopPage.module.css";
 
 function formatPrice(value: number): string {
@@ -24,6 +25,7 @@ export default function CheckoutDesktopPage() {
   const dict = useDictionary();
   const {
     cartStatus,
+    retryLoad,
     items,
     subtotal,
     cities,
@@ -40,21 +42,15 @@ export default function CheckoutDesktopPage() {
     setPaymentMethod,
     coupon,
     setCoupon,
+    couponStatus,
+    couponError,
+    discountAmount,
+    applyCoupon,
     total,
     orderNumber,
     checkoutUrl,
-    checkoutError,
     placeOrder,
   } = useCheckout();
-
-  // Mobile money orders get a checkoutUrl: send the browser to Enkap's
-  // hosted payment page instead of showing our own success screen, which
-  // only makes sense once the payment has actually gone through.
-  useEffect(() => {
-    if (orderNumber && checkoutUrl) {
-      window.location.href = checkoutUrl;
-    }
-  }, [orderNumber, checkoutUrl]);
 
   const [activeStep, setActiveStep] = useState<Step>(1);
   const [maxStepReached, setMaxStepReached] = useState<Step>(1);
@@ -94,12 +90,34 @@ export default function CheckoutDesktopPage() {
     setActiveStep(3);
   }
 
-  if (orderNumber && !checkoutUrl) {
+  // Mobile money orders get a checkoutUrl: show a brief interstitial before
+  // sending the browser to Enkap's hosted payment page — an instant jump to
+  // a third-party domain with no explanation reads as suspicious. Checked
+  // before the plain success screen below since checkoutUrl implies the
+  // order isn't actually confirmed yet, just created.
+  if (orderNumber && checkoutUrl) {
     return (
       <div className={styles.page}>
         <Header cartCount={items.length} />
         <main className={styles.successMain}>
-          <CheckoutSuccessContent orderNumber={orderNumber} />
+          <CheckoutRedirectingContent checkoutUrl={checkoutUrl} />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (orderNumber && !checkoutUrl) {
+    // Same reasoning as the mobile /checkout/confirmation/[reference] route:
+    // orderNumber here comes from sessionStorage (see CheckoutContext), not
+    // a URL a stranger could edit, but re-verifying it against the backend
+    // before showing "your order is confirmed" keeps both platforms honest
+    // about the same thing rather than trusting local state on one of them.
+    return (
+      <div className={styles.page}>
+        <Header cartCount={items.length} />
+        <main className={styles.successMain}>
+          <CheckoutConfirmationVerified reference={orderNumber} />
         </main>
         <Footer />
       </div>
@@ -128,6 +146,14 @@ export default function CheckoutDesktopPage() {
               <LocaleLink href="/cart" className={styles.gateLink}>
                 {dict.checkout.viewCart}
               </LocaleLink>
+            </>
+          )}
+          {cartStatus === "error" && (
+            <>
+              <p>{dict.checkout.loadError}</p>
+              <button type="button" className={styles.gateLink} onClick={retryLoad}>
+                {dict.checkout.retry}
+              </button>
             </>
           )}
         </main>
@@ -517,6 +543,10 @@ export default function CheckoutDesktopPage() {
               <span className={styles.summaryRowValue}>{formatPrice(subtotal)}</span>
             </div>
             <div className={styles.summaryRow}>
+              <span className={styles.summaryRowLabel}>{dict.checkout.discount}</span>
+              <span className={styles.summaryRowValue}>{formatPrice(discountAmount)}</span>
+            </div>
+            <div className={styles.summaryRow}>
               <span className={styles.summaryRowLabel}>{dict.cart.deliveryLabel}</span>
               <span className={styles.summaryRowValue}>{formatPrice(livraisonFee)}</span>
             </div>
@@ -550,12 +580,19 @@ export default function CheckoutDesktopPage() {
                     placeholder={dict.cart.couponPlaceholder}
                     className={styles.couponInput}
                   />
-                  <button type="button" className={styles.couponApply}>
-                    {dict.cart.applyCoupon}
+                  <button
+                    type="button"
+                    className={styles.couponApply}
+                    onClick={applyCoupon}
+                    disabled={!coupon.trim() || couponStatus === "checking"}
+                  >
+                    {couponStatus === "checking" ? dict.cart.couponChecking : dict.cart.applyCoupon}
                     <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
                   </button>
                 </div>
               )}
+              {couponStatus === "applied" && <p className={styles.couponSuccess}>{dict.cart.couponApplied}</p>}
+              {couponStatus === "invalid" && couponError && <p className={styles.checkoutWarning}>{couponError}</p>}
             </div>
 
             <button
@@ -575,7 +612,6 @@ export default function CheckoutDesktopPage() {
                     : dict.checkout.selectPaymentPrompt}
               </p>
             )}
-            {checkoutError && <p className={styles.checkoutWarning}>{checkoutError}</p>}
           </aside>
         </div>
       </main>

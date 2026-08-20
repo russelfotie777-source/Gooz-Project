@@ -9,6 +9,10 @@ import styles from "./CatalogueSection.module.css";
 interface CatalogueSectionProps {
   products: Product[];
   categories: Category[];
+  /** True when the fetched product list hit PRODUCT_FETCH_CAP — filters/sort
+   * below run entirely client-side over this list, so results past the cap
+   * can't be represented at all (see lib/api.ts's PRODUCT_FETCH_CAP comment). */
+  possiblyTruncated?: boolean;
 }
 
 const PAGE_SIZE = 8;
@@ -27,7 +31,7 @@ function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
   return next;
 }
 
-export default function CatalogueSection({ products, categories }: CatalogueSectionProps) {
+export default function CatalogueSection({ products, categories, possiblyTruncated }: CatalogueSectionProps) {
   const dict = useDictionary();
   const PRICE_RANGES = PRICE_RANGE_DEFS.map((r) => ({
     ...r,
@@ -128,6 +132,8 @@ export default function CatalogueSection({ products, categories }: CatalogueSect
           {dict.home.catalogue.filters}
         </button>
       </div>
+
+      {possiblyTruncated && <p className={styles.truncatedNotice}>{dict.home.catalogue.truncatedNotice}</p>}
 
       <div className={styles.layout}>
         <aside className={`${styles.filters} ${filtersOpen ? styles.filtersOpen : ""}`}>

@@ -634,3 +634,11 @@
   color: #fe522e;
   margin: 0;
 }
+
+.couponSuccess {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #1a9d5c;
+  margin: 8px 0 0;
+}

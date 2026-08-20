@@ -32,7 +32,7 @@ export default function CheckoutMobileShell({
   onContinue,
 }: CheckoutMobileShellProps) {
   const dict = useDictionary();
-  const { total, cartStatus } = useCheckout();
+  const { total, cartStatus, retryLoad } = useCheckout();
 
   if (cartStatus !== "ready") {
     return (
@@ -57,6 +57,14 @@ export default function CheckoutMobileShell({
                 </LocaleLink>
               </>
             )}
+            {cartStatus === "error" && (
+              <>
+                <p>{dict.checkout.loadError}</p>
+                <button type="button" className={styles.gateLink} onClick={retryLoad}>
+                  {dict.checkout.retry}
+                </button>
+              </>
+            )}
           </div>
         </main>
       </div>
@@ -68,17 +76,29 @@ export default function CheckoutMobileShell({
       <Header variant="cart" />
 
       <main className={styles.main}>
-        <div className={styles.stepIndicator}>
-          <img src="/icon/checkout/step-location.svg" alt={dict.checkout.stepAddress} className={styles.stepIcon} />
+        <nav className={styles.stepIndicator} aria-label={dict.checkout.stepIndicatorLabel}>
+          <span className={styles.srOnly}>{dict.checkout.stepOfTotal(step, 3)}</span>
+          <img
+            src="/icon/checkout/step-location.svg"
+            alt={dict.checkout.stepAddress}
+            aria-current={step === 1 ? "step" : undefined}
+            className={styles.stepIcon}
+          />
           <span className={`${styles.stepDash} ${step > 1 ? styles.stepDashActive : ""}`} />
           <img
             src={step >= 2 ? "/icon/checkout/step-shipping-active.svg" : "/icon/checkout/step-shipping.svg"}
             alt={dict.checkout.stepDelivery}
+            aria-current={step === 2 ? "step" : undefined}
             className={styles.stepIcon}
           />
           <span className={`${styles.stepDash} ${step > 2 ? styles.stepDashActive : ""}`} />
-          <img src="/icon/checkout/step-card.svg" alt={dict.checkout.stepPayment} className={styles.stepIcon} />
-        </div>
+          <img
+            src="/icon/checkout/step-card.svg"
+            alt={dict.checkout.stepPayment}
+            aria-current={step === 3 ? "step" : undefined}
+            className={styles.stepIcon}
+          />
+        </nav>
 
         {children}
       </main>

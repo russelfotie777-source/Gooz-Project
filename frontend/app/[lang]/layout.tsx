@@ -3,8 +3,9 @@ import { Sora, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import PushNotificationRegistrar from "@/components/PushNotificationRegistrar/PushNotificationRegistrar";
 import SupportButton from "@/components/SupportButton/SupportButton";
+import ToastProvider from "@/components/ToastProvider/ToastProvider";
 import WhatsAppButton from "@/components/WhatsAppButton/WhatsAppButton";
-import { isLocale } from "@/lib/i18n/config";
+import { isLocale, locales } from "@/lib/i18n/config";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import "../globals.css";
 
@@ -20,10 +21,38 @@ const inter = Inter({
   weight: ["400", "500", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "Shopitech",
-  description: "Shopitech — Découvrez un univers d'articles",
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const DESCRIPTIONS = {
+  fr: "Shopitech — Découvrez un univers d'articles",
+  en: "Shopitech — Discover a world of products",
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  const resolvedLang = isLocale(lang) ? lang : "fr";
+
+  // Was a single static object shared by both locales — no hreflang/
+  // alternates.languages at all, which search engines need to serve the
+  // right locale to the right audience instead of treating /fr and /en as
+  // duplicate content.
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: "Shopitech",
+    description: DESCRIPTIONS[resolvedLang],
+    alternates: {
+      canonical: `/${resolvedLang}`,
+      languages: Object.fromEntries(locales.map((locale) => [locale, `/${locale}`])),
+    },
+    openGraph: {
+      locale: resolvedLang === "fr" ? "fr_FR" : "en_US",
+    },
+  };
+}
 
 export function generateStaticParams() {
   return [{ lang: "fr" }, { lang: "en" }];
@@ -47,6 +76,7 @@ export default async function RootLayout({
           <WhatsAppButton />
           <SupportButton />
           <PushNotificationRegistrar />
+          <ToastProvider />
         </I18nProvider>
       </body>
     </html>

@@ -7,6 +7,7 @@ import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import type { Order } from "@/lib/types";
 import {
+  computeOrderSubtotal,
   DELIVERY_METHOD_LABEL_KEYS,
   formatOrderDate,
   formatPrice,
@@ -107,7 +108,7 @@ export default function OrderHistoryPage() {
                       <div className={styles.summary}>
                         <div className={styles.summaryRow}>
                           <span>{dict.orders.subtotal}</span>
-                          <span>{formatPrice(order.total_amount - order.delivery_fees + order.discount_amount)}</span>
+                          <span>{formatPrice(computeOrderSubtotal(order))}</span>
                         </div>
                         {order.discount_amount > 0 && (
                           <div className={styles.summaryRow}>

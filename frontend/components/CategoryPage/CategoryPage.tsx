@@ -6,7 +6,7 @@ import ProductSection from "@/components/ProductSection/ProductSection";
 import CategoryResults from "@/components/CategoryResults/CategoryResults";
 import PromoBanner from "@/components/PromoBanner/PromoBanner";
 import Footer from "@/components/Footer/Footer";
-import { getCategories, getProducts } from "@/lib/api";
+import { getBanners, getCategories, getProducts, PRODUCT_FETCH_CAP } from "@/lib/api";
 import styles from "./CategoryPage.module.css";
 
 interface CategoryPageProps {
@@ -21,10 +21,14 @@ export default async function CategoryPage({ categorySlug }: CategoryPageProps) 
   const category = categories.find((c) => c.slug === categorySlug);
   if (!category) notFound();
 
-  const [categoryProducts, otherProducts] = await Promise.all([
-    getProducts({ category_id: category.id, per_page: 50 }),
-    getProducts({ per_page: 8 }),
+  const [categoryProducts, otherProducts, banners] = await Promise.all([
+    getProducts({ category_id: category.id, per_page: PRODUCT_FETCH_CAP }),
+    // Secondary/non-essential (recommended-products) fetch — a failure here
+    // shouldn't take down a page whose main content already loaded fine.
+    getProducts({ per_page: 8 }).catch(() => []),
+    getBanners("category").catch(() => []),
   ]);
+  const possiblyTruncated = categoryProducts.length >= PRODUCT_FETCH_CAP;
 
   const bestSellers = categoryProducts.slice(0, 4);
   const recommendedProducts = otherProducts
@@ -36,11 +40,15 @@ export default async function CategoryPage({ categorySlug }: CategoryPageProps) 
       <Header cartCount={2} />
 
       <main className={styles.main}>
-        <HeroSection categories={categories} />
+        <HeroSection categories={categories} banners={banners} />
 
         <ProductSection titleKey="bestSellersTitle" products={bestSellers} cardLayout="row" />
 
-        <CategoryResults categoryName={category.name} products={categoryProducts} />
+        <CategoryResults
+          categoryName={category.name}
+          products={categoryProducts}
+          possiblyTruncated={possiblyTruncated}
+        />
 
         <PromoBanner />
 

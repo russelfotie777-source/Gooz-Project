@@ -185,6 +185,33 @@
   text-align: center;
 }
 
+.modeTabs {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background: #f4f4f6;
+  border-radius: 10px;
+}
+
+.modeTab {
+  flex: 1;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.modeTabActive {
+  background: var(--color-white);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -254,9 +281,31 @@
   padding: 0;
 }
 
+.visibilityIconWrapper {
+  position: relative;
+  display: flex;
+  width: 22px;
+  height: 22px;
+}
+
 .visibilityIcon {
   width: 22px;
   height: 22px;
+}
+
+/* No dedicated "hidden password" icon asset exists yet — a diagonal strike
+   over the existing eye icon is a cheap, unambiguous way to distinguish the
+   two states until a proper eye-slash icon is added to the design system. */
+.visibilityIconCrossed::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 50%;
+  height: 2px;
+  background: currentColor;
+  color: var(--color-text);
+  transform: translateY(-50%) rotate(-45deg);
 }
 
 .forgotLink {
@@ -321,6 +370,70 @@
   font-size: 13px;
   color: #fe522e;
   text-align: center;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e2e2e9;
+}
+
+.dividerLabel {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-style: normal;
+  color: #818183;
+}
+
+.snsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.snsButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid #e2e2e9;
+  background: var(--color-white);
+  padding: 0;
+}
+
+.snsIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.snsButtonFull {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+.snsIconFull {
+  width: 100%;
+  height: 100%;
+}
+
+.snsButton:disabled,
+.snsButtonFull:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .switchLine {
