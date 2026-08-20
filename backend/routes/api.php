@@ -17,6 +17,13 @@ use App\Http\Controllers\Admin\NeighborhoodController as AdminNeighborhoodContro
 use App\Http\Controllers\Admin\StockAdjustmentController as AdminStockAdjustmentController;
 use App\Http\Controllers\Admin\StockController as AdminStockController;
 use App\Http\Controllers\Admin\SupplierController as AdminSupplierController;
+use App\Http\Controllers\Admin\AccountController as AdminAccountController;
+use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
+use App\Http\Controllers\Admin\MoneyMovementController as AdminMoneyMovementController;
+use App\Http\Controllers\Admin\PurchaseInvoiceController as AdminPurchaseInvoiceController;
+use App\Http\Controllers\Admin\PurchaseOrderController as AdminPurchaseOrderController;
+use App\Http\Controllers\Admin\AccountingPeriodController as AdminAccountingPeriodController;
+use App\Http\Controllers\Admin\CashSessionController as AdminCashSessionController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
@@ -229,5 +236,42 @@ Route::prefix('v1')->group(function () {
         Route::post('/admin/neighborhoods', [AdminNeighborhoodController::class, 'store']);
         Route::put('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'update']);
         Route::delete('/admin/neighborhoods/{neighborhood}', [AdminNeighborhoodController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-accounting'])->group(function () {
+        Route::get('/admin/accounts', [AdminAccountController::class, 'index']);
+        Route::get('/admin/accounts/{account}', [AdminAccountController::class, 'show']);
+        Route::post('/admin/accounts', [AdminAccountController::class, 'store']);
+        Route::put('/admin/accounts/{account}', [AdminAccountController::class, 'update']);
+        Route::delete('/admin/accounts/{account}', [AdminAccountController::class, 'destroy']);
+
+        Route::get('/admin/money-movements', [AdminMoneyMovementController::class, 'index']);
+        Route::get('/admin/money-movements/{moneyMovement}', [AdminMoneyMovementController::class, 'show']);
+
+        Route::get('/admin/purchase-orders', [AdminPurchaseOrderController::class, 'index']);
+        Route::get('/admin/purchase-orders/{purchaseOrder}', [AdminPurchaseOrderController::class, 'show']);
+        Route::post('/admin/purchase-orders', [AdminPurchaseOrderController::class, 'store']);
+        Route::delete('/admin/purchase-orders/{purchaseOrder}', [AdminPurchaseOrderController::class, 'destroy']);
+
+        Route::get('/admin/purchase-invoices', [AdminPurchaseInvoiceController::class, 'index']);
+        Route::get('/admin/purchase-invoices/{purchaseInvoice}', [AdminPurchaseInvoiceController::class, 'show']);
+        Route::post('/admin/purchase-invoices', [AdminPurchaseInvoiceController::class, 'store']);
+        Route::put('/admin/purchase-invoices/{purchaseInvoice}', [AdminPurchaseInvoiceController::class, 'update']);
+        Route::post('/admin/purchase-invoices/{purchaseInvoice}/cancel', [AdminPurchaseInvoiceController::class, 'cancel']);
+
+        Route::get('/admin/expenses', [AdminExpenseController::class, 'index']);
+        Route::get('/admin/expenses/{expense}', [AdminExpenseController::class, 'show']);
+        Route::post('/admin/expenses', [AdminExpenseController::class, 'store']);
+        Route::post('/admin/expenses/{expense}/cancel', [AdminExpenseController::class, 'cancel']);
+
+        Route::get('/admin/accounting-periods', [AdminAccountingPeriodController::class, 'index']);
+        Route::post('/admin/accounting-periods', [AdminAccountingPeriodController::class, 'store']);
+        Route::delete('/admin/accounting-periods/{accountingPeriod}', [AdminAccountingPeriodController::class, 'destroy']);
+
+        Route::get('/admin/cash-sessions', [AdminCashSessionController::class, 'index']);
+        Route::get('/admin/cash-sessions/{cashSession}', [AdminCashSessionController::class, 'show']);
+        Route::post('/admin/cash-sessions', [AdminCashSessionController::class, 'store']);
+        Route::put('/admin/cash-sessions/{cashSession}', [AdminCashSessionController::class, 'update']);
+        Route::delete('/admin/cash-sessions/{cashSession}', [AdminCashSessionController::class, 'destroy']);
     });
 });

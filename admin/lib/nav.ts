@@ -23,11 +23,9 @@ import {
   Image,
   Lock,
   Landmark,
-  BookText,
   ArrowLeftRight,
   CalendarRange,
   FileText,
-  Repeat,
   Smartphone,
   LifeBuoy,
   Building,
@@ -36,6 +34,7 @@ import {
   BarChart3,
   FileCheck2,
   Banknote,
+  ClipboardList,
 } from "lucide-react";
 
 export type NavItem = {
@@ -86,6 +85,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Stocks", href: "/dashboard/stocks", icon: Boxes, ready: true },
       { label: "Emplacements", href: "/dashboard/entrepots", icon: Building2, ready: true },
       { label: "Fournisseurs", href: "/dashboard/fournisseurs", icon: Truck, ready: true },
+      { label: "Commandes d'achat", href: "/dashboard/commandes-achat", icon: ClipboardList, ready: true },
       { label: "Ajustement de stock", href: "/dashboard/ajustement-stock", icon: SlidersHorizontal, ready: true },
       { label: "Journal d'inventaire", href: "/dashboard/journal-inventaire", icon: BookOpen, ready: true },
     ],
@@ -115,21 +115,19 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Comptabilité",
     items: [
-      { label: "Sessions de caisse", href: "/dashboard/sessions-caisse", icon: Lock },
-      { label: "Comptes", href: "/dashboard/comptes", icon: Landmark },
-      { label: "Journaux", href: "/dashboard/journaux", icon: BookText },
-      { label: "Mouvements d'argent", href: "/dashboard/mouvements-argent", icon: ArrowLeftRight },
-      { label: "Périodes comptables", href: "/dashboard/periodes-comptables", icon: CalendarRange },
-      { label: "Factures d'achat", href: "/dashboard/factures-achat", icon: FileText },
-      { label: "Expenses", href: "/dashboard/expenses", icon: Banknote },
-      { label: "File de règlement", href: "/dashboard/file-reglement", icon: Repeat },
+      { label: "Sessions de caisse", href: "/dashboard/sessions-caisse", icon: Lock, ready: true },
+      { label: "Comptes", href: "/dashboard/comptes", icon: Landmark, ready: true },
+      { label: "Mouvements d'argent", href: "/dashboard/mouvements-argent", icon: ArrowLeftRight, ready: true },
+      { label: "Périodes comptables", href: "/dashboard/periodes-comptables", icon: CalendarRange, ready: true },
+      { label: "Factures d'achat", href: "/dashboard/factures-achat", icon: FileText, ready: true },
+      { label: "Expenses", href: "/dashboard/expenses", icon: Banknote, ready: true },
       { label: "Fournisseurs Mobile Money", href: "/dashboard/fournisseurs-mobile-money", icon: Smartphone },
     ],
   },
   {
     title: "Support client",
     items: [
-      { label: "Tickets", href: "/dashboard/tickets", icon: LifeBuoy },
+      { label: "Tickets", href: "/dashboard/tickets", icon: LifeBuoy, ready: true },
     ],
   },
   {
