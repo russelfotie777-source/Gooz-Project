@@ -45,24 +45,32 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const router = useLocaleRouter();
   const FEATURES = dict.product.features.map((f, i) => ({ ...f, icon: FEATURE_ICONS[i] }));
   const MOODS = MOOD_DEFS.map((m) => ({ ...m, label: dict.product.moods[m.key] }));
+  // Defaults to the cheapest variant (same as the price shown on the
+  // catalogue card the shopper clicked through from), but — unlike before —
+  // this is now just the initial pick: selectVariant lets them change it
+  // before adding to cart, instead of silently shipping whatever's cheapest.
+  const [selectedVariantId, setSelectedVariantId] = useState(() => getDisplayVariant(product)?.id ?? null);
+  const selectedVariant = product.variants.find((v) => v.id === selectedVariantId) ?? null;
+  // ProductImage.product_variant_id exists precisely for this — a variant
+  // with its own photos (e.g. a different color) should show those, not the
+  // product's generic/first-variant set left over from the initial pick.
   const baseImages =
-    product.images.length > 0
-      ? product.images
-      : [{ id: 0, image_url: PLACEHOLDER_IMAGE, is_primary: true, product_variant_id: null }];
+    selectedVariant && selectedVariant.images.length > 0
+      ? selectedVariant.images
+      : product.images.length > 0
+        ? product.images
+        : [{ id: 0, image_url: PLACEHOLDER_IMAGE, is_primary: true, product_variant_id: null }];
   // Real products will eventually have several angles; pad with the same
   // image for now so the thumbnail rail/dots always show their full slots.
   const images = Array.from({ length: GALLERY_SIZE }, (_, i) => ({
     ...baseImages[i % baseImages.length],
     id: i,
   }));
-  // No size/color picker exists yet (see the "Ajouter au panier" comment
-  // below) — the cheapest variant is the one whose price is shown and the
-  // one sent to the cart, so the two always agree.
-  const displayVariant = getDisplayVariant(product);
   const [activeImage, setActiveImage] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [allNeighborhoods, setAllNeighborhoods] = useState<Neighborhood[]>([]);
+  const [locationListsStatus, setLocationListsStatus] = useState<"loading" | "ready" | "error">("loading");
   const [cityId, setCityId] = useState("");
   const [neighborhoodId, setNeighborhoodId] = useState("");
   const [deliveryFee, setDeliveryFee] = useState<number | null>(null);
@@ -74,7 +82,12 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [addStatus, setAddStatus] = useState<"idle" | "adding" | "added" | "error">("idle");
   const [addMessage, setAddMessage] = useState<string | null>(null);
 
-  const inStock = (product.stock_quantity ?? 0) > 0;
+  // Stock is tracked per variant, not per product (a product can be
+  // in-stock overall while the specific variant picked is sold out, or vice
+  // versa) — reflect whichever the shopper actually has selected.
+  const effectiveStock = selectedVariant ? (selectedVariant.stock_quantity ?? 0) : (product.stock_quantity ?? 0);
+  const inStock = effectiveStock > 0;
+  const effectivePrice = selectedVariant?.price ?? product.price_from;
 
   // Cart routes require auth (API.md §4) — a guest is sent to sign in rather
   // than silently failing. Used by both buttons in .buyRow: the icon-only
@@ -90,7 +103,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     setAddStatus("adding");
     setAddMessage(null);
     try {
-      const cart = await addCartItem(session.token, product.id, 1, displayVariant?.id);
+      const cart = await addCartItem(session.token, product.id, 1, selectedVariant?.id);
       notifyCartUpdated(cart.items.length);
       if (goToCart) {
         router.push("/cart");
@@ -110,18 +123,24 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     }
   }
 
-  useEffect(() => {
-    getCities()
-      .then(setCities)
-      .catch(() => setCities([]));
+  // Fetched once, up front: the neighborhoods list stays tiny (a handful per
+  // city), so filtering client-side on city change avoids an extra network
+  // round-trip every time the user picks a city.
+  function loadLocationLists() {
+    setLocationListsStatus("loading");
+    Promise.all([getCities(), getNeighborhoods()])
+      .then(([citiesData, neighborhoodsData]) => {
+        setCities(citiesData);
+        setAllNeighborhoods(neighborhoodsData);
+        setLocationListsStatus("ready");
+      })
+      // An empty [] here used to be indistinguishable from "there really are
+      // no cities" — the shopper saw an empty dropdown either way, with no
+      // way to tell a real gap in the data from a failed fetch worth retrying.
+      .catch(() => setLocationListsStatus("error"));
+  }
 
-    // Fetched once, up front: this list stays tiny (a handful of neighborhoods
-    // per city), so filtering client-side on city change avoids an extra
-    // network round-trip every time the user picks a city.
-    getNeighborhoods()
-      .then(setAllNeighborhoods)
-      .catch(() => setAllNeighborhoods([]));
-  }, []);
+  useEffect(loadLocationLists, []);
 
   useEffect(() => {
     setNeighborhoodId("");
@@ -170,6 +189,14 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     setActiveImage(index);
   }
 
+  // The gallery's contents just changed under it (see baseImages above) —
+  // jump back to the first photo instead of leaving activeImage pointing at
+  // whatever slide the shopper happened to be on for the previous variant.
+  useEffect(() => {
+    trackRef.current?.scrollTo({ left: 0 });
+    setActiveImage(0);
+  }, [selectedVariantId]);
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.topRow}>
@@ -215,7 +242,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 aria-label={dict.product.viewImage(index + 1)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={image.image_url} alt="" className={styles.thumbnailImage} />
+                <img
+                  src={image.image_url ?? PLACEHOLDER_IMAGE}
+                  alt=""
+                  className={styles.thumbnailImage}
+                  onError={(e) => {
+                    if (e.currentTarget.src.endsWith(PLACEHOLDER_IMAGE)) return;
+                    e.currentTarget.src = PLACEHOLDER_IMAGE;
+                  }}
+                />
               </button>
             ))}
           </div>
@@ -251,11 +286,41 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </div>
 
               <p className={styles.price}>
-                {product.price_from !== null ? formatPrice(product.price_from) : dict.common.priceUnavailable}
-                {displayVariant?.is_promotion && displayVariant.promo_price && (
+                {effectivePrice !== null ? formatPrice(effectivePrice) : dict.common.priceUnavailable}
+                {selectedVariant?.is_promotion && selectedVariant.promo_price && (
                   <span className={styles.specialPriceTag}>{dict.product.specialPrice}</span>
                 )}
               </p>
+
+              {product.variants.length > 1 && (
+                <div className={styles.variantRow} role="group" aria-label={dict.product.chooseVariant}>
+                  {product.variants.map((variant) => {
+                    const label =
+                      variant.display_name ??
+                      [variant.size, variant.color, variant.material].filter(Boolean).join(" · ") ??
+                      dict.product.variantFallbackLabel(variant.id);
+                    const variantOutOfStock = (variant.stock_quantity ?? 0) <= 0;
+
+                    return (
+                      <button
+                        key={variant.id}
+                        type="button"
+                        className={`${styles.variantButton} ${
+                          variant.id === selectedVariantId ? styles.variantButtonActive : ""
+                        } ${variantOutOfStock ? styles.variantButtonOutOfStock : ""}`}
+                        aria-pressed={variant.id === selectedVariantId}
+                        disabled={variantOutOfStock}
+                        onClick={() => setSelectedVariantId(variant.id)}
+                      >
+                        {label}
+                        {variantOutOfStock && (
+                          <span className={styles.variantOutOfStockTag}>{dict.product.outOfStock}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               <div className={styles.descriptionBlock}>
                 <h2 className={styles.descriptionTitle}>{dict.product.aboutProduct}</h2>
@@ -299,6 +364,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 <img src="/icon/product-detail/location.svg" alt="" className={styles.locationIcon} />
                 {dict.product.deliveryPrompt}
               </p>
+
+              {locationListsStatus === "error" && (
+                <p className={styles.locationListsError}>
+                  {dict.product.locationListsError}{" "}
+                  <button type="button" className={styles.locationListsRetry} onClick={loadLocationLists}>
+                    {dict.product.locationListsRetry}
+                  </button>
+                </p>
+              )}
 
               <label className={styles.selectField}>
                 <select value={cityId} onChange={(e) => setCityId(e.target.value)} className={styles.select}>

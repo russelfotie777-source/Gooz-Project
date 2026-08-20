@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ApiValidationError, deleteAccount } from "@/lib/api";
 import { clearSession, getSession } from "@/lib/auth";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { useFocusOnError } from "@/lib/useFocusOnError";
+import { useModalA11y } from "@/lib/useModalA11y";
 import styles from "./DeleteAccountModal.module.css";
 
 interface DeleteAccountModalProps {
@@ -24,6 +26,10 @@ export default function DeleteAccountModal({ open, onClose }: DeleteAccountModal
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const errorRef = useFocusOnError<HTMLParagraphElement>(error);
+
+  useModalA11y(open, handleClose, modalRef);
 
   if (!open) return null;
 
@@ -58,7 +64,14 @@ export default function DeleteAccountModal({ open, onClose }: DeleteAccountModal
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div
+        ref={modalRef}
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+      >
         <div className={styles.header}>
           <WarningIcon className={styles.warningIcon} />
           <h2 className={styles.title}>{dict.deleteAccount.modalTitle}</h2>
@@ -92,7 +105,11 @@ export default function DeleteAccountModal({ open, onClose }: DeleteAccountModal
             />
           </label>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <p ref={errorRef} tabIndex={-1} className={styles.error} role="alert">
+              {error}
+            </p>
+          )}
 
           <div className={styles.actions}>
             <button type="button" className={styles.cancelButton} onClick={handleClose} disabled={submitting}>

@@ -70,7 +70,13 @@ class ProductController extends Controller
             $query->orderBy($sortBy, $sortDir);
         }
 
-        $perPage = min((int) $request->query('per_page', 15), 50) ?: 15;
+        // The homepage catalogue and category pages fetch once and filter/sort
+        // client-side rather than re-querying per filter change — a cap this
+        // low silently hid anything past it, even for filters that otherwise
+        // matched more products. 200 comfortably covers the current catalogue
+        // size; a true server-driven paginated catalogue is the real fix once
+        // the product count grows enough for that to matter.
+        $perPage = min((int) $request->query('per_page', 15), 200) ?: 15;
 
         return ProductResource::collection($query->paginate($perPage));
     }

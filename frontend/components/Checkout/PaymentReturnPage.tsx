@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { refreshOrderPayment } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
@@ -14,16 +14,28 @@ interface PaymentReturnPageProps {
   reference: string;
 }
 
+const MAX_AUTO_ATTEMPTS = 5;
+const POLL_INTERVAL_MS = 3000;
+
 // Landed on after the customer completes (or abandons) payment on Enkap's
 // hosted page — reached via the merchant-wide returnUrl configured on the
 // Enkap side, which appends "/{merchantReference}" (our order_reference).
 // Re-checks the authoritative status via PaymentController::refresh rather
 // than trusting anything encoded in the URL itself.
+//
+// Two failure modes need to stay visibly distinct here: the status check
+// itself failing (network/backend issue — we don't actually know what
+// happened to the payment) versus the payment genuinely still being
+// processed (Enkap says "en_attente"). Collapsing both into one "en
+// attente" message — the previous behavior — leaves a customer who really
+// did pay with no way to tell "wait" from "something's broken, act".
 export default function PaymentReturnPage({ reference }: PaymentReturnPageProps) {
   const dict = useDictionary();
   const router = useLocaleRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [checking, setChecking] = useState(true);
+  const [checkFailed, setCheckFailed] = useState(false);
+  const attemptsRef = useRef(0);
 
   async function check() {
     const session = getSession();
@@ -36,12 +48,17 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
     try {
       const result = await refreshOrderPayment(session.token, reference);
       setOrder(result);
+      setCheckFailed(false);
     } catch {
-      // Keep whatever we last had (possibly nothing) — the retry button
-      // below lets the customer try the status check again.
+      setCheckFailed(true);
     } finally {
       setChecking(false);
     }
+  }
+
+  function manualRetry() {
+    attemptsRef.current = 0;
+    check();
   }
 
   useEffect(() => {
@@ -49,11 +66,38 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Bounded auto-poll: only while the check itself is succeeding and Enkap
+  // genuinely reports the payment as still pending. A failed check does not
+  // retry itself — that's what the distinct "verification failed" state
+  // and its manual retry button are for.
+  useEffect(() => {
+    if (checking || checkFailed || !order) return;
+    if (order.payment.payment_status !== "en_attente") return;
+    if (attemptsRef.current >= MAX_AUTO_ATTEMPTS) return;
+
+    attemptsRef.current += 1;
+    const timer = setTimeout(check, POLL_INTERVAL_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checking, checkFailed, order]);
+
   if (checking && !order) {
     return (
       <div className={styles.page}>
         <h1 className={styles.title}>{dict.checkout.paymentReturn.checkingTitle}</h1>
         <p className={styles.subtitle}>{dict.checkout.paymentReturn.checkingSubtitle}</p>
+      </div>
+    );
+  }
+
+  if (checkFailed) {
+    return (
+      <div className={styles.page}>
+        <h1 className={styles.title}>{dict.checkout.paymentReturn.checkFailedTitle}</h1>
+        <p className={styles.subtitle}>{dict.checkout.paymentReturn.checkFailedSubtitle}</p>
+        <button type="button" className={styles.homeButton} onClick={manualRetry} disabled={checking}>
+          {dict.checkout.paymentReturn.retryCheck}
+        </button>
       </div>
     );
   }
@@ -75,11 +119,17 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
     );
   }
 
+  const autoRetriesExhausted = attemptsRef.current >= MAX_AUTO_ATTEMPTS;
+
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>{dict.checkout.paymentReturn.pendingTitle}</h1>
-      <p className={styles.subtitle}>{dict.checkout.paymentReturn.pendingSubtitle}</p>
-      <button type="button" className={styles.homeButton} onClick={check} disabled={checking}>
+      <p className={styles.subtitle}>
+        {autoRetriesExhausted
+          ? dict.checkout.paymentReturn.pendingGiveUpSubtitle
+          : dict.checkout.paymentReturn.pendingSubtitle}
+      </p>
+      <button type="button" className={styles.homeButton} onClick={manualRetry} disabled={checking}>
         {dict.checkout.paymentReturn.retryCheck}
       </button>
     </div>

@@ -54,7 +54,12 @@ export async function initPushNotifications(authToken: string): Promise<void> {
 // FCM only invokes that handler when the tab isn't focused — a message
 // arriving while the app is open needs to be shown explicitly.
 export async function listenForForegroundMessages(): Promise<void> {
-  if (typeof window === "undefined" || Notification.permission !== "granted") return;
+  // Notification.permission on a browser without the Notification API at
+  // all (unlike the rest of this module, which checks "Notification" in
+  // window / isSupported() first) throws a ReferenceError, not just
+  // undefined — this has to be checked before touching that property.
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
 
   const messaging = await getMessagingInstance();
   if (!messaging) return;

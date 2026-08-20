@@ -2,7 +2,7 @@ import Header from "@/components/Header/Header";
 import BottomNav from "@/components/BottomNav/BottomNav";
 import Footer from "@/components/Footer/Footer";
 import CategoryResults from "@/components/CategoryResults/CategoryResults";
-import { getProducts } from "@/lib/api";
+import { getProducts, PRODUCT_FETCH_CAP } from "@/lib/api";
 import styles from "./SearchPage.module.css";
 
 interface SearchPageProps {
@@ -16,14 +16,20 @@ interface SearchPageProps {
 // hero/promo sections.
 export default async function SearchPage({ query }: SearchPageProps) {
   const trimmed = query.trim();
-  const products = trimmed ? await getProducts({ q: trimmed, per_page: 50 }) : [];
+  const products = trimmed ? await getProducts({ q: trimmed, per_page: PRODUCT_FETCH_CAP }) : [];
+  const possiblyTruncated = products.length >= PRODUCT_FETCH_CAP;
 
   return (
     <div className={styles.page}>
       <Header cartCount={2} />
 
       <main className={styles.main}>
-        <CategoryResults categoryName={trimmed} products={products} mode="search" />
+        <CategoryResults
+          categoryName={trimmed}
+          products={products}
+          mode="search"
+          possiblyTruncated={possiblyTruncated}
+        />
       </main>
 
       <Footer />

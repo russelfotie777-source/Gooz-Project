@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import CheckoutMobileShell from "./CheckoutMobileShell";
@@ -15,7 +16,20 @@ function formatPrice(value: number): string {
 export default function CheckoutDeliveryStep() {
   const dict = useDictionary();
   const router = useLocaleRouter();
-  const { items, deliveryMethod, setDeliveryMethod, deliveryFee, deliveryStatus, warehouse } = useCheckout();
+  const { isAddressComplete, items, deliveryMethod, setDeliveryMethod, deliveryFee, deliveryStatus, warehouse } =
+    useCheckout();
+
+  // Reaching this step directly (typed URL, browser back/forward) without a
+  // completed address used to just show the delivery form anyway — nothing
+  // stopped placeOrder() from being called downstream with an incomplete
+  // shipping address.
+  useEffect(() => {
+    if (!isAddressComplete) {
+      router.replace("/checkout/adresse");
+    }
+  }, [isAddressComplete, router]);
+
+  if (!isAddressComplete) return null;
 
   return (
     <CheckoutMobileShell

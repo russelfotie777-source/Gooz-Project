@@ -1,0 +1,198 @@
+/* No desktop Figma exists for this screen yet (the bell that opens it only
+   lives in the mobile BottomNav) — rather than hiding entirely above 1024px
+   like the other mobile-only pages (which all have a desktop sibling
+   component), this stays visible and centered so a desktop visitor doesn't
+   just get a blank page. */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--color-bg);
+  padding-bottom: calc(var(--bottom-nav-height) + 32px);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: max(24px, env(safe-area-inset-top)) 20px 12px;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.backIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text);
+  margin: 0;
+  text-align: center;
+}
+
+.spacer {
+  width: 32px;
+  flex: 0 0 auto;
+}
+
+.tabs {
+  display: flex;
+  gap: 24px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  padding: 0 0 10px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tabActive {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.markAllReadButton {
+  margin-left: auto;
+  padding: 0 0 10px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-accent-strong);
+  cursor: pointer;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 15px 0;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 48px 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.loginLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  gap: 10px;
+  background: #f5f7fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.12);
+  padding: 14px 16px;
+}
+
+.cardRead {
+  background: rgba(245, 247, 250, 0.4);
+  box-shadow: none;
+}
+
+.bellIcon {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+}
+
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.cardTime {
+  flex: 0 0 auto;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.51);
+  white-space: nowrap;
+}
+
+.cardText {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: var(--color-text);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.markReadButton {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--color-accent-strong);
+  cursor: pointer;
+  padding: 4px 0 0;
+}

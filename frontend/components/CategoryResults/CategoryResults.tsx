@@ -15,13 +15,22 @@ interface CategoryResultsProps {
    * product matches your search" / "Results for ..." instead of the plain
    * category name) — same filter/sort/pagination UI either way. */
   mode?: "category" | "search";
+  /** True when `products` hit PRODUCT_FETCH_CAP — filter/sort below run
+   * entirely client-side over this list, so matches past the cap can't be
+   * represented at all (see lib/api.ts's PRODUCT_FETCH_CAP comment). */
+  possiblyTruncated?: boolean;
 }
 
 const PAGE_SIZE = 9;
 
 type SortOption = "" | "price-asc" | "price-desc" | "name-asc";
 
-export default function CategoryResults({ categoryName, products, mode = "category" }: CategoryResultsProps) {
+export default function CategoryResults({
+  categoryName,
+  products,
+  mode = "category",
+  possiblyTruncated,
+}: CategoryResultsProps) {
   const dict = useDictionary();
   const isEmptySearch = mode === "search" && categoryName.trim() === "";
   const noResultsMessage = isEmptySearch
@@ -76,6 +85,8 @@ export default function CategoryResults({ categoryName, products, mode = "catego
 
   return (
     <section className={styles.section}>
+      {possiblyTruncated && <p className={styles.truncatedNotice}>{dict.category.truncatedNotice}</p>}
+
       <div className={styles.resultBar}>
         <p className={styles.count}>{dict.category.resultsFound(filtered.length)}</p>
         <h1 className={styles.pageTitle}>{heading}</h1>

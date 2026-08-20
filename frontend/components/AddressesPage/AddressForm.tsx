@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { AddressPayload } from "@/lib/api";
+import { ApiValidationError, type AddressPayload } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import type { Address } from "@/lib/types";
+import { useFocusOnError } from "@/lib/useFocusOnError";
 import styles from "./AddressForm.module.css";
 
 interface AddressFormProps {
@@ -27,6 +28,7 @@ export default function AddressForm({ initial, onSubmit, onCancel }: AddressForm
   const [isDefault, setIsDefault] = useState(initial?.is_default ?? false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useFocusOnError<HTMLParagraphElement>(error);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,8 +44,8 @@ export default function AddressForm({ initial, onSubmit, onCancel }: AddressForm
         address_line: addressLine.trim() || null,
         is_default: isDefault,
       });
-    } catch {
-      setError(dict.addresses.genericError);
+    } catch (err) {
+      setError(err instanceof ApiValidationError ? (Object.values(err.errors)[0]?.[0] ?? err.message) : dict.addresses.genericError);
       setSubmitting(false);
     }
   }
@@ -152,7 +154,11 @@ export default function AddressForm({ initial, onSubmit, onCancel }: AddressForm
         {dict.addresses.setAsDefault}
       </label>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {error && (
+        <p ref={errorRef} tabIndex={-1} className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
 
       <div className={styles.actions}>
         <button type="button" className={styles.cancelButton} onClick={onCancel} disabled={submitting}>

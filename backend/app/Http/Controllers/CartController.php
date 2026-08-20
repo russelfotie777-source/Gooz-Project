@@ -16,7 +16,7 @@ class CartController extends Controller
 {
     public function index(Request $request): CartResource
     {
-        return new CartResource($this->activeCart($request)->load(['items.product.brand', 'items.variant']));
+        return new CartResource($this->activeCart($request)->load($this->cartEagerLoads()));
     }
 
     public function addItem(AddCartItemRequest $request): CartResource
@@ -54,7 +54,7 @@ class CartController extends Controller
         $cartItem->quantity = $newQuantity;
         $cartItem->save();
 
-        return new CartResource($cart->load(['items.product.brand', 'items.variant']));
+        return new CartResource($cart->load($this->cartEagerLoads()));
     }
 
     public function updateItem(UpdateCartItemRequest $request, CartItem $cartItem): CartResource
@@ -69,7 +69,7 @@ class CartController extends Controller
 
         $cartItem->update(['quantity' => $request->validated('quantity')]);
 
-        return new CartResource($cartItem->cart->load(['items.product.brand', 'items.variant']));
+        return new CartResource($cartItem->cart->load($this->cartEagerLoads()));
     }
 
     public function removeItem(Request $request, CartItem $cartItem)
@@ -91,6 +91,18 @@ class CartController extends Controller
     private function activeCart(Request $request): Cart
     {
         return $request->user()->carts()->firstOrCreate(['is_active' => true]);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function cartEagerLoads(): array
+    {
+        // ProductResource/ProductVariantResource only emit stock_quantity
+        // when the `stocks` relation is loaded (whenLoaded) — without this,
+        // the cart response carries no stock info at all, and the frontend
+        // can't show "low stock"/"out of stock" or cap the quantity stepper.
+        return ['items.product.brand', 'items.product.stocks', 'items.variant.stocks'];
     }
 
     private function authorizeOwnership(Request $request, CartItem $cartItem): void
