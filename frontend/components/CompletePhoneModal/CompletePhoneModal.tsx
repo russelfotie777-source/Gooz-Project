@@ -40,6 +40,9 @@ export default function CompletePhoneModal({ user, onUpdated }: CompletePhoneMod
   const currentUser = user;
 
   function handleDismiss() {
+    // Escape (via useModalA11y) shouldn't abandon an in-flight save — the
+    // "Plus tard" button already has its own `disabled` for the same reason.
+    if (submitting) return;
     window.sessionStorage.setItem(DISMISS_KEY, "1");
     setDismissed(true);
   }
