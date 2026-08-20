@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Admin\CartSettingController as AdminCartSettingController;
+use App\Http\Controllers\Admin\CompanyProfileController as AdminCompanyProfileController;
 use App\Http\Controllers\Admin\DeliverySettingController as AdminDeliverySettingController;
 use App\Http\Controllers\Admin\InventoryLedgerController as AdminInventoryLedgerController;
 use App\Http\Controllers\Admin\NeighborhoodController as AdminNeighborhoodController;
@@ -250,6 +251,11 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'can:manage-cart-settings'])->group(function () {
         Route::get('/admin/cart-settings', [AdminCartSettingController::class, 'show']);
         Route::put('/admin/cart-settings', [AdminCartSettingController::class, 'update']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-company-profile'])->group(function () {
+        Route::get('/admin/company-profile', [AdminCompanyProfileController::class, 'show']);
+        Route::put('/admin/company-profile', [AdminCompanyProfileController::class, 'update']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-neighborhoods'])->group(function () {
