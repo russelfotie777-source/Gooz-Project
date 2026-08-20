@@ -34,9 +34,33 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * True for every staff role that should reach the admin panel at all.
+     * What each of those roles can actually *do* once inside is decided by
+     * hasPermission() below.
+     */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'super_admin', 'manager', 'staff', 'stagiaire'], true);
+    }
+
+    /**
+     * admin/super_admin always pass — restricting them via the
+     * role-permissions screen would risk locking every admin out at once.
+     * Other staff roles (manager/staff/stagiaire) are checked against the
+     * role_permissions table, defaulting to no access until granted.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        if (in_array($this->role, ['admin', 'super_admin'], true)) {
+            return true;
+        }
+
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        return RolePermission::where('role', $this->role)->where('permission', $permission)->exists();
     }
 
     public function carts(): HasMany
