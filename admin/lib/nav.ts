@@ -141,7 +141,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Profil entreprise", href: "/dashboard/profil-entreprise", icon: Building, ready: true },
       { label: "Utilisateur", href: "/dashboard/utilisateurs", icon: UserCog, ready: true },
-      { label: "Roles & Permissions", href: "/dashboard/roles-permissions", icon: ShieldCheck },
+      { label: "Roles & Permissions", href: "/dashboard/roles-permissions", icon: ShieldCheck, ready: true },
     ],
   },
   {
