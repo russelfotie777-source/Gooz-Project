@@ -6,6 +6,7 @@ import Header from "@/components/Header/Header";
 import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import {
+  computeOrderSubtotal,
   DELIVERY_METHOD_LABEL_KEYS,
   formatOrderDate,
   formatPrice,
@@ -99,7 +100,7 @@ export default function OrderHistoryDesktop() {
                       <div className={styles.summary}>
                         <div className={styles.summaryRow}>
                           <span>{dict.orders.subtotal}</span>
-                          <span>{formatPrice(order.total_amount - order.delivery_fees + order.discount_amount)}</span>
+                          <span>{formatPrice(computeOrderSubtotal(order))}</span>
                         </div>
                         {order.discount_amount > 0 && (
                           <div className={styles.summaryRow}>

@@ -73,7 +73,10 @@ export interface ProductVariant {
 export interface User {
   id: number;
   name: string;
-  phone: string;
+  // Nullable because a social sign-in (Google/Facebook via Firebase) creates
+  // the account before a phone number is known — see socialLogin() /
+  // CompletePhoneModal, which collects it as a follow-up step.
+  phone: string | null;
   role: "customer" | "admin" | "delivery";
   is_active: boolean;
   created_at: string;
@@ -97,6 +100,53 @@ export interface Product {
   images: ProductImage[];
   variants: ProductVariant[];
   stock_quantity?: number;
+  created_at: string;
+}
+
+export interface Banner {
+  id: number;
+  title: string;
+  description: string | null;
+  image: string;
+  link_url: string | null;
+  link_type: "external" | "product";
+  product: Product | null;
+  location: "homepage" | "category" | "search" | "checkout";
+  position: number;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+}
+
+interface HomepageSectionBase {
+  id: number;
+  display_title: string;
+  slug: string;
+  description: string | null;
+  display_layout: "horizontal_list" | "grid";
+  show_title: boolean;
+  show_view_all: boolean;
+  view_all_url: string;
+}
+
+// content_type discriminates what HomepageSectionController::present()
+// actually resolved this section to — category_list/brand_list strategies
+// return categories/brands, not products, so the frontend has to switch on
+// this rather than always expecting a product list.
+export type HomepageSection =
+  | (HomepageSectionBase & { content_type: "products"; products: Product[] })
+  | (HomepageSectionBase & { content_type: "categories"; categories: Category[] })
+  | (HomepageSectionBase & { content_type: "brands"; brands: Brand[] });
+
+// Named AppNotification, not Notification — that name is already the
+// browser's own global (Notification API), used elsewhere in lib/firebase.
+export interface AppNotification {
+  id: number;
+  title: string;
+  body: string | null;
+  type: string | null;
+  is_read: boolean;
+  read_at: string | null;
   created_at: string;
 }
 

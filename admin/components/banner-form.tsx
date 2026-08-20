@@ -30,6 +30,18 @@ function toLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// datetime-local inputs give back a timezone-less wall-clock string (e.g.
+// "2026-08-20T15:00") — new Date() parses that as the BROWSER's local time,
+// so .toISOString() converts it to real UTC before it's sent. Without this,
+// the backend (which runs in UTC) stored the admin's local clock reading as
+// if it already were UTC — an admin anywhere ahead of UTC would create a
+// banner that silently doesn't appear until real UTC time catches up to
+// what they typed.
+function toIsoFromLocalInput(value: string): string {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
 export function BannerForm({
   initial,
   existingImage,
@@ -58,8 +70,18 @@ export function BannerForm({
   const [productSearch, setProductSearch] = useState("");
   const [productResults, setProductResults] = useState<ProductOption[]>([]);
   const [location, setLocation] = useState<BannerFormValues["location"]>(initial?.location ?? "homepage");
-  const [startsAt, setStartsAt] = useState(initial?.starts_at ? toLocalInput(initial.starts_at) : "");
-  const [endsAt, setEndsAt] = useState(initial?.ends_at ? toLocalInput(initial.ends_at) : "");
+  // starts_at/ends_at are required (the backend needs a real window), but
+  // leaving them blank by default meant a new banner was invisible until
+  // the admin thought to fill both in — default to "active right now,
+  // for a year" so a fresh banner just works, still fully editable.
+  const [startsAt, setStartsAt] = useState(() =>
+    initial?.starts_at ? toLocalInput(initial.starts_at) : toLocalInput(new Date().toISOString())
+  );
+  const [endsAt, setEndsAt] = useState(() =>
+    initial?.ends_at
+      ? toLocalInput(initial.ends_at)
+      : toLocalInput(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString())
+  );
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(existingImage ?? null);
@@ -92,8 +114,8 @@ export function BannerForm({
       formData.set("product_id", String(productId));
     }
     formData.set("location", location);
-    if (startsAt) formData.set("starts_at", startsAt);
-    if (endsAt) formData.set("ends_at", endsAt);
+    if (startsAt) formData.set("starts_at", toIsoFromLocalInput(startsAt));
+    if (endsAt) formData.set("ends_at", toIsoFromLocalInput(endsAt));
     formData.set("is_active", isActive ? "1" : "0");
     if (image) formData.set("image", image);
     return formData;

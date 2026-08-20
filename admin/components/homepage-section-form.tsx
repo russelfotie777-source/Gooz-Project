@@ -49,6 +49,15 @@ function toLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// See banner-form.tsx's copy of this for why: a datetime-local input has no
+// timezone info, so it must be converted to real UTC before being sent to a
+// backend that runs in UTC — otherwise an admin outside UTC would schedule a
+// section that appears/disappears at the wrong time relative to what they typed.
+function toIsoFromLocalInput(value: string): string {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -192,8 +201,8 @@ export function HomepageSectionForm({
       item_limit: Number(itemLimit),
       visibility,
       view_all_url: viewAllUrl || null,
-      starts_at: startsAt || null,
-      ends_at: endsAt || null,
+      starts_at: startsAt ? toIsoFromLocalInput(startsAt) : null,
+      ends_at: endsAt ? toIsoFromLocalInput(endsAt) : null,
       show_title: showTitle,
       show_view_all: showViewAll,
       is_active: isActive,

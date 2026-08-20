@@ -1,6 +1,7 @@
 "use client";
 
 import BottomNav from "@/components/BottomNav/BottomNav";
+import CompletePhoneModal from "@/components/CompletePhoneModal/CompletePhoneModal";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import ProfileLoggedIn from "./ProfileLoggedIn";
 import ProfileLoggedOut from "./ProfileLoggedOut";
@@ -14,7 +15,7 @@ import styles from "./ProfilePage.module.css";
 // desktop counterpart (ProfileDesktop).
 export default function ProfilePage() {
   const dict = useDictionary();
-  const { user, handleLogout, toggleLanguage } = useProfileSession();
+  const { user, handleLogout, toggleLanguage, updateUser } = useProfileSession();
 
   return (
     <div className={styles.page}>
@@ -27,13 +28,19 @@ export default function ProfilePage() {
 
       <main className={styles.main}>
         {user ? (
-          <ProfileLoggedIn user={user} onLogout={handleLogout} onToggleLanguage={toggleLanguage} />
+          <ProfileLoggedIn
+            user={user}
+            onLogout={handleLogout}
+            onToggleLanguage={toggleLanguage}
+            onProfileUpdated={updateUser}
+          />
         ) : (
           <ProfileLoggedOut onToggleLanguage={toggleLanguage} />
         )}
       </main>
 
       <BottomNav active="profile" />
+      <CompletePhoneModal user={user} onUpdated={updateUser} />
     </div>
   );
 }

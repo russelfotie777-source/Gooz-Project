@@ -6,14 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\DeleteAccountRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\SocialAuthRequest;
+use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\FirebaseIdTokenVerifier;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class AuthController extends Controller
 {
@@ -58,6 +63,66 @@ class AuthController extends Controller
         ]);
     }
 
+    // Any Firebase-issued sign-in (Firebase Auth on the frontend hands us its
+    // ID token; we never see the provider's own secrets — Firebase does that
+    // exchange) — Google/Facebook popup, or email+password
+    // (sign_in_provider "password", frontend: signInWithEmail/
+    // registerWithEmail). First sign-in for a given firebase_uid creates the
+    // account with phone left null (follow-up collects it — see
+    // CompletePhoneModal on the frontend); every later sign-in from the same
+    // provider account just re-authenticates it.
+    public function social(SocialAuthRequest $request, FirebaseIdTokenVerifier $verifier): JsonResponse
+    {
+        try {
+            $claims = $verifier->verify($request->validated('id_token'));
+        } catch (RuntimeException $e) {
+            throw ValidationException::withMessages([
+                'id_token' => [$e->getMessage()],
+            ]);
+        }
+
+        $uid = $claims['sub'];
+        $provider = $claims['firebase']['sign_in_provider'] ?? 'unknown';
+        $wasExisting = true;
+
+        $user = User::where('firebase_uid', $uid)->first();
+
+        if (! $user) {
+            $wasExisting = false;
+
+            try {
+                $user = User::create([
+                    'name' => $claims['name'] ?? 'Utilisateur',
+                    'phone' => null,
+                    'email' => $claims['email'] ?? null,
+                    'password' => Hash::make(Str::random(40)),
+                    'firebase_uid' => $uid,
+                    'auth_provider' => $provider,
+                ]);
+            } catch (QueryException $e) {
+                // Unique constraint on `email` — another account (a
+                // different firebase_uid) already claimed it.
+                throw ValidationException::withMessages([
+                    'id_token' => ['Cet email est déjà associé à un autre compte.'],
+                ]);
+            }
+        }
+
+        if (! $user->is_active) {
+            throw ValidationException::withMessages([
+                'id_token' => ['Ce compte a été suspendu.'],
+            ]);
+        }
+
+        $deviceName = $request->validated('device_name') ?? $request->userAgent() ?? 'api';
+        $token = $user->createToken($deviceName)->plainTextToken;
+
+        return response()->json([
+            'user' => new UserResource($user),
+            'token' => $token,
+        ], $wasExisting ? 200 : 201);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
@@ -68,6 +133,18 @@ class AuthController extends Controller
     public function me(Request $request): UserResource
     {
         return new UserResource($request->user());
+    }
+
+    public function updateProfile(UpdateProfileRequest $request): UserResource
+    {
+        $user = $request->user();
+
+        $user->forceFill([
+            'name' => $request->validated('name'),
+            'phone' => $request->validated('phone'),
+        ])->save();
+
+        return new UserResource($user);
     }
 
     public function destroy(DeleteAccountRequest $request): JsonResponse

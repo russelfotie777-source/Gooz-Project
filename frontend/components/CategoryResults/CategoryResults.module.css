@@ -4,6 +4,16 @@
   gap: 16px;
 }
 
+.truncatedNotice {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 149, 0, 0.1);
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
 .resultBar {
   display: flex;
   flex-direction: column;

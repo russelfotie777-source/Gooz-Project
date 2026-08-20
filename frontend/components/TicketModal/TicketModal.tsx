@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createTicket, getMyTickets } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { showToast } from "@/lib/toast";
 import type { Ticket, TicketPriority } from "@/lib/types";
+import { useModalA11y } from "@/lib/useModalA11y";
 import styles from "./TicketModal.module.css";
 
 interface TicketModalProps {
@@ -74,8 +76,9 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
   const [priority, setPriority] = useState<TicketPriority>("moyenne");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useModalA11y(open, onClose, modalRef);
 
   function formatDate(iso: string): string {
     return new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-US", {
@@ -110,8 +113,6 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
     setCategory("");
     setPriority("moyenne");
     setMessage("");
-    setError(null);
-    setSuccess(false);
     setView("new");
     setExpandedId(null);
   }, [open]);
@@ -123,7 +124,6 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
     if (!token || !category) return;
 
     setSubmitting(true);
-    setError(null);
     try {
       const created = await createTicket(token, {
         subject: subject.trim(),
@@ -135,14 +135,13 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
       setSubject("");
       setCategory("");
       setMessage("");
-      setSuccess(true);
+      showToast(dict.tickets.successMessage, "success");
       window.setTimeout(() => {
-        setSuccess(false);
         setView("list");
         setExpandedId(created.id);
       }, 1200);
     } catch {
-      setError(dict.tickets.genericError);
+      showToast(dict.tickets.genericError, "error");
     } finally {
       setSubmitting(false);
     }
@@ -150,7 +149,14 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div
+        ref={modalRef}
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+      >
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>{dict.tickets.modalTitle}</h2>
@@ -252,9 +258,6 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
                     className={styles.textarea}
                   />
                 </label>
-
-                {error && <p className={styles.error}>{error}</p>}
-                {success && <p className={styles.success}>{dict.tickets.successMessage}</p>}
 
                 <button type="submit" className={styles.submitButton} disabled={submitting}>
                   {submitting ? dict.tickets.submitting : dict.tickets.submit}

@@ -102,7 +102,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Marketing",
     items: [
       { label: "Coupons", href: "/dashboard/coupons", icon: Ticket, ready: true },
-      { label: "Notifications push", href: "/dashboard/notifications-push", icon: Bell },
+      { label: "Notifications", href: "/dashboard/notifications-push", icon: Bell, ready: true },
     ],
   },
   {
