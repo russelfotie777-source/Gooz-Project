@@ -33,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-stock-adjustments', fn (User $user) => $user->isAdmin());
         Gate::define('view-inventory-ledger', fn (User $user) => $user->isAdmin());
         Gate::define('manage-delivery-settings', fn (User $user) => $user->isAdmin());
+        Gate::define('manage-cart-settings', fn (User $user) => $user->isAdmin());
         Gate::define('manage-neighborhoods', fn (User $user) => $user->isAdmin());
         Gate::define('manage-homepage-sections', fn (User $user) => $user->isAdmin());
     }
