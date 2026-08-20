@@ -22,17 +22,29 @@ class FirebaseMessaging
 
     private const SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 
-    private array $credentials;
+    private ?array $credentials = null;
 
-    public function __construct()
+    /**
+     * Loaded on first use rather than in the constructor: this class is
+     * injected (via PushNotificationService) into controllers that have
+     * nothing to do with notifications, so eagerly validating credentials
+     * here would break unrelated endpoints in any environment where Firebase
+     * isn't configured. Callers already handle send() failures gracefully
+     * (see PushNotificationService::sendToUser).
+     */
+    private function credentials(): array
     {
+        if ($this->credentials !== null) {
+            return $this->credentials;
+        }
+
         $path = config('services.firebase.credentials');
 
         if (! is_string($path) || ! is_file($path)) {
             throw new RuntimeException("Firebase credentials file not found at [{$path}].");
         }
 
-        $this->credentials = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+        return $this->credentials = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -40,7 +52,7 @@ class FirebaseMessaging
      */
     public function send(string $deviceToken, string $title, string $body, array $data = []): array
     {
-        $projectId = $this->credentials['project_id'];
+        $projectId = $this->credentials()['project_id'];
 
         $response = Http::withToken($this->accessToken())
             ->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
@@ -79,14 +91,14 @@ class FirebaseMessaging
             $now = time();
 
             $jwt = $this->signedJwt([
-                'iss' => $this->credentials['client_email'],
+                'iss' => $this->credentials()['client_email'],
                 'scope' => self::SCOPE,
-                'aud' => $this->credentials['token_uri'],
+                'aud' => $this->credentials()['token_uri'],
                 'iat' => $now,
                 'exp' => $now + 3600,
             ]);
 
-            $response = Http::asForm()->post($this->credentials['token_uri'], [
+            $response = Http::asForm()->post($this->credentials()['token_uri'], [
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
                 'assertion' => $jwt,
             ]);
@@ -105,7 +117,7 @@ class FirebaseMessaging
         $payload = $this->base64UrlEncode(json_encode($claims));
         $unsigned = "{$header}.{$payload}";
 
-        openssl_sign($unsigned, $signature, $this->credentials['private_key'], 'SHA256');
+        openssl_sign($unsigned, $signature, $this->credentials()['private_key'], 'SHA256');
 
         return "{$unsigned}.".$this->base64UrlEncode($signature);
     }
