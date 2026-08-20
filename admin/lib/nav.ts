@@ -139,7 +139,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Paramètres système",
     items: [
-      { label: "Profil entreprise", href: "/dashboard/profil-entreprise", icon: Building },
+      { label: "Profil entreprise", href: "/dashboard/profil-entreprise", icon: Building, ready: true },
       { label: "Utilisateur", href: "/dashboard/utilisateurs", icon: UserCog, ready: true },
       { label: "Roles & Permissions", href: "/dashboard/roles-permissions", icon: ShieldCheck },
     ],
