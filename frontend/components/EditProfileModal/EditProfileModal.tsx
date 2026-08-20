@@ -35,10 +35,13 @@ export default function EditProfileModal({ open, user, onClose, onUpdated }: Edi
   if (!open) return null;
 
   function handleClose() {
+    // Guards both paths that call this: the overlay's onClick and Escape
+    // (via useModalA11y) — neither should be able to abandon an in-flight
+    // save. The Cancel button has its own `disabled` for the same reason.
+    if (submitting) return;
     setName(user.name);
     setPhone(user.phone ?? "");
     setError(null);
-    setSubmitting(false);
     onClose();
   }
 

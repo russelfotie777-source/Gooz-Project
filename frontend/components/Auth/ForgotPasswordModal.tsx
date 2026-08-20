@@ -33,7 +33,10 @@ export default function ForgotPasswordModal({ open, onClose, initialEmail }: For
   if (!open) return null;
 
   function handleClose() {
-    setSubmitting(false);
+    // Guards both paths that call this: the overlay's onClick and Escape
+    // (via useModalA11y) — neither should be able to abandon an in-flight
+    // reset request.
+    if (submitting) return;
     setError(null);
     setSent(false);
     onClose();
