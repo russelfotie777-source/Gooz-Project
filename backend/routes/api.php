@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\UserNotificationController as AdminUserNotificationController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BannerController;
@@ -37,25 +38,32 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\HomepageSectionController;
 use App\Http\Controllers\Admin\WarehouseController as AdminWarehouseController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\DeliveryEstimateController;
 use App\Http\Controllers\DeliveryQuoteController;
 use App\Http\Controllers\DeviceTokenController;
 use App\Http\Controllers\EnkapWebhookController;
 use App\Http\Controllers\NeighborhoodController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/auth/social', [AuthController::class, 'social']);
+
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 
     // Called by Enkap's servers directly — no Sanctum token to send, so
     // this has to sit outside the auth:sanctum group. See
@@ -66,6 +74,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/me', [AuthController::class, 'updateProfile']);
         Route::delete('/me', [AuthController::class, 'destroy']);
 
         Route::get('/cart', [CartController::class, 'index']);
@@ -82,6 +91,11 @@ Route::prefix('v1')->group(function () {
         // frontend return page carrying only the reference Enkap was given
         // (see EnkapWebhookController's docblock for the matching webhook path).
         Route::post('/orders/{order:order_reference}/payment/refresh', [PaymentController::class, 'refresh']);
+        // Same reason: the checkout confirmation screen only has the
+        // reference (it's in the URL, see CheckoutConfirmationStep) and
+        // needs to verify it — and that it belongs to this user — before
+        // showing a "your order is confirmed" screen for it.
+        Route::get('/orders/reference/{order:order_reference}', [OrderController::class, 'show']);
 
         Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
 
@@ -93,6 +107,8 @@ Route::prefix('v1')->group(function () {
 
         Route::post('/delivery/quote', [DeliveryQuoteController::class, 'store']);
 
+        Route::post('/coupons/validate', [CouponController::class, 'validateCode']);
+
         Route::get('/addresses', [AddressController::class, 'index']);
         Route::post('/addresses', [AddressController::class, 'store']);
         Route::put('/addresses/{address}', [AddressController::class, 'update']);
@@ -100,6 +116,10 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/tickets', [TicketController::class, 'index']);
         Route::post('/tickets', [TicketController::class, 'store']);
+
+        Route::get('/notifications', [UserNotificationController::class, 'index']);
+        Route::post('/notifications/{notification}/read', [UserNotificationController::class, 'markRead']);
+        Route::post('/notifications/read-all', [UserNotificationController::class, 'markAllRead']);
     });
 
     Route::get('/products', [ProductController::class, 'index']);
@@ -110,6 +130,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
     Route::get('/banners', [BannerController::class, 'index']);
+
+    Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
 
     Route::get('/brands', [BrandController::class, 'index']);
     Route::get('/brands/{brand}', [BrandController::class, 'show']);
@@ -212,6 +234,9 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/admin/addresses', [AdminAddressController::class, 'index']);
         Route::get('/admin/addresses/{address}', [AdminAddressController::class, 'show']);
+
+        Route::get('/admin/notifications', [AdminUserNotificationController::class, 'index']);
+        Route::post('/admin/notifications', [AdminUserNotificationController::class, 'store']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-warehouses'])->group(function () {

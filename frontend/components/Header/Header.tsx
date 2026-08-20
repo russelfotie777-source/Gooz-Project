@@ -10,6 +10,8 @@ import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { splitName } from "@/lib/name";
+import { onSessionExpired } from "@/lib/sessionEvents";
+import { showToast } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import styles from "./Header.module.css";
 
@@ -77,6 +79,17 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     return onCartUpdated(setCartCount);
   }, []);
 
+  // authedFetch (lib/api.ts) already clears the stored session on any 401 —
+  // this just makes sure Header's own copy of that state (derived once on
+  // mount, above) doesn't keep showing the account name/dropdown as if
+  // nothing happened.
+  useEffect(() => {
+    return onSessionExpired(() => {
+      setUser(null);
+      setCartCount(0);
+    });
+  }, []);
+
   function handleLogout() {
     const session = getSession();
     if (session) apiLogout(session.token);
@@ -84,6 +97,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     setUser(null);
     setCartCount(0);
     notifyCartUpdated(0);
+    showToast(dict.session.loggedOut, "success");
   }
 
   function handleSearchSubmit(e: React.FormEvent) {
@@ -241,10 +255,10 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                     </>
                   )}
                   <li>
-                    <button type="button" className={styles.accountMenuItem}>
+                    <LocaleLink href="/aide" className={styles.accountMenuItem}>
                       <HelpIcon className={styles.accountMenuIcon} />
                       {dict.header.helpCenter}
-                    </button>
+                    </LocaleLink>
                   </li>
                 </ul>
               </div>

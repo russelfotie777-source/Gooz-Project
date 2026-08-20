@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import styles from "./WhatsAppButton.module.css";
 
@@ -9,8 +10,18 @@ import styles from "./WhatsAppButton.module.css";
 // pages). wa.me needs the number in plain international digits, no "+".
 const WHATSAPP_NUMBER = "237688407756";
 
+// /connexion and /inscription (AuthDesktopPage/AuthMobileFlow) shouldn't
+// show this — it overlaps the form, especially the mobile sheet whose
+// bottom row sits right under it.
+function isHiddenOnPathname(pathname: string | null): boolean {
+  return pathname != null && /\/(connexion|inscription)$/.test(pathname);
+}
+
 export default function WhatsAppButton() {
   const dict = useDictionary();
+  const pathname = usePathname();
+
+  if (isHiddenOnPathname(pathname)) return null;
 
   return (
     <a

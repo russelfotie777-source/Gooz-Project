@@ -21,20 +21,17 @@ export default function ProfileLoggedOut({ onToggleLanguage }: ProfileLoggedOutP
           <p className={styles.userName}>{dict.profile.loggedOutName}</p>
           <p className={styles.userEmail}>{dict.profile.notConnected}</p>
         </div>
-        <button type="button" className={styles.editButton} aria-label={dict.profile.editProfile}>
-          <img src="/icon/profile/person-edit.svg" alt="" className={styles.editIcon} />
-        </button>
       </div>
 
       <div className={styles.card}>
-        <div className={styles.row}>
+        <LocaleLink href="/aide" className={`${styles.row} ${styles.rowButton} ${styles.rowNoBorder}`}>
           <img src="/icon/profile/quiz.svg" alt="" className={styles.rowIcon} />
           <div className={styles.rowText}>
             <p className={styles.rowTitle}>{dict.profile.helpCenterTitle}</p>
             <p className={styles.rowSubtitle}>{dict.profile.helpCenterSubtitle}</p>
           </div>
           <img src="/icon/profile/arrow-forward-ios.svg" alt="" className={styles.chevron} />
-        </div>
+        </LocaleLink>
       </div>
 
       <div className={styles.card}>

@@ -1,12 +1,39 @@
 "use client";
 
+import { useState } from "react";
+import { ApiValidationError, subscribeNewsletter } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { showToast } from "@/lib/toast";
 import ScrollToTopButton from "./ScrollToTopButton";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
   const dict = useDictionary();
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleNewsletterSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = email.trim();
+    if (!trimmed) return;
+
+    setSubmitting(true);
+    try {
+      await subscribeNewsletter(trimmed);
+      showToast(dict.footer.newsletterSuccess, "success");
+      setEmail("");
+    } catch (err) {
+      showToast(
+        err instanceof ApiValidationError
+          ? (Object.values(err.errors)[0]?.[0] ?? err.message)
+          : dict.footer.newsletterError,
+        "error"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <footer className={styles.footer}>
@@ -49,16 +76,20 @@ export default function Footer() {
           </div>
         </div>
 
-        <form className={styles.newsletterForm}>
+        <form className={styles.newsletterForm} onSubmit={handleNewsletterSubmit}>
           <p className={styles.columnTitle}>{dict.footer.newsletter}</p>
           <div className={styles.newsletterField}>
             <input
               type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder={dict.footer.newsletterPlaceholder}
               className={styles.newsletterInput}
+              disabled={submitting}
             />
-            <button type="submit" className={styles.newsletterButton}>
-              {dict.footer.subscribe}
+            <button type="submit" className={styles.newsletterButton} disabled={submitting}>
+              {submitting ? dict.footer.subscribing : dict.footer.subscribe}
             </button>
           </div>
         </form>

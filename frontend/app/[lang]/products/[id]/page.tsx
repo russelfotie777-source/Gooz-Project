@@ -8,7 +8,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const product = await getProduct(Number(id)).catch(() => null);
   if (!product) notFound();
 
-  const otherProducts = await getProducts({ per_page: 8 });
+  // The main product above already has to succeed (404s otherwise) — a
+  // failure on this secondary call is not worth taking down a page that
+  // otherwise loaded fine; just show it with no recommendations.
+  const otherProducts = await getProducts({ per_page: 8 }).catch(() => []);
   const recommendedProducts = otherProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
   return <ProductPage product={product} recommendedProducts={recommendedProducts} />;

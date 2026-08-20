@@ -150,3 +150,10 @@
   color: #fe522e;
   text-align: center;
 }
+
+.couponSuccess {
+  margin: 8px 0 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #1a9d5c;
+}

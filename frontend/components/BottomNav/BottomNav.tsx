@@ -1,12 +1,25 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import styles from "./BottomNav.module.css";
 
+type ActiveSlot = "home" | "cart" | "bell" | "profile";
+
 interface BottomNavProps {
-  /** Which slot is raised as the active orange circle. Defaults to "home". */
-  active?: "home" | "cart" | "profile";
+  /** Which slot is raised as the active orange circle. Defaults to a value
+   * derived from the current URL (see deriveActiveFromPathname) rather than
+   * always "home" — a page that forgets to pass this explicitly used to
+   * silently show the wrong tab as active instead of a reasonable guess. */
+  active?: ActiveSlot;
+}
+
+function deriveActiveFromPathname(pathname: string): ActiveSlot {
+  if (/\/cart(\/|$)/.test(pathname)) return "cart";
+  if (/\/notifications(\/|$)/.test(pathname)) return "bell";
+  if (/\/(compte|adresses|commandes)(\/|$)/.test(pathname)) return "profile";
+  return "home";
 }
 
 // Real mobile nav bar from Figma (node 372:242, frame 372:185) — floating
@@ -17,8 +30,10 @@ interface BottomNavProps {
 // Each slot has two icon variants: "icon" (dark, used inline in the white
 // bar) and "activeIcon" (white, used when raised into the orange circle) —
 // the two states use differently-colored exports in Figma, not just CSS.
-export default function BottomNav({ active = "home" }: BottomNavProps) {
+export default function BottomNav({ active }: BottomNavProps) {
   const dict = useDictionary();
+  const pathname = usePathname();
+  const resolvedActive = active ?? deriveActiveFromPathname(pathname);
 
   const SLOTS = [
     {
@@ -37,7 +52,7 @@ export default function BottomNav({ active = "home" }: BottomNavProps) {
     },
     {
       key: "bell",
-      href: null,
+      href: "/notifications",
       icon: "/icon/bottom-nav/nav-bell.svg",
       activeIcon: "/icon/bottom-nav/nav-bell.svg",
       label: dict.bottomNav.notifications,
@@ -51,7 +66,7 @@ export default function BottomNav({ active = "home" }: BottomNavProps) {
     },
   ] as const;
 
-  const activeIndex = SLOTS.findIndex((slot) => slot.key === active);
+  const activeIndex = SLOTS.findIndex((slot) => slot.key === resolvedActive);
   const activeSlot = SLOTS[activeIndex];
   const circlePosition = `${(activeIndex * 2 + 1) * 12.5}%`;
 
@@ -70,39 +85,23 @@ export default function BottomNav({ active = "home" }: BottomNavProps) {
           {SLOTS.map((slot, index) =>
             index === activeIndex ? (
               <div key={slot.key} className={styles.homeSlot} aria-hidden />
-            ) : slot.href ? (
+            ) : (
               <LocaleLink key={slot.key} href={slot.href} className={styles.item} aria-label={slot.label}>
                 <img src={slot.icon} alt="" className={styles.icon} />
               </LocaleLink>
-            ) : (
-              <button key={slot.key} type="button" className={styles.item} aria-label={slot.label}>
-                <img src={slot.icon} alt="" className={styles.icon} />
-              </button>
             )
           )}
         </div>
 
-        {activeSlot.href ? (
-          <LocaleLink
-            href={activeSlot.href}
-            className={styles.homeCircle}
-            style={{ left: circlePosition }}
-            aria-label={activeSlot.label}
-            aria-current="page"
-          >
-            <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
-          </LocaleLink>
-        ) : (
-          <button
-            type="button"
-            className={styles.homeCircle}
-            style={{ left: circlePosition }}
-            aria-label={activeSlot.label}
-            aria-current="page"
-          >
-            <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
-          </button>
-        )}
+        <LocaleLink
+          href={activeSlot.href}
+          className={styles.homeCircle}
+          style={{ left: circlePosition }}
+          aria-label={activeSlot.label}
+          aria-current="page"
+        >
+          <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
+        </LocaleLink>
       </div>
     </nav>
   );

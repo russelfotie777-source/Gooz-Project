@@ -203,6 +203,45 @@
   border-radius: 4px;
 }
 
+.variantRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.variantButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.variantButtonActive {
+  border-color: var(--color-accent-strong);
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+}
+
+.variantButtonOutOfStock {
+  opacity: 0.55;
+}
+
+.variantOutOfStockTag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .descriptionBlock {
   display: flex;
   flex-direction: column;
@@ -252,6 +291,22 @@
   font-size: 14px;
   color: var(--color-text);
   margin: 0;
+}
+
+.locationListsError {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #e0433c;
+}
+
+.locationListsRetry {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  color: #e0433c;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .locationIcon {

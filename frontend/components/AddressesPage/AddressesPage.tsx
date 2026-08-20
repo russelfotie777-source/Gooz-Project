@@ -17,7 +17,7 @@ import styles from "./AddressesPage.module.css";
 export default function AddressesPage() {
   const dict = useDictionary();
   const router = useLocaleRouter();
-  const { status, addresses, create, update, remove, setDefault } = useAddresses();
+  const { status, addresses, pending, create, update, remove, setDefault } = useAddresses();
   const [view, setView] = useState<"list" | "form">("list");
   const [editing, setEditing] = useState<Address | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(null);
@@ -39,8 +39,21 @@ export default function AddressesPage() {
   }
 
   async function handleDelete(id: number) {
-    await remove(id);
-    setConfirmingDeleteId(null);
+    try {
+      await remove(id);
+      setConfirmingDeleteId(null);
+    } catch {
+      // Error is surfaced via a toast (see useAddresses); keep the confirm
+      // row open so the user can retry instead of losing their place.
+    }
+  }
+
+  async function handleSetDefault(id: number) {
+    try {
+      await setDefault(id);
+    } catch {
+      // Error is surfaced via a toast (see useAddresses).
+    }
   }
 
   return (
@@ -100,6 +113,7 @@ export default function AddressesPage() {
                       <button
                         type="button"
                         className={styles.confirmYes}
+                        disabled={pending}
                         onClick={() => handleDelete(address.id)}
                       >
                         {dict.addresses.confirmDeleteYes}
@@ -118,7 +132,8 @@ export default function AddressesPage() {
                         <button
                           type="button"
                           className={styles.actionButton}
-                          onClick={() => setDefault(address.id)}
+                          disabled={pending}
+                          onClick={() => handleSetDefault(address.id)}
                         >
                           {dict.addresses.setDefault}
                         </button>

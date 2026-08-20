@@ -5,7 +5,7 @@ import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import BottomNav from "@/components/BottomNav/BottomNav";
 import CartItems from "@/components/CartItems/CartItems";
-import { getCart } from "@/lib/api";
+import { getCart, isUnauthorized } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
@@ -18,25 +18,32 @@ import styles from "./CartPage.module.css";
 // visitor sees a prompt to sign in instead of cart contents.
 export default function CartPage() {
   const dict = useDictionary();
-  const [status, setStatus] = useState<"loading" | "loggedOut" | "ready">("loading");
+  const [status, setStatus] = useState<"loading" | "loggedOut" | "error" | "ready">("loading");
   const [cart, setCart] = useState<Cart | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
     const session = getSession();
     if (!session) {
       setStatus("loggedOut");
       return;
     }
 
+    setStatus("loading");
     setToken(session.token);
     getCart(session.token)
       .then((c) => {
         setCart(c);
         setStatus("ready");
       })
-      .catch(() => setStatus("loggedOut"));
-  }, []);
+      // A 401 means the token really is dead — anything else (offline,
+      // backend down, a 500) is not the same thing as "not logged in", and
+      // telling an authenticated shopper to log back in when the real
+      // problem is a network blip just loses them.
+      .catch((err) => setStatus(isUnauthorized(err) ? "loggedOut" : "error"));
+  }
+
+  useEffect(load, []);
 
   return (
     <div className={styles.page}>
@@ -56,6 +63,15 @@ export default function CartPage() {
             <LocaleLink href="/connexion" className={styles.loginLink}>
               {dict.cart.login}
             </LocaleLink>
+          </div>
+        )}
+
+        {status === "error" && (
+          <div className={styles.message}>
+            <p>{dict.cart.loadError}</p>
+            <button type="button" className={styles.loginLink} onClick={load}>
+              {dict.cart.retry}
+            </button>
           </div>
         )}
 
