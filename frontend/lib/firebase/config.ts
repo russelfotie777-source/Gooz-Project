@@ -1,8 +1,8 @@
 // Firebase Web app config (project "shopitechmessage"). Not a secret — it's
 // inherently exposed in any client bundle that talks to Firebase, including
-// the raw public/firebase-messaging-sw.js service worker (which can't read
-// process.env, since Next.js never bundles static /public files). Kept
-// identical in both places on purpose; if you rotate these, update both.
+// the raw public/sw.js service worker (which can't read process.env, since
+// Next.js never bundles static /public files). Kept identical in both
+// places on purpose; if you rotate these, update both.
 export const firebaseConfig = {
   apiKey: "AIzaSyCYmmBzE0Ao8pmRkA5MWrEMl9KjXf9WmmM",
   authDomain: "shopitechmessage.firebaseapp.com",

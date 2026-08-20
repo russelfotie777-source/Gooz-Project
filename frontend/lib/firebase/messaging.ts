@@ -1,4 +1,5 @@
 import { registerDeviceToken } from "@/lib/api";
+import { registerServiceWorker } from "@/lib/serviceWorker";
 import { FIREBASE_VAPID_KEY, firebaseConfig } from "./config";
 
 // Everything here is browser-only (Notification, serviceWorker, FCM token
@@ -34,7 +35,8 @@ export async function initPushNotifications(authToken: string): Promise<void> {
     const messaging = await getMessagingInstance();
     if (!messaging) return;
 
-    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    const registration = await registerServiceWorker();
+    if (!registration) return;
 
     const { getToken } = await import("firebase/messaging");
     const fcmToken = await getToken(messaging, {
@@ -50,7 +52,7 @@ export async function initPushNotifications(authToken: string): Promise<void> {
   }
 }
 
-// Background messages are handled by public/firebase-messaging-sw.js, but
+// Background messages are handled by public/sw.js, but
 // FCM only invokes that handler when the tab isn't focused — a message
 // arriving while the app is open needs to be shown explicitly.
 export async function listenForForegroundMessages(): Promise<void> {

@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import PushNotificationRegistrar from "@/components/PushNotificationRegistrar/PushNotificationRegistrar";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar/ServiceWorkerRegistrar";
 import SupportButton from "@/components/SupportButton/SupportButton";
 import ToastProvider from "@/components/ToastProvider/ToastProvider";
 import WhatsAppButton from "@/components/WhatsAppButton/WhatsAppButton";
@@ -51,8 +52,20 @@ export async function generateMetadata({
     openGraph: {
       locale: resolvedLang === "fr" ? "fr_FR" : "en_US",
     },
+    manifest: "/manifest.json",
+    icons: {
+      icon: "/favicon.ico",
+      apple: "/icons/apple-touch-icon.png",
+    },
   };
 }
+
+// Brand orange (matches the app icon's background — see
+// public/manifest.json) so the Android address-bar/task-switcher chrome and
+// the install splash screen aren't a jarring mismatch with the icon.
+export const viewport: Viewport = {
+  themeColor: "#f39200",
+};
 
 export function generateStaticParams() {
   return [{ lang: "fr" }, { lang: "en" }];
@@ -75,6 +88,7 @@ export default async function RootLayout({
           {children}
           <WhatsAppButton />
           <SupportButton />
+          <ServiceWorkerRegistrar />
           <PushNotificationRegistrar />
           <ToastProvider />
         </I18nProvider>
