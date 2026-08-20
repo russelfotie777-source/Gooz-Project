@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\RolePermission;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -21,22 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::define('manage-products', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-orders', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-deliveries', fn (User $user) => $user->isAdmin());
-        Gate::define('moderate-reviews', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-users', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-coupons', fn (User $user) => $user->isAdmin());
-        Gate::define('view-stats', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-warehouses', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-suppliers', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-stock-adjustments', fn (User $user) => $user->isAdmin());
-        Gate::define('view-inventory-ledger', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-delivery-settings', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-cart-settings', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-company-profile', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-neighborhoods', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-homepage-sections', fn (User $user) => $user->isAdmin());
-        Gate::define('manage-accounting', fn (User $user) => $user->isAdmin());
+        foreach (RolePermission::ALL as $permission) {
+            Gate::define($permission, fn (User $user) => $user->hasPermission($permission));
+        }
     }
 }
