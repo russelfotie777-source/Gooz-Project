@@ -11,6 +11,7 @@ class ProductImage extends Model
         'product_id',
         'product_variant_id',
         'image_url',
+        'thumbnail_url',
         'is_primary',
     ];
 

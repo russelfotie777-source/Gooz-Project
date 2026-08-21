@@ -6,7 +6,6 @@ use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -31,7 +30,7 @@ class ProductController extends Controller
         }
 
         if ($brandId = $request->query('brand_id')) {
-            $query->where('brand_id', $brandId);
+            $query->whereIn('brand_id', (array) $brandId);
         }
 
         if ($request->boolean('is_promotion', false)) {
@@ -53,19 +52,20 @@ class ProductController extends Controller
             $query->whereHas('variants', fn ($q) => $q->where('base_price', '<=', $maxPrice));
         }
 
+        if ($color = $request->query('color')) {
+            $query->whereHas('variants', fn ($q) => $q->whereIn('color', (array) $color));
+        }
+
         $sortBy = in_array($request->query('sort_by'), self::SORTABLE_COLUMNS, true)
             ? $request->query('sort_by')
             : 'created_at';
         $sortDir = $request->query('sort_dir') === 'asc' ? 'asc' : 'desc';
 
         if ($sortBy === 'base_price') {
-            $query->orderBy(
-                ProductVariant::select('base_price')
-                    ->whereColumn('product_id', 'products.id')
-                    ->orderBy('base_price')
-                    ->limit(1),
-                $sortDir
-            );
+            // min_price (products.min_price) is kept in sync by
+            // ProductVariantObserver — sorts on an indexed column instead of
+            // a correlated subquery per row (performance audit finding).
+            $query->orderBy('min_price', $sortDir);
         } else {
             $query->orderBy($sortBy, $sortDir);
         }

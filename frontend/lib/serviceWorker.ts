@@ -9,7 +9,16 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return null;
 
   try {
-    return await navigator.serviceWorker.register("/sw.js");
+    // sw.js is a static file — it's never bundled by Next, so it can't read
+    // process.env itself. The env is passed as a query param instead, so
+    // sw.js can skip its offline-caching fetch handler outside production:
+    // that handler intercepts every same-origin request, including
+    // Turbopack's own HMR/RSC navigation fetches, which don't survive being
+    // replayed through fetch() inside the worker — this caused "Failed to
+    // fetch" errors on plain page navigation during local dev. Push
+    // notifications are a separate `push` event handler in sw.js, unaffected
+    // either way, so this doesn't block testing push locally.
+    return await navigator.serviceWorker.register(`/sw.js?env=${process.env.NODE_ENV}`);
   } catch (error) {
     console.error("Service worker registration failed", error);
     return null;

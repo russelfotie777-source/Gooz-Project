@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useState } from "react";
 import { addCartItem } from "@/lib/api";
 import { getSession } from "@/lib/auth";
@@ -41,6 +42,11 @@ export default function ProductCard({
   const [cartStatus, setCartStatus] = useState<"idle" | "adding" | "added">("idle");
   const primaryImage =
     product.images.find((img) => img.is_primary) ?? product.images[0];
+  // Grid-sized cards only ever need the small variant — thumbnail_url is
+  // absent on images uploaded before this existed, hence the fallback.
+  const [imageSrc, setImageSrc] = useState(
+    primaryImage?.thumbnail_url ?? primaryImage?.image_url ?? PLACEHOLDER_IMAGE
+  );
   const displayVariant = getDisplayVariant(product);
   const discount = discountPercent(displayVariant);
 
@@ -75,16 +81,13 @@ export default function ProductCard({
     <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
         <LocaleLink href={`/products/${product.id}`} className={styles.imageLink}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={primaryImage?.image_url ?? PLACEHOLDER_IMAGE}
+          <Image
+            src={imageSrc}
             alt={product.name}
             className={styles.image}
-            loading="lazy"
-            onError={(e) => {
-              if (e.currentTarget.src.endsWith(PLACEHOLDER_IMAGE)) return;
-              e.currentTarget.src = PLACEHOLDER_IMAGE;
-            }}
+            fill
+            sizes={layout === "row" ? "96px" : "(min-width: 1024px) 280px, 45vw"}
+            onError={() => setImageSrc(PLACEHOLDER_IMAGE)}
           />
         </LocaleLink>
         {discount && <span className={styles.discountTag}>-{discount}%</span>}
