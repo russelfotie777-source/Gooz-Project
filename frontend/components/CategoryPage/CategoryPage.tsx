@@ -6,7 +6,7 @@ import ProductSection from "@/components/ProductSection/ProductSection";
 import CategoryResults from "@/components/CategoryResults/CategoryResults";
 import PromoBanner from "@/components/PromoBanner/PromoBanner";
 import Footer from "@/components/Footer/Footer";
-import { getBanners, getCategories, getProducts, PRODUCT_FETCH_CAP } from "@/lib/api";
+import { getBanners, getCategories, getProducts, getProductsPage } from "@/lib/api";
 import styles from "./CategoryPage.module.css";
 
 interface CategoryPageProps {
@@ -21,16 +21,22 @@ export default async function CategoryPage({ categorySlug }: CategoryPageProps) 
   const category = categories.find((c) => c.slug === categorySlug);
   if (!category) notFound();
 
-  const [categoryProducts, otherProducts, banners] = await Promise.all([
-    getProducts({ category_id: category.id, per_page: PRODUCT_FETCH_CAP }),
+  const [categoryFirstPage, bestSellerProducts, otherProducts, banners] = await Promise.all([
+    // CategoryResults manages its own paging/filtering after this first
+    // page — see its own getProductsPage() calls.
+    getProductsPage({ category_id: category.id, per_page: 9 }),
+    // "Best sellers" here is really just "first 4 of this category by
+    // default sort" (no real popularity signal on this endpoint) — same as
+    // before, just its own small fetch instead of slicing the (now paged)
+    // categoryProducts array.
+    getProducts({ category_id: category.id, per_page: 4 }),
     // Secondary/non-essential (recommended-products) fetch — a failure here
     // shouldn't take down a page whose main content already loaded fine.
     getProducts({ per_page: 8 }).catch(() => []),
     getBanners("category").catch(() => []),
   ]);
-  const possiblyTruncated = categoryProducts.length >= PRODUCT_FETCH_CAP;
 
-  const bestSellers = categoryProducts.slice(0, 4);
+  const bestSellers = bestSellerProducts;
   const recommendedProducts = otherProducts
     .filter((p) => p.category?.id !== category.id)
     .slice(0, 4);
@@ -46,8 +52,10 @@ export default async function CategoryPage({ categorySlug }: CategoryPageProps) 
 
         <CategoryResults
           categoryName={category.name}
-          products={categoryProducts}
-          possiblyTruncated={possiblyTruncated}
+          initialProducts={categoryFirstPage.products}
+          initialLastPage={categoryFirstPage.lastPage}
+          initialTotal={categoryFirstPage.total}
+          categoryId={category.id}
         />
 
         <PromoBanner />

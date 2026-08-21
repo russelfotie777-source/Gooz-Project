@@ -8,14 +8,28 @@ import CatalogueSection from "@/components/CatalogueSection/CatalogueSection";
 import PromoBanner from "@/components/PromoBanner/PromoBanner";
 import BrandsSection from "@/components/BrandsSection/BrandsSection";
 import Footer from "@/components/Footer/Footer";
-import { getBanners, getCategories, getBrands, getHomepageSections, getProducts, PRODUCT_FETCH_CAP } from "@/lib/api";
+import {
+  getBanners,
+  getCategories,
+  getBrands,
+  getHomepageSections,
+  getProducts,
+  getProductsPage,
+  PRODUCT_FETCH_CAP,
+} from "@/lib/api";
 import styles from "./HomePage.module.css";
 
 export default async function HomePage() {
-  const [categories, brands, products, banners, homepageSections] = await Promise.all([
+  const [categories, brands, products, catalogueFirstPage, banners, homepageSections] = await Promise.all([
     getCategories(),
     getBrands(),
+    // Feeds the curated carousels below (on sale / popular / recommended) —
+    // not paginated UI, just "first N of a broad pool", so this doesn't
+    // need CatalogueSection's own real pagination.
     getProducts({ per_page: PRODUCT_FETCH_CAP }),
+    // CatalogueSection manages its own paging/filtering after this first
+    // page — see its own getProductsPage() calls.
+    getProductsPage({ per_page: 8 }),
     // Not fatal if it fails — the hero falls back to its static slide (see
     // HeroBanner) rather than taking the whole homepage down over a
     // secondary, non-essential fetch.
@@ -24,7 +38,6 @@ export default async function HomePage() {
     // hand-built ones below, never required for the page to render.
     getHomepageSections().catch(() => []),
   ]);
-  const possiblyTruncated = products.length >= PRODUCT_FETCH_CAP;
 
   const saleProducts = products.filter((p) => p.variants.some((v) => v.is_promotion));
   const popularProducts = products.slice(0, 4);
@@ -43,7 +56,12 @@ export default async function HomePage() {
 
         <ProductSection titleKey="popularTitle" products={popularProducts} cardLayout="row" />
 
-        <CatalogueSection products={products} categories={categories} possiblyTruncated={possiblyTruncated} />
+        <CatalogueSection
+          initialProducts={catalogueFirstPage.products}
+          initialLastPage={catalogueFirstPage.lastPage}
+          categories={categories}
+          brands={brands}
+        />
 
         <PromoBanner />
 

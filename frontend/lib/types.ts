@@ -44,6 +44,8 @@ export interface Category {
 export interface ProductImage {
   id: number;
   image_url: string;
+  /** Grid/card-sized variant (~400px) — null for images uploaded before this existed. */
+  thumbnail_url: string | null;
   is_primary: boolean;
   product_variant_id: number | null;
 }

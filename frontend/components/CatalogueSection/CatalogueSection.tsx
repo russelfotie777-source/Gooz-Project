@@ -1,18 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { Category, Product } from "@/lib/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Brand, Category, Product } from "@/lib/types";
+import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CatalogueSection.module.css";
 
 interface CatalogueSectionProps {
-  products: Product[];
+  /** First page, fetched server-side so there's no loading flash on mount. */
+  initialProducts: Product[];
+  initialLastPage: number;
   categories: Category[];
-  /** True when the fetched product list hit PRODUCT_FETCH_CAP — filters/sort
-   * below run entirely client-side over this list, so results past the cap
-   * can't be represented at all (see lib/api.ts's PRODUCT_FETCH_CAP comment). */
-  possiblyTruncated?: boolean;
+  /** Full catalogue-wide list, not just brands present in the current page
+   *  (unlike before — the filter used to only ever show brands it happened
+   *  to have already downloaded). */
+  brands: Brand[];
 }
 
 const PAGE_SIZE = 8;
@@ -21,7 +24,7 @@ const PRICE_RANGE_DEFS = [
   { id: "under-10000", key: "under10000", min: 0, max: 9999 },
   { id: "10000-25000", key: "10000to25000", min: 10000, max: 25000 },
   { id: "25000-50000", key: "25000to50000", min: 25000, max: 50000 },
-  { id: "over-50000", key: "over50000", min: 50001, max: Infinity },
+  { id: "over-50000", key: "over50000", min: 50001, max: undefined },
 ] as const;
 
 function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
@@ -31,7 +34,7 @@ function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
   return next;
 }
 
-export default function CatalogueSection({ products, categories, possiblyTruncated }: CatalogueSectionProps) {
+export default function CatalogueSection({ initialProducts, initialLastPage, categories, brands }: CatalogueSectionProps) {
   const dict = useDictionary();
   const PRICE_RANGES = PRICE_RANGE_DEFS.map((r) => ({
     ...r,
@@ -42,19 +45,18 @@ export default function CatalogueSection({ products, categories, possiblyTruncat
   const [selectedBrandIds, setSelectedBrandIds] = useState<Set<number>>(new Set());
   const [selectedColors, setSelectedColors] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
+  const [products, setProducts] = useState(initialProducts);
+  const [lastPage, setLastPage] = useState(initialLastPage);
+  const [loading, setLoading] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const isFirstRender = useRef(true);
 
-  const brands = useMemo(() => {
-    const byId = new Map<number, string>();
-    for (const product of products) {
-      if (product.brand) byId.set(product.brand.id, product.brand.name);
-    }
-    return Array.from(byId, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-  }, [products]);
+  const priceRange = PRICE_RANGES.find((r) => r.id === priceRangeId);
 
+  // No "distinct colors across the catalogue" endpoint exists, so — same as
+  // before this was server-paginated — the color facet can only reflect
+  // what's on the currently-loaded page, not the whole catalogue.
   const colors = useMemo(() => {
     const set = new Set<string>();
     for (const product of products) {
@@ -65,36 +67,45 @@ export default function CatalogueSection({ products, categories, possiblyTruncat
     return Array.from(set).sort();
   }, [products]);
 
-  const priceRange = PRICE_RANGES.find((r) => r.id === priceRangeId);
+  useEffect(() => {
+    // Skip the fetch on mount — initialProducts (server-rendered) already
+    // has it, and firing an identical request would just be a wasted
+    // round-trip.
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
 
-  const filtered = useMemo(
-    () =>
-      products.filter((product) => {
-        if (activeCategoryId && product.category?.id !== activeCategoryId) return false;
-        const price = product.price_from ?? 0;
-        if (priceRange && (price < priceRange.min || price > priceRange.max)) {
-          return false;
-        }
-        if (selectedBrandIds.size > 0 && (!product.brand || !selectedBrandIds.has(product.brand.id))) {
-          return false;
-        }
-        if (
-          selectedColors.size > 0 &&
-          !product.variants.some((v) => v.color && selectedColors.has(v.color))
-        ) {
-          return false;
-        }
-        return true;
-      }),
-    [products, activeCategoryId, priceRange, selectedBrandIds, selectedColors]
-  );
+    let cancelled = false;
+    setLoading(true);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const pageItems = filtered.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+    const params: GetProductsParams = {
+      page,
+      per_page: PAGE_SIZE,
+      category_id: activeCategoryId ?? undefined,
+      brand_id: selectedBrandIds.size > 0 ? Array.from(selectedBrandIds) : undefined,
+      color: selectedColors.size > 0 ? Array.from(selectedColors) : undefined,
+      min_price: priceRange && priceRange.min > 0 ? priceRange.min : undefined,
+      max_price: priceRange?.max,
+    };
+
+    getProductsPage(params)
+      .then((result) => {
+        if (cancelled) return;
+        setProducts(result.products);
+        setLastPage(result.lastPage);
+      })
+      .catch(() => {
+        if (!cancelled) setProducts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [page, activeCategoryId, priceRangeId, selectedBrandIds, selectedColors]);
 
   function toggleGroup(name: string) {
     setOpenGroup((current) => (current === name ? null : name));
@@ -132,8 +143,6 @@ export default function CatalogueSection({ products, categories, possiblyTruncat
           {dict.home.catalogue.filters}
         </button>
       </div>
-
-      {possiblyTruncated && <p className={styles.truncatedNotice}>{dict.home.catalogue.truncatedNotice}</p>}
 
       <div className={styles.layout}>
         <aside className={`${styles.filters} ${filtersOpen ? styles.filtersOpen : ""}`}>
@@ -234,9 +243,9 @@ export default function CatalogueSection({ products, categories, possiblyTruncat
           )}
         </aside>
 
-        {pageItems.length > 0 ? (
-          <div className={styles.grid}>
-            {pageItems.map((product) => (
+        {products.length > 0 ? (
+          <div className={styles.grid} aria-busy={loading}>
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} layout="column" />
             ))}
           </div>
@@ -245,23 +254,24 @@ export default function CatalogueSection({ products, categories, possiblyTruncat
         )}
       </div>
 
-      {pageCount > 1 && (
+      {lastPage > 1 && (
         <div className={styles.pagination}>
           <button
             type="button"
             className={styles.pageArrow}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
+            disabled={page === 1 || loading}
             aria-label={dict.home.catalogue.previousPage}
           >
             ‹
           </button>
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+          {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
             <button
               key={n}
               type="button"
-              className={`${styles.pageNumber} ${n === currentPage ? styles.pageNumberActive : ""}`}
+              className={`${styles.pageNumber} ${n === page ? styles.pageNumberActive : ""}`}
               onClick={() => setPage(n)}
+              disabled={loading}
             >
               {n}
             </button>
@@ -269,8 +279,8 @@ export default function CatalogueSection({ products, categories, possiblyTruncat
           <button
             type="button"
             className={styles.pageArrow}
-            onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-            disabled={currentPage === pageCount}
+            onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+            disabled={page === lastPage || loading}
             aria-label={dict.home.catalogue.nextPage}
           >
             ›

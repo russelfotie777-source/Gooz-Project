@@ -23,3 +23,13 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# gzip/deflate compression for the JSON API responses and any static assets
+# served straight from public/ — no effect locally (`php artisan serve`
+# doesn't read .htaccess at all), only takes effect once this runs behind a
+# real Apache (production/XAMPP), which is exactly when it matters.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/xml application/xml+rss
+</IfModule>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#f39200" />
+<title>Hors ligne — Shopitech</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    text-align: center;
+    background: #ffffff;
+    color: #000000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  img {
+    width: 96px;
+    height: 96px;
+    border-radius: 20%;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+  p {
+    font-size: 14px;
+    color: #555555;
+    margin: 0;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+  button {
+    margin-top: 8px;
+    padding: 12px 28px;
+    border: none;
+    border-radius: 10px;
+    background: #f39200;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <img src="/icons/icon-192.png" alt="" />
+  <h1>Pas de connexion internet</h1>
+  <p>Vérifie ta connexion et réessaie. Les pages déjà visitées restent disponibles hors-ligne.</p>
+  <button type="button" onclick="location.reload()">Réessayer</button>
+</body>
+</html>
