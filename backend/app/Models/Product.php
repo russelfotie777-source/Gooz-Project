@@ -15,12 +15,14 @@ class Product extends Model
         'category_id',
         'reference',
         'is_active',
+        'min_price',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'min_price' => 'decimal:2',
         ];
     }
 

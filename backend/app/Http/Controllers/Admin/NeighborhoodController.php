@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\NeighborhoodController as PublicNeighborhoodController;
 use App\Http\Requests\Neighborhood\StoreNeighborhoodRequest;
 use App\Http\Requests\Neighborhood\UpdateNeighborhoodRequest;
 use App\Http\Resources\NeighborhoodResource;
 use App\Models\Neighborhood;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 class NeighborhoodController extends Controller
 {
@@ -34,6 +36,7 @@ class NeighborhoodController extends Controller
     public function store(StoreNeighborhoodRequest $request): NeighborhoodResource
     {
         $neighborhood = Neighborhood::create($request->validated());
+        Cache::forget(PublicNeighborhoodController::CACHE_KEY);
 
         return new NeighborhoodResource($neighborhood->fresh('city'));
     }
@@ -41,6 +44,7 @@ class NeighborhoodController extends Controller
     public function update(UpdateNeighborhoodRequest $request, Neighborhood $neighborhood): NeighborhoodResource
     {
         $neighborhood->update($request->validated());
+        Cache::forget(PublicNeighborhoodController::CACHE_KEY);
 
         return new NeighborhoodResource($neighborhood->fresh('city'));
     }
@@ -48,6 +52,7 @@ class NeighborhoodController extends Controller
     public function destroy(Neighborhood $neighborhood)
     {
         $neighborhood->delete();
+        Cache::forget(PublicNeighborhoodController::CACHE_KEY);
 
         return response()->json(null, 204);
     }

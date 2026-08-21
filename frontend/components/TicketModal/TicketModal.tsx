@@ -78,7 +78,15 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useModalA11y(open, onClose, modalRef);
+  // Wraps onClose so the overlay's onClick and Escape (via useModalA11y)
+  // can't abandon an in-flight ticket submission — mirrors the guard in
+  // DeleteAccountModal/EditProfileModal.
+  function handleClose() {
+    if (submitting) return;
+    onClose();
+  }
+
+  useModalA11y(open, handleClose, modalRef);
 
   function formatDate(iso: string): string {
     return new Intl.DateTimeFormat(lang === "fr" ? "fr-FR" : "en-US", {
@@ -148,7 +156,7 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
   }
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={handleClose}>
       <div
         ref={modalRef}
         className={styles.modal}
@@ -162,7 +170,7 @@ export default function TicketModal({ open, onClose }: TicketModalProps) {
             <h2 className={styles.title}>{dict.tickets.modalTitle}</h2>
             <p className={styles.subtitle}>{dict.tickets.modalSubtitle}</p>
           </div>
-          <button type="button" className={styles.closeButton} aria-label={dict.tickets.close} onClick={onClose}>
+          <button type="button" className={styles.closeButton} aria-label={dict.tickets.close} onClick={handleClose}>
             <CloseIcon />
           </button>
         </div>

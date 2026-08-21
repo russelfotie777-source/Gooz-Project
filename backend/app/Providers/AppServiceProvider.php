@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\ProductVariant;
 use App\Models\RolePermission;
 use App\Models\User;
+use App\Observers\ProductVariantObserver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,5 +27,7 @@ class AppServiceProvider extends ServiceProvider
         foreach (RolePermission::ALL as $permission) {
             Gate::define($permission, fn (User $user) => $user->hasPermission($permission));
         }
+
+        ProductVariant::observe(ProductVariantObserver::class);
     }
 }

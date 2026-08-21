@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { addCartItem, ApiValidationError, getCities, getDeliveryEstimate, getNeighborhoods } from "@/lib/api";
 import { getSession } from "@/lib/auth";
@@ -67,6 +68,11 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     id: i,
   }));
   const [activeImage, setActiveImage] = useState(0);
+  // next/image needs a stable src per <Image> — imperatively mutating the
+  // DOM node's src (the old <img onError> pattern) fights React's own
+  // re-renders here, so failures are tracked in state instead, keyed by the
+  // gallery slot's id (0..GALLERY_SIZE-1).
+  const [failedImageIds, setFailedImageIds] = useState<Set<number>>(new Set());
   const trackRef = useRef<HTMLDivElement>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [allNeighborhoods, setAllNeighborhoods] = useState<Neighborhood[]>([]);
@@ -195,6 +201,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   useEffect(() => {
     trackRef.current?.scrollTo({ left: 0 });
     setActiveImage(0);
+    setFailedImageIds(new Set());
   }, [selectedVariantId]);
 
   return (
@@ -205,15 +212,14 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             <div className={styles.swipeTrack} ref={trackRef} onScroll={handleTrackScroll}>
               {images.map((image) => (
                 <div className={styles.swipeSlide} key={image.id}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={image.image_url ?? PLACEHOLDER_IMAGE}
+                  <Image
+                    src={failedImageIds.has(image.id) ? PLACEHOLDER_IMAGE : (image.image_url ?? PLACEHOLDER_IMAGE)}
                     alt={product.name}
                     className={styles.mainImage}
-                    onError={(e) => {
-                      if (e.currentTarget.src.endsWith(PLACEHOLDER_IMAGE)) return;
-                      e.currentTarget.src = PLACEHOLDER_IMAGE;
-                    }}
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    priority={image.id === 0}
+                    onError={() => setFailedImageIds((prev) => new Set(prev).add(image.id))}
                   />
                 </div>
               ))}
@@ -241,15 +247,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 onClick={() => goToImage(index)}
                 aria-label={dict.product.viewImage(index + 1)}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image.image_url ?? PLACEHOLDER_IMAGE}
+                <Image
+                  src={failedImageIds.has(image.id) ? PLACEHOLDER_IMAGE : (image.image_url ?? PLACEHOLDER_IMAGE)}
                   alt=""
                   className={styles.thumbnailImage}
-                  onError={(e) => {
-                    if (e.currentTarget.src.endsWith(PLACEHOLDER_IMAGE)) return;
-                    e.currentTarget.src = PLACEHOLDER_IMAGE;
-                  }}
+                  fill
+                  sizes="90px"
+                  onError={() => setFailedImageIds((prev) => new Set(prev).add(image.id))}
                 />
               </button>
             ))}

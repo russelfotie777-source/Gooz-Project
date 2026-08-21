@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
@@ -80,8 +81,7 @@ export default function DynamicHomepageSection({ section }: DynamicHomepageSecti
               <LocaleLink href={`/categories/${category.slug}`} className={styles.cardItem} key={category.id}>
                 <span className={styles.cardBadge}>
                   {category.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={category.image} alt="" className={styles.cardImage} />
+                    <Image src={category.image} alt="" fill sizes="72px" className={styles.cardImage} />
                   ) : (
                     <span className={styles.cardInitial}>{category.name.charAt(0).toUpperCase()}</span>
                   )}
@@ -95,8 +95,7 @@ export default function DynamicHomepageSection({ section }: DynamicHomepageSecti
               <div className={styles.cardItem} key={brand.id}>
                 <span className={styles.cardBadge}>
                   {brand.logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={brand.logo} alt="" className={styles.cardImage} />
+                    <Image src={brand.logo} alt="" fill sizes="72px" className={styles.cardImage} />
                   ) : (
                     <span className={styles.cardInitial}>{brand.name.charAt(0).toUpperCase()}</span>
                   )}

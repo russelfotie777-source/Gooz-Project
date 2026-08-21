@@ -34,10 +34,14 @@ export default function DeleteAccountModal({ open, onClose }: DeleteAccountModal
   if (!open) return null;
 
   function handleClose() {
+    // Guards both paths that call this: the overlay's onClick and Escape
+    // (via useModalA11y) — neither should be able to abandon an in-flight
+    // deletion request. The Cancel button has its own `disabled` for the
+    // same reason.
+    if (submitting) return;
     setAcknowledged(false);
     setPassword("");
     setError(null);
-    setSubmitting(false);
     onClose();
   }
 
