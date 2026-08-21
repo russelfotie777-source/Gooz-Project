@@ -9,7 +9,6 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\HomepageSection;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -42,12 +41,79 @@ class HomepageSectionController extends Controller
             ->orderBy('position')
             ->get();
 
+        $batched = $this->batchSimpleAutomaticSections($sections);
+
         return response()->json([
-            'data' => $sections->map(fn (HomepageSection $section) => $this->present($section))->values(),
+            'data' => $sections->map(fn (HomepageSection $section) => $this->present($section, $batched->get($section->id)))->values(),
         ]);
     }
 
-    private function present(HomepageSection $section): array
+    /**
+     * Sections using the plain "recency" strategies (new_arrivals /
+     * category_showcase, no extra filters beyond category_ids) each used to
+     * run their own products query — with N such sections on the homepage,
+     * that's N round-trips run one after another before the page can
+     * respond (see the performance audit). Grouped by sort_direction (the
+     * one thing that has to match to share a single ORDER BY), fetched in
+     * one query per group, then split back out per section in memory.
+     * Sections with any other filter, or another strategy, are left as
+     * individual queries in queryAutomaticProducts() — merging those in too
+     * would risk subtly changing what best_sellers/price_range actually
+     * compute, for a gain this homepage's section count doesn't need.
+     *
+     * @return Collection<int, Collection<int, Product>> keyed by section id
+     */
+    private function batchSimpleAutomaticSections(Collection $sections): Collection
+    {
+        $batchable = $sections->filter(function (HomepageSection $section) {
+            if ($section->section_type !== 'automatic') {
+                return false;
+            }
+
+            if (! in_array($section->automatic_strategy, ['new_arrivals', 'category_showcase', null, ''], true)) {
+                return false;
+            }
+
+            return empty($section->brand_ids)
+                && $section->min_price === null
+                && $section->max_price === null
+                && ! $section->in_stock_only
+                && ! $section->campaign_products_only;
+        });
+
+        $results = new Collection;
+
+        foreach ($batchable->groupBy(fn (HomepageSection $s) => $s->sort_direction === 'desc' ? 'desc' : 'asc') as $direction => $group) {
+            /** @var Collection<int, HomepageSection> $group */
+            $categoryIds = $group->pluck('category_ids')->filter()->flatten()->unique()->values();
+            $needsAllCategories = $group->contains(fn (HomepageSection $s) => empty($s->category_ids));
+            $poolSize = (int) $group->sum(fn (HomepageSection $s) => $s->item_limit ?: 8);
+
+            $pool = Product::query()
+                ->with(['brand', 'category', 'images', 'variants'])
+                ->where('is_active', true)
+                ->when(! $needsAllCategories, fn (Builder $q) => $q->whereIn('category_id', $categoryIds))
+                ->orderBy('created_at', $direction)
+                ->limit($poolSize)
+                ->get();
+
+            foreach ($group as $section) {
+                $limit = $section->item_limit ?: 8;
+                $ids = $section->category_ids;
+
+                $results->put(
+                    $section->id,
+                    empty($ids)
+                        ? $pool->take($limit)
+                        : $pool->whereIn('category_id', $ids)->take($limit)->values()
+                );
+            }
+        }
+
+        return $results;
+    }
+
+    private function present(HomepageSection $section, ?Collection $batchedProducts = null): array
     {
         $limit = $section->item_limit ?: 8;
 
@@ -81,7 +147,7 @@ class HomepageSectionController extends Controller
 
         return $base + [
             'content_type' => 'products',
-            'products' => ProductResource::collection($this->resolveProducts($section, $limit)),
+            'products' => ProductResource::collection($this->resolveProducts($section, $limit, $batchedProducts)),
         ];
     }
 
@@ -104,10 +170,14 @@ class HomepageSectionController extends Controller
             ->get();
     }
 
-    private function resolveProducts(HomepageSection $section, int $limit): Collection
+    private function resolveProducts(HomepageSection $section, int $limit, ?Collection $batchedProducts = null): Collection
     {
         if ($section->section_type === 'manual') {
             return $section->items->pluck('product')->filter()->values();
+        }
+
+        if ($batchedProducts !== null) {
+            return $batchedProducts;
         }
 
         $automatic = $this->queryAutomaticProducts($section, $limit);
@@ -147,13 +217,9 @@ class HomepageSectionController extends Controller
                 break;
 
             case 'price_range':
-                $query->orderBy(
-                    ProductVariant::select('base_price')
-                        ->whereColumn('product_id', 'products.id')
-                        ->orderBy('base_price')
-                        ->limit(1),
-                    $direction
-                );
+                // products.min_price, kept in sync by ProductVariantObserver
+                // — see ProductController::index() for the same swap.
+                $query->orderBy('min_price', $direction);
                 break;
 
             case 'category_showcase':

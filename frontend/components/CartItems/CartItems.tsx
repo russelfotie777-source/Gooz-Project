@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { ApiValidationError, removeCartItem, updateCartItem, validateCoupon } from "@/lib/api";
 import { notifyCartUpdated } from "@/lib/cartEvents";
@@ -28,6 +29,9 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
   const [subtotal, setSubtotal] = useState(initialTotal);
   const [pendingId, setPendingId] = useState<number | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(null);
+  // next/image needs a stable src per <Image> — state instead of the old
+  // <img onError> DOM-mutation pattern, keyed by cart line id.
+  const [failedImageIds, setFailedImageIds] = useState<Set<number>>(new Set());
   const [couponOpen, setCouponOpen] = useState(true);
   const [coupon, setCoupon] = useState(readPersistedCouponCode);
   const [couponStatus, setCouponStatus] = useState<"idle" | "checking" | "applied" | "invalid">("idle");
@@ -135,15 +139,13 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
           return (
             <div key={item.id} className={styles.card}>
               <div className={styles.imageWrapper}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image?.image_url ?? PLACEHOLDER_IMAGE}
+                <Image
+                  src={failedImageIds.has(item.id) ? PLACEHOLDER_IMAGE : (image?.image_url ?? PLACEHOLDER_IMAGE)}
                   alt={item.product.name}
                   className={styles.image}
-                  onError={(e) => {
-                    if (e.currentTarget.src.endsWith(PLACEHOLDER_IMAGE)) return;
-                    e.currentTarget.src = PLACEHOLDER_IMAGE;
-                  }}
+                  fill
+                  sizes="110px"
+                  onError={() => setFailedImageIds((prev) => new Set(prev).add(item.id))}
                 />
               </div>
 

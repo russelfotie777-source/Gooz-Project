@@ -22,6 +22,7 @@ import type {
   User,
   Warehouse,
 } from "./types";
+import { unstable_rethrow } from "next/navigation";
 import { notifySessionExpired } from "./sessionEvents";
 
 // Talks to the Laravel API described in API.md. Server Components call these
@@ -41,6 +42,17 @@ export function resolveMediaUrl(path: string): string {
 
 interface ApiCollection<T> {
   data: T[];
+}
+
+interface ApiPageMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+interface PaginatedApiCollection<T> extends ApiCollection<T> {
+  meta: ApiPageMeta;
 }
 
 interface ApiResource<T> {
@@ -80,8 +92,16 @@ export function isNetworkFailure(error: unknown): boolean {
   return error instanceof ApiValidationError && error.status === undefined;
 }
 
-async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetchOrThrow(`${API_BASE_URL}${path}`, { cache: "no-store" });
+// Public/shared data (catalogue, categories, banners...) doesn't need a
+// fresh fetch on every single request the way cart/order/profile data does
+// — CATALOG_CACHE lets Next serve a recent cached response instead
+// (performance audit: this was previously hardcoded to `no-store`
+// everywhere, meaning even the homepage re-fetched from Laravel on every
+// visit for data that's identical for every visitor).
+const CATALOG_CACHE: RequestInit = { next: { revalidate: 60 } };
+
+async function apiFetch<T>(path: string, init: RequestInit = { cache: "no-store" }): Promise<T> {
+  const res = await fetchOrThrow(`${API_BASE_URL}${path}`, init);
   if (!res.ok) {
     throw new ApiValidationError(`API ${path} -> ${res.status}`, {}, res.status);
   }
@@ -98,6 +118,13 @@ async function fetchOrThrow(input: string, init?: RequestInit): Promise<Response
   try {
     return await fetch(input, init);
   } catch (error) {
+    // Next throws its own internal errors through this same catch (e.g. the
+    // "cache: no-store during static generation" signal that tells it to
+    // fall back to dynamic rendering for this route) — those must propagate
+    // unchanged or Next can't recognize them and hard-fails the build
+    // instead of just rendering the route dynamically. Only a genuine
+    // network failure reaches the line below.
+    unstable_rethrow(error);
     const message = error instanceof Error ? error.message : "Network request failed";
     throw new ApiValidationError(message, {}, undefined);
   }
@@ -221,56 +248,87 @@ function normalizeProduct(raw: Product): Product {
 
 export interface GetProductsParams {
   category_id?: number;
-  brand_id?: number;
+  brand_id?: number | number[];
   q?: string;
   is_promotion?: boolean;
   min_price?: number;
   max_price?: number;
+  /** No dedicated "distinct colors" endpoint exists — see CatalogueSection's colors facet. */
+  color?: string | string[];
   sort_by?: "created_at" | "base_price" | "name";
   sort_dir?: "asc" | "desc";
   per_page?: number;
+  page?: number;
 }
 
 function buildQuery(params: GetProductsParams): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) search.set(key, String(value));
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) search.append(`${key}[]`, String(item));
+    } else {
+      search.set(key, String(value));
+    }
   }
   const qs = search.toString();
   return qs ? `?${qs}` : "";
 }
 
-// Matches ProductController's own hard cap — the homepage catalogue and
-// category pages fetch once and filter/sort client-side rather than
-// re-querying per filter change, so this is also the point past which a
-// filter can silently under-report matches (see CatalogueSection/
-// CategoryResults' truncation notice). A real server-driven paginated
-// catalogue is the actual fix once the product count grows enough to matter.
-export const PRODUCT_FETCH_CAP = 200;
+// Sample size for the homepage's curated carousels (on sale / popular /
+// recommended) — these aren't paginated UI, just "first N of a broad pool",
+// so they don't need CatalogueSection's real pagination. Was 200 (used for
+// the paginated catalogue too, downloading everything then slicing/
+// filtering in the browser) — see CatalogueSection/CategoryResults/
+// SearchPage, which now call getProductsPage() with a real per_page instead.
+export const PRODUCT_FETCH_CAP = 40;
 
 export async function getProducts(params: GetProductsParams = {}): Promise<Product[]> {
-  const { data } = await apiFetch<ApiCollection<Product>>(`/products${buildQuery(params)}`);
+  const { data } = await apiFetch<ApiCollection<Product>>(`/products${buildQuery(params)}`, CATALOG_CACHE);
   return data.map(normalizeProduct);
 }
 
+export interface ProductsPage {
+  products: Product[];
+  currentPage: number;
+  lastPage: number;
+  total: number;
+}
+
+// Real server-side pagination — unlike getProducts(), keeps the pagination
+// envelope instead of discarding it, for callers with actual page/filter/
+// sort controls (CatalogueSection, CategoryResults, SearchPage).
+export async function getProductsPage(params: GetProductsParams = {}): Promise<ProductsPage> {
+  const { data, meta } = await apiFetch<PaginatedApiCollection<Product>>(
+    `/products${buildQuery(params)}`,
+    CATALOG_CACHE
+  );
+  return {
+    products: data.map(normalizeProduct),
+    currentPage: meta.current_page,
+    lastPage: meta.last_page,
+    total: meta.total,
+  };
+}
+
 export async function getProduct(id: number): Promise<Product> {
-  const { data } = await apiFetch<ApiResource<Product>>(`/products/${id}`);
+  const { data } = await apiFetch<ApiResource<Product>>(`/products/${id}`, CATALOG_CACHE);
   return normalizeProduct(data);
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const { data } = await apiFetch<ApiCollection<Category>>("/categories");
+  const { data } = await apiFetch<ApiCollection<Category>>("/categories", CATALOG_CACHE);
   return data;
 }
 
 export async function getBrands(): Promise<Brand[]> {
-  const { data } = await apiFetch<ApiCollection<Brand>>("/brands");
+  const { data } = await apiFetch<ApiCollection<Brand>>("/brands", CATALOG_CACHE);
   return data;
 }
 
 export async function getBanners(location?: Banner["location"]): Promise<Banner[]> {
   const query = location ? `?location=${location}` : "";
-  const { data } = await apiFetch<ApiCollection<Banner>>(`/banners${query}`);
+  const { data } = await apiFetch<ApiCollection<Banner>>(`/banners${query}`, CATALOG_CACHE);
   return data;
 }
 
@@ -278,7 +336,7 @@ export async function getBanners(location?: Banner["location"]): Promise<Banner[
 // resolved server-side (manual picks or an automatic strategy) into
 // products/categories/brands, see HomepageSectionController::present().
 export async function getHomepageSections(): Promise<HomepageSection[]> {
-  const { data } = await apiFetch<ApiCollection<HomepageSection>>("/homepage-sections");
+  const { data } = await apiFetch<ApiCollection<HomepageSection>>("/homepage-sections", CATALOG_CACHE);
   return data.map((section) =>
     section.content_type === "products" ? { ...section, products: section.products.map(normalizeProduct) } : section
   );
@@ -306,13 +364,13 @@ function normalizeNeighborhood(raw: Neighborhood): Neighborhood {
 }
 
 export async function getCities(): Promise<City[]> {
-  const { data } = await apiFetch<ApiCollection<City>>("/cities");
+  const { data } = await apiFetch<ApiCollection<City>>("/cities", CATALOG_CACHE);
   return data;
 }
 
 export async function getNeighborhoods(cityId?: number): Promise<Neighborhood[]> {
   const query = cityId !== undefined ? `?city_id=${cityId}` : "";
-  const { data } = await apiFetch<ApiCollection<Neighborhood>>(`/neighborhoods${query}`);
+  const { data } = await apiFetch<ApiCollection<Neighborhood>>(`/neighborhoods${query}`, CATALOG_CACHE);
   return data.map(normalizeNeighborhood);
 }
 
@@ -423,7 +481,7 @@ function normalizeWarehouse(raw: Warehouse): Warehouse {
 }
 
 export async function getWarehouses(): Promise<Warehouse[]> {
-  const { data } = await apiFetch<ApiCollection<Warehouse>>("/warehouses");
+  const { data } = await apiFetch<ApiCollection<Warehouse>>("/warehouses", CATALOG_CACHE);
   return data.map(normalizeWarehouse);
 }
 

@@ -33,63 +33,82 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(title, options);
 });
 
+// Always take over immediately, dev or prod — in particular this is what
+// lets a browser that already installed an older/buggier version of this
+// file (e.g. one without the IS_PRODUCTION guard below) self-heal on the
+// next reload instead of sitting "waiting" behind the stuck old worker
+// until every tab is closed.
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+
 // --- Offline caching ---
 //
-// Next's JS/CSS chunk filenames are content-hashed per build, so this
-// static, un-bundled file can't precache them by name the way a build-time
-// tool (Workbox, next-pwa) would. Instead: cache pages/assets
-// opportunistically as they're fetched (network-first, cache as a
-// fallback), so anything already visited stays available offline. Bump
-// CACHE_NAME when changing this logic so old caches get cleaned up.
+// Production only. lib/serviceWorker.ts passes ?env=... on the registration
+// URL (this file can't read process.env itself — it's static, never
+// bundled). Intercepting *every* same-origin fetch is fine against a real
+// production build, but in dev it swallows Turbopack's own HMR/RSC
+// navigation requests and replays them through fetch() inside the worker,
+// which doesn't survive the round-trip and surfaces as "Failed to fetch" on
+// plain page navigation — so this whole block is skipped outside prod. The
+// push handler above isn't affected either way (`push`, not `fetch`).
+const IS_PRODUCTION = new URL(location.href).searchParams.get("env") === "production";
 
-const CACHE_NAME = "shopitech-v1";
-const OFFLINE_URL = "/offline.html";
-const PRECACHE_URLS = [OFFLINE_URL, "/manifest.json", "/icons/icon-192.png"];
+if (IS_PRODUCTION) {
+  // Next's JS/CSS chunk filenames are content-hashed per build, so this
+  // static, un-bundled file can't precache them by name the way a
+  // build-time tool (Workbox, next-pwa) would. Instead: cache pages/assets
+  // opportunistically as they're fetched (network-first, cache as a
+  // fallback), so anything already visited stays available offline. Bump
+  // CACHE_NAME when changing this logic so old caches get cleaned up.
+  const CACHE_NAME = "shopitech-v1";
+  const OFFLINE_URL = "/offline.html";
+  const PRECACHE_URLS = [OFFLINE_URL, "/manifest.json", "/icons/icon-192.png"];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
-  );
-});
+  self.addEventListener("install", (event) => {
+    event.waitUntil(
+      caches
+        .open(CACHE_NAME)
+        .then((cache) => cache.addAll(PRECACHE_URLS))
+        .then(() => self.skipWaiting())
+    );
+  });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
-});
+  self.addEventListener("activate", (event) => {
+    event.waitUntil(
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+        .then(() => self.clients.claim())
+    );
+  });
 
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  // POST/PUT aren't cacheable (and Next's server actions/RSC calls are
-  // POSTs), so only GET goes through the cache logic below.
-  if (request.method !== "GET") return;
+  self.addEventListener("fetch", (event) => {
+    const { request } = event;
+    // POST/PUT aren't cacheable (and Next's server actions/RSC calls are
+    // POSTs), so only GET goes through the cache logic below.
+    if (request.method !== "GET") return;
 
-  // Never intercept the Laravel API (different origin) — cart/order/auth
-  // responses must always be live when online, and a stale cached response
-  // served while "offline-looking but actually fine" would be actively
-  // misleading. Cross-origin requests just pass through untouched.
-  if (new URL(request.url).origin !== self.location.origin) return;
+    // Never intercept the Laravel API (different origin) — cart/order/auth
+    // responses must always be live when online, and a stale cached response
+    // served while "offline-looking but actually fine" would be actively
+    // misleading. Cross-origin requests just pass through untouched.
+    if (new URL(request.url).origin !== self.location.origin) return;
 
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      })
-      .catch(async () => {
-        const cached = await caches.match(request);
-        if (cached) return cached;
-        if (request.mode === "navigate") return caches.match(OFFLINE_URL);
-        return Response.error();
-      })
-  );
-});
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          if (request.mode === "navigate") return caches.match(OFFLINE_URL);
+          return Response.error();
+        })
+    );
+  });
+}
