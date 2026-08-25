@@ -128,7 +128,7 @@ export default function CategoryResults({
   }
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} id="catalogue">
       <div className={styles.resultBar}>
         <p className={styles.count}>{dict.category.resultsFound(total)}</p>
         <h1 className={styles.pageTitle}>{heading}</h1>

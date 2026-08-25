@@ -16,6 +16,10 @@ class UpdateProductRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'slug' => [
+                'sometimes', 'required', 'string', 'max:255',
+                Rule::unique('products', 'slug')->ignore($this->route('product')),
+            ],
             'description' => ['nullable', 'string'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
             'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],

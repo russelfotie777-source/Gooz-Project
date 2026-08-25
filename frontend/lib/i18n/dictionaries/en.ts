@@ -28,6 +28,9 @@ const en: Dictionary = {
     back: "Back",
     info: "Information",
     categories: "Quick categories",
+    toggleToDark: "Switch to dark mode",
+    toggleToLight: "Switch to light mode",
+    announcementBrand: "Shopitech — Secure Mobile Money payment • Delivery all across Cameroon",
     quickCategories: [
       "PROMOTION !!!",
       "BEST SELLER",
@@ -639,6 +642,12 @@ const en: Dictionary = {
   },
   loadingPage: {
     label: "Loading...",
+  },
+  seo: {
+    categoryDescription: (name: string): string =>
+      `Shop ${name} at the best price on Shopitech. Fast delivery and secure payment.`,
+    productDescriptionFallback: (name: string): string =>
+      `${name} available on Shopitech, at the best price, with fast delivery and secure payment.`,
   },
 };
 

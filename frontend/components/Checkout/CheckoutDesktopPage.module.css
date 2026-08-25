@@ -87,8 +87,8 @@
 /* Step card */
 
 .stepCard {
-  background: #f5f7fa;
-  border: 1px solid #c8c6c6;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.12);
   padding: 18px 22px;
@@ -123,7 +123,7 @@
 }
 
 .stepNumberLocked {
-  background: #c8c6c6;
+  background: var(--color-placeholder-strong);
 }
 
 .stepCheck {
@@ -134,7 +134,7 @@
   height: 28px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #34c759;
+  background: var(--color-success);
 }
 
 .stepCheckIcon {
@@ -146,7 +146,7 @@
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 18px;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -154,7 +154,7 @@
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 18px;
-  color: #34c759;
+  color: var(--color-success);
   margin: 0;
 }
 
@@ -173,7 +173,7 @@
   padding: 8px 14px;
   font-family: var(--font-body);
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.56);
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
@@ -198,7 +198,7 @@
   border-top: 1px solid var(--color-border);
   font-family: var(--font-body);
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--color-text-muted);
 }
 
 /* Form */
@@ -223,7 +223,7 @@
 }
 
 .required {
-  color: #fe522e;
+  color: var(--color-danger);
   margin-right: 2px;
 }
 
@@ -231,8 +231,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--color-white);
-  border: 2px solid #cbcbce;
+  background: var(--color-elevated);
+  border: 2px solid var(--color-border);
   border-radius: 6px;
   padding: 12px 14px;
 }
@@ -255,7 +255,7 @@
 }
 
 .input::placeholder {
-  color: rgba(0, 0, 0, 0.3);
+  color: var(--color-text-muted);
 }
 
 .select {
@@ -281,7 +281,7 @@
 .note {
   font-family: var(--font-body);
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -315,7 +315,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 16px;
@@ -354,7 +354,7 @@
   font-family: var(--font-body);
   font-style: italic;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -423,7 +423,7 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 24px;
@@ -479,7 +479,7 @@
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -495,7 +495,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #f5f7fa;
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.12);
   padding: 20px;
@@ -528,17 +528,17 @@
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.56);
+  color: var(--color-text-muted);
 }
 
 .summaryDivider {
   height: 1px;
-  background: #d9d9d9;
+  background: var(--color-border);
   margin: 4px 0;
 }
 
 .couponSection {
-  border: 1px solid rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   overflow: hidden;
   margin-top: 8px;
@@ -549,13 +549,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(217, 217, 217, 0.35);
+  background: var(--color-surface-alt);
   border: none;
   padding: 10px 12px;
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--color-text);
   cursor: pointer;
 }
 
@@ -584,6 +584,8 @@
   padding: 0 12px;
   font-family: var(--font-body);
   font-size: 13px;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .couponApply {
@@ -622,8 +624,8 @@
 }
 
 .checkoutButton:disabled {
-  background: #d9d9d9;
-  color: rgba(0, 0, 0, 0.5);
+  background: var(--color-placeholder);
+  color: var(--color-text-muted);
   cursor: not-allowed;
 }
 
@@ -631,7 +633,7 @@
   text-align: center;
   font-family: var(--font-body);
   font-size: 12px;
-  color: #fe522e;
+  color: var(--color-danger);
   margin: 0;
 }
 
@@ -639,6 +641,6 @@
   text-align: center;
   font-family: var(--font-body);
   font-size: 12px;
-  color: #1a9d5c;
+  color: var(--color-success);
   margin: 8px 0 0;
 }

@@ -21,8 +21,16 @@ return new class extends Migration
             DB::table('brands')->where('id', $brand->id)->update(['slug' => Str::slug($brand->name)]);
         }
 
-        DB::statement('ALTER TABLE brands MODIFY slug VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE brands ADD UNIQUE brands_slug_unique (slug)');
+        // NOT NULL tightening is MySQL-only DDL; the unique index itself
+        // (unlike a column-type change) doesn't need doctrine/dbal and works
+        // identically on SQLite via the portable Schema builder below.
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE brands MODIFY slug VARCHAR(255) NOT NULL');
+        }
+
+        Schema::table('brands', function (Blueprint $table) {
+            $table->unique('slug');
+        });
     }
 
     /**

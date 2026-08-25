@@ -81,7 +81,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-md);
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
   padding: 14px 16px;
@@ -97,14 +97,14 @@
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--color-text);
 }
 
 .totalValue {
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 16px;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--color-text);
 }
 
 .continueButton {

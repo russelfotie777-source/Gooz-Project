@@ -51,7 +51,7 @@
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--color-text-muted);
   max-width: 320px;
   margin: 0 0 32px;
 }

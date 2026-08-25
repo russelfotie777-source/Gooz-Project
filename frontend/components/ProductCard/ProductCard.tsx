@@ -7,6 +7,7 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { getDisplayVariant } from "@/lib/pricing";
+import { productPath } from "@/lib/productUrl";
 import type { Product, ProductVariant } from "@/lib/types";
 import styles from "./ProductCard.module.css";
 
@@ -80,7 +81,7 @@ export default function ProductCard({
   return (
     <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
-        <LocaleLink href={`/products/${product.id}`} className={styles.imageLink}>
+        <LocaleLink href={productPath(product)} className={styles.imageLink}>
           <Image
             src={imageSrc}
             alt={product.name}
@@ -102,7 +103,7 @@ export default function ProductCard({
       </div>
 
       <div className={styles.info}>
-        <LocaleLink href={`/products/${product.id}`} className={styles.infoLink}>
+        <LocaleLink href={productPath(product)} className={styles.infoLink}>
           <p className={styles.name}>{product.name}</p>
           {product.description && (
             <p className={styles.description}>{product.description}</p>

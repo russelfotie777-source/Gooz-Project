@@ -46,7 +46,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 40px;
@@ -79,7 +79,7 @@
 }
 
 .card {
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 20px;
@@ -158,7 +158,7 @@
 }
 
 .actionButtonDanger {
-  color: #e0433c;
+  color: var(--color-danger);
   margin-left: auto;
 }
 
@@ -185,7 +185,7 @@
 }
 
 .confirmYes {
-  background: #e0433c;
+  background: var(--color-danger);
   color: var(--color-white);
   border: none;
   border-radius: var(--radius-sm);

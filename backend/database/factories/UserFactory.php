@@ -31,4 +31,9 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
         ];
     }
+
+    public function suspended(): static
+    {
+        return $this->state(fn () => ['is_active' => false]);
+    }
 }

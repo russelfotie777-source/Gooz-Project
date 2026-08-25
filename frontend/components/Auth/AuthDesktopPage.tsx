@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiValidationError, login, register, socialLogin } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
 import { notifyLogin } from "@/lib/authEvents";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/firebase/auth";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { currentTheme } from "@/lib/theme";
 import { useFocusOnError } from "@/lib/useFocusOnError";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import styles from "./AuthDesktopPage.module.css";
@@ -43,6 +44,18 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
   const [exiting, setExiting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The right panel (see .rightPanel) goes dark in dark mode, so the
+  // black-wordmark logo needs the white-wordmark variant that already
+  // exists for the Header's permanently-black bar — no separate asset to
+  // add, just picking the one that already has the right contrast. Starts
+  // "light" (matching the server) and corrects post-mount — see
+  // ThemeToggle's comment for why reading currentTheme() straight into
+  // useState causes a worse hydration mismatch than this one-tick flash.
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    setTheme(currentTheme());
+  }, []);
   const [socialLoading, setSocialLoading] = useState<"google" | "facebook" | null>(null);
   const [forgotOpen, setForgotOpen] = useState(false);
   const errorRef = useFocusOnError<HTMLParagraphElement>(error);
@@ -160,7 +173,11 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
         <div className={styles.rightPanelScroll}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo-shopitech-primaire/logoFichier 5version F.png"
+            src={
+              theme === "dark"
+                ? "/logo-shopitech-primaire/logoFichier 16version F.png"
+                : "/logo-shopitech-primaire/logoFichier 5version F.png"
+            }
             alt="Shopitech"
             className={styles.logo}
           />

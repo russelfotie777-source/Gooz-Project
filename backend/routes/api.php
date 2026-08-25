@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AddressController as AdminAddressController;
+use App\Http\Controllers\Admin\AnnouncementController as AdminAnnouncementController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\UserNotificationController as AdminUserNotificationController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
@@ -132,6 +134,8 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/banners', [BannerController::class, 'index']);
 
+    Route::get('/announcements', [AnnouncementController::class, 'index']);
+
     Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
 
     Route::get('/brands', [BrandController::class, 'index']);
@@ -178,6 +182,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/banners', [AdminBannerController::class, 'store']);
         Route::put('/banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-announcements'])->group(function () {
+        Route::get('/admin/announcements', [AdminAnnouncementController::class, 'index']);
+        Route::get('/admin/announcements/{announcement}', [AdminAnnouncementController::class, 'show']);
+        Route::post('/admin/announcements', [AdminAnnouncementController::class, 'store']);
+        Route::put('/admin/announcements/{announcement}', [AdminAnnouncementController::class, 'update']);
+        Route::delete('/admin/announcements/{announcement}', [AdminAnnouncementController::class, 'destroy']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-homepage-sections'])->group(function () {
