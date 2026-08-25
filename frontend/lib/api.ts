@@ -1,5 +1,6 @@
 import type {
   Address,
+  Announcement,
   ApiPaymentMethod,
   AppNotification,
   AuthResponse,
@@ -329,6 +330,11 @@ export async function getBrands(): Promise<Brand[]> {
 export async function getBanners(location?: Banner["location"]): Promise<Banner[]> {
   const query = location ? `?location=${location}` : "";
   const { data } = await apiFetch<ApiCollection<Banner>>(`/banners${query}`, CATALOG_CACHE);
+  return data;
+}
+
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const { data } = await apiFetch<ApiCollection<Announcement>>("/announcements", CATALOG_CACHE);
   return data;
 }
 

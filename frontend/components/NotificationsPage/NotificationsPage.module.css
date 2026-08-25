@@ -128,14 +128,17 @@
 .card {
   display: flex;
   gap: 10px;
-  background: #f5f7fa;
+  background: var(--color-surface);
   border-radius: 10px;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.12);
   padding: 14px 16px;
 }
 
 .cardRead {
-  background: rgba(245, 247, 250, 0.4);
+  /* A dimmed version of .card's own background (not a fixed light tint) so
+     "read" still reads as de-emphasized relative to the page in both
+     themes, instead of turning into a pale haze on a dark background. */
+  background: color-mix(in srgb, var(--color-surface) 40%, transparent);
   box-shadow: none;
 }
 
@@ -173,7 +176,7 @@
   flex: 0 0 auto;
   font-family: var(--font-body);
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.51);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 

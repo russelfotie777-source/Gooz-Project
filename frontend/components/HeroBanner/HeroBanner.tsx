@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { resolveMediaUrl } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { productPath } from "@/lib/productUrl";
 import type { Banner } from "@/lib/types";
 import styles from "./HeroBanner.module.css";
 
@@ -53,7 +54,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
             <h1 className={styles.title}>{banner.title}</h1>
             {banner.description && <p className={styles.description}>{banner.description}</p>}
             {banner.link_type === "product" && banner.product ? (
-              <LocaleLink href={`/products/${banner.product.id}`} className={styles.cta}>
+              <LocaleLink href={productPath(banner.product)} className={styles.cta}>
                 {dict.home.heroCta}
               </LocaleLink>
             ) : (
@@ -73,7 +74,13 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
             </h1>
             <p className={styles.subtitle}>{dict.home.heroFallbackSubtitle}</p>
             <p className={styles.description}>{dict.home.heroFallbackDescription}</p>
-            <LocaleLink href="/categories" className={styles.cta}>
+            {/* Same-page anchor, not a route — this fallback renders inside
+                both HomePage and CategoryPage (via HeroSection), and both
+                give their product grid the id "catalogue" (see
+                CatalogueSection.tsx / CategoryResults.tsx). There was never
+                a standalone "/categories" index page, so this used to be a
+                dead link. */}
+            <LocaleLink href="#catalogue" className={styles.cta}>
               {dict.home.heroFallbackCta}
             </LocaleLink>
           </div>

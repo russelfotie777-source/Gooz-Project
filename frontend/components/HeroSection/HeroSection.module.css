@@ -73,6 +73,7 @@
     flex: 1;
     background: var(--color-primary-soft);
     border-radius: var(--radius-md);
+    overflow: hidden;
   }
 }
 

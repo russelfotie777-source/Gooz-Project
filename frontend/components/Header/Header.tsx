@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getCart, logout as apiLogout } from "@/lib/api";
+import { getAnnouncements, getCart, logout as apiLogout } from "@/lib/api";
 import { clearSession, getSession } from "@/lib/auth";
 import { notifyCartUpdated, onCartUpdated } from "@/lib/cartEvents";
 import type { Locale } from "@/lib/i18n/config";
@@ -12,8 +12,14 @@ import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { splitName } from "@/lib/name";
 import { onSessionExpired } from "@/lib/sessionEvents";
 import { showToast } from "@/lib/toast";
-import type { User } from "@/lib/types";
+import type { Announcement, User } from "@/lib/types";
+import AnnouncementBar from "@/components/AnnouncementBar/AnnouncementBar";
+import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
 import styles from "./Header.module.css";
+
+// Dismissing the announcement bar hides it for the rest of the browser
+// session (not forever) — sessionStorage, not localStorage.
+const ANNOUNCEMENT_DISMISSED_KEY = "shopitech-announcement-dismissed";
 
 interface HeaderProps {
   cartCount?: number;
@@ -65,6 +71,8 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   // threading a cart store through every page that renders Header.
   const [cartCount, setCartCount] = useState(cartCountProp);
   const [user, setUser] = useState<User | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsDismissed, setAnnouncementsDismissed] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -78,6 +86,16 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
     return onCartUpdated(setCartCount);
   }, []);
+
+  useEffect(() => {
+    getAnnouncements().then(setAnnouncements).catch(() => {});
+    setAnnouncementsDismissed(sessionStorage.getItem(ANNOUNCEMENT_DISMISSED_KEY) === "1");
+  }, []);
+
+  function dismissAnnouncements() {
+    setAnnouncementsDismissed(true);
+    sessionStorage.setItem(ANNOUNCEMENT_DISMISSED_KEY, "1");
+  }
 
   // authedFetch (lib/api.ts) already clears the stored session on any 401 —
   // this just makes sure Header's own copy of that state (derived once on
@@ -152,9 +170,15 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     <header className={styles.header}>
       {/* Desktop / tablet header — Figma node 1057:2032 */}
       <div className={styles.desktopHeader}>
-        {/* Empty in the Figma design (node 907:1140) — placeholder slot for a future ad banner.
-            Scrolls away with the page; only the sticky wrapper below stays fixed. */}
-        <div className={styles.promoStrip} aria-hidden="true" />
+        {/* Figma node 907:1140 was an empty placeholder slot — now filled by
+            the admin-managed announcement bar. Scrolls away with the page;
+            only the sticky wrapper below stays fixed. */}
+        <AnnouncementBar
+          announcements={announcements}
+          dismissed={announcementsDismissed}
+          variant="desktop"
+          onDismiss={dismissAnnouncements}
+        />
 
         <div className={styles.desktopSticky}>
           <div className={styles.mainRow}>
@@ -162,11 +186,13 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               <img src="/icon/header/hamburger.svg" alt="" className={styles.menuIcon} />
             </button>
 
-            <img
-              src="/logo-shopitech-primaire/logoFichier 16version F.png"
-              alt="Shopitech"
-              className={styles.logo}
-            />
+            <LocaleLink href="/" aria-label={dict.header.catalogueTitle}>
+              <img
+                src="/logo-shopitech-primaire/logoFichier 16version F.png"
+                alt="Shopitech"
+                className={styles.logo}
+              />
+            </LocaleLink>
 
             <form className={styles.searchForm} role="search" onSubmit={handleSearchSubmit}>
               <input
@@ -182,6 +208,8 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
             </form>
 
             <div className={styles.actions}>
+              <ThemeToggle className={styles.themeToggleDesktop} />
+
               <div className={styles.langWrapper} ref={langWrapperRef}>
                 <button
                   type="button"
@@ -338,9 +366,15 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
           </div>
         ) : (
           <>
-            {/* Empty in the Figma design (node 373:488) — placeholder slot for a future ad banner.
-                Scrolls away with the page; only the sticky wrapper below stays fixed. */}
-            <div className={styles.mobilePromoStrip} aria-hidden="true" />
+            {/* Figma node 373:488 was an empty placeholder slot — now filled by
+                the admin-managed announcement bar. Scrolls away with the page;
+                only the sticky wrapper below stays fixed. */}
+            <AnnouncementBar
+              announcements={announcements}
+              dismissed={announcementsDismissed}
+              variant="mobile"
+              onDismiss={dismissAnnouncements}
+            />
 
             <div className={styles.mobileSticky}>
               <div className={styles.mobileTopRow}>

@@ -1,0 +1,16 @@
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(128, 128, 128, 0.14);
+  color: var(--color-text);
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.toggle:hover {
+  opacity: 0.85;
+}

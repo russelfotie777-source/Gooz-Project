@@ -1,4 +1,6 @@
 :root {
+  color-scheme: light;
+
   --color-primary: #065aad;
   --color-primary-dark: #084683;
   --color-footer-bg: #2b2d42;
@@ -8,14 +10,29 @@
   --color-accent-strong: #ff9500;
   --color-text: #000000;
   --color-text-muted: rgba(0, 0, 0, 0.5);
+  /* Fixed white — foreground on an element whose own background never
+     changes with the theme (text/icons on the orange accent, on the
+     permanently-black header). Not a themed surface — see --color-elevated
+     for that. */
   --color-white: #ffffff;
   --color-bg: #ffffff;
   --color-surface: #f8f9fc;
   --color-surface-alt: #f6f8fb;
+  /* Themed "raised" surface — dropdowns, modals, the bottom nav bar. Distinct
+     from --color-white so those can invert in dark mode without touching the
+     fixed-white foreground cases above. */
+  --color-elevated: #ffffff;
   --color-placeholder: #d9d9d9;
   --color-placeholder-strong: #ccc8c8;
   --color-border: #e5e7eb;
   --color-navy: #04305c;
+  --color-danger: #e0433c;
+  --color-success: #1a9c5c;
+
+  /* Always-black chrome (header nav bar, category bar, hero fallback, toast)
+     — these bars keep their fixed white/orange logo and icon set in both
+     themes, so their background must not react to --color-text flipping. */
+  --color-chrome-bg: #000000;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -29,6 +46,27 @@
 
   --header-height: 90px;
   --bottom-nav-height: 68px;
+}
+
+/* Dark theme — elevated grays, not pure black/white: a true #000/#fff pair
+   is what makes a dark UI feel harsh. Brand colors (primary/accent/navy)
+   are intentionally left as-is; they already read fine on a dark surface. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-text: #eef0f2;
+  --color-text-muted: rgba(238, 240, 242, 0.6);
+  --color-bg: #121317;
+  --color-surface: #1b1c21;
+  --color-surface-alt: #202128;
+  --color-elevated: #24252c;
+  --color-placeholder: #33343b;
+  --color-placeholder-strong: #3d3e46;
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-danger: #ff6b61;
+  --color-success: #3ddb8a;
+
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -46,6 +84,7 @@ body {
   color: var(--color-text);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 a {

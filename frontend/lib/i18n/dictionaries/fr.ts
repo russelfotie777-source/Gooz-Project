@@ -33,6 +33,9 @@ const fr = {
     back: "Retour",
     info: "Informations",
     categories: "Catégories rapides",
+    toggleToDark: "Activer le mode sombre",
+    toggleToLight: "Activer le mode clair",
+    announcementBrand: "Shopitech — Paiement Mobile Money sécurisé • Livraison partout au Cameroun",
     quickCategories: [
       "PROMOTION !!!",
       "BEST SELLER",
@@ -648,6 +651,16 @@ const fr = {
   },
   loadingPage: {
     label: "Chargement...",
+  },
+  // Generated meta descriptions for pages with no admin-editable
+  // description of their own (categories) or a description too short/absent
+  // to reuse as-is (products) — see generateMetadata in the relevant
+  // app/[lang]/**/page.tsx files.
+  seo: {
+    categoryDescription: (name: string): string =>
+      `Achetez ${name} au meilleur prix sur Shopitech. Livraison rapide et paiement sécurisé.`,
+    productDescriptionFallback: (name: string): string =>
+      `${name} disponible sur Shopitech, au meilleur prix, avec livraison rapide et paiement sécurisé.`,
   },
 };
 

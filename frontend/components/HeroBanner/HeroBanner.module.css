@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--color-text);
+  background: var(--color-chrome-bg);
   border-radius: var(--radius-md);
   overflow: visible;
   min-height: 170px;

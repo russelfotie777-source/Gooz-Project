@@ -132,7 +132,7 @@ export default function CatalogueSection({ initialProducts, initialLastPage, cat
   }
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} id="catalogue">
       <div className={styles.header}>
         <h2 className={styles.title}>{dict.home.catalogue.title}</h2>
         <button

@@ -4,6 +4,7 @@ import type { Banner, Category } from "@/lib/types";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import HeroBanner from "@/components/HeroBanner/HeroBanner";
+import AdBannerCarousel from "@/components/AdBannerCarousel/AdBannerCarousel";
 import styles from "./HeroSection.module.css";
 
 interface HeroSectionProps {
@@ -36,7 +37,9 @@ export default function HeroSection({ categories, banners }: HeroSectionProps) {
       </div>
 
       <aside className={styles.adColumn} aria-hidden="true">
-        <div className={styles.adBanner} />
+        <div className={styles.adBanner}>
+          <AdBannerCarousel />
+        </div>
         <div className={styles.adBanner} />
       </aside>
     </div>

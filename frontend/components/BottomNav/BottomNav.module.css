@@ -21,7 +21,7 @@
   position: relative;
   width: 100%;
   height: var(--bottom-nav-height);
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   display: flex;
@@ -42,6 +42,15 @@
 .icon {
   height: 20px;
   width: auto;
+}
+
+/* These are dark-line SVGs exported for a white bar (see BottomNav.tsx's
+   comment) — no separate light-on-dark export exists, so they're inverted
+   in place rather than adding new assets. The raised circle's activeIcon is
+   already white and sits on the orange circle (unaffected by the theme), so
+   it's left alone. */
+:global(html[data-theme="dark"]) .icon {
+  filter: invert(1) brightness(1.15);
 }
 
 .homeSlot {

@@ -1,5 +1,5 @@
 .card {
-  background: #f5f7fa;
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   padding: 16px;
   display: flex;
@@ -30,7 +30,7 @@
 }
 
 .required {
-  color: #fe522e;
+  color: var(--color-danger);
   margin-right: 2px;
 }
 
@@ -39,8 +39,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--color-white);
-  border: 1px solid #e2e2e9;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px 14px;
 }
@@ -63,7 +63,7 @@
 }
 
 .input::placeholder {
-  color: rgba(0, 0, 0, 0.3);
+  color: var(--color-text-muted);
 }
 
 .select {
@@ -92,6 +92,6 @@
 .note {
   font-family: var(--font-body);
   font-size: 9px;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--color-text-muted);
   margin: 0;
 }
