@@ -17,9 +17,21 @@ class EnkapWebhookController extends Controller
      * whenever a payment's status changes. The body is deliberately
      * ignored — we re-verify via GET /api/order/{txid}/status instead; see
      * the comment on EnkapPaymentService::refreshStatus for why.
+     *
+     * Enkap has no HMAC/signature header to verify the CALLER either, so
+     * ?token=... is the substitute — a long random value only we and
+     * Maviance's merchant portal (where the notification URL is registered)
+     * know. Checked before even looking the order up, so a request without
+     * it can't be used to probe which order references exist.
      */
     public function handle(Request $request, string $orderReference): Response
     {
+        $expectedToken = config('services.enkap.webhook_token');
+
+        if (! $expectedToken || ! hash_equals($expectedToken, (string) $request->query('token'))) {
+            return response()->noContent(403);
+        }
+
         $order = Order::where('order_reference', $orderReference)->with('payment')->first();
 
         if (! $order || ! $order->payment) {

@@ -151,6 +151,12 @@ export type HomepageSection =
   | (HomepageSectionBase & { content_type: "categories"; categories: Category[] })
   | (HomepageSectionBase & { content_type: "brands"; brands: Brand[] });
 
+export interface Favorite {
+  id: number;
+  product: Product;
+  created_at: string;
+}
+
 // Named AppNotification, not Notification — that name is already the
 // browser's own global (Notification API), used elsewhere in lib/firebase.
 export interface AppNotification {

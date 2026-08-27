@@ -11,6 +11,7 @@ import type {
   Category,
   City,
   DeliveryEstimate,
+  Favorite,
   HomepageSection,
   Neighborhood,
   Order,
@@ -638,6 +639,19 @@ export async function createTicket(token: string, payload: TicketPayload): Promi
     body: JSON.stringify(payload),
   });
   return data;
+}
+
+export async function getFavorites(token: string): Promise<Favorite[]> {
+  const { data } = await authedFetch<ApiCollection<Favorite>>("/favorites", token);
+  return data;
+}
+
+export async function addFavorite(token: string, productId: number): Promise<void> {
+  await authedFetch<void>(`/favorites/${productId}`, token, { method: "POST" });
+}
+
+export async function removeFavorite(token: string, productId: number): Promise<void> {
+  await authedFetch<void>(`/favorites/${productId}`, token, { method: "DELETE" });
 }
 
 export type DevicePlatform = "android" | "ios" | "web";

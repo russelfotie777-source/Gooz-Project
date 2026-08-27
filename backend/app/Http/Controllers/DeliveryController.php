@@ -11,6 +11,17 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class DeliveryController extends Controller
 {
+    // "en_transit" gets its own title ("Livreur en route") rather than the
+    // generic "Livraison {ref}" the other statuses use — it's the one
+    // moment in the delivery lifecycle worth calling out specifically.
+    private const STATUS_MESSAGES = [
+        'en_attente' => ['title' => 'Livraison', 'body' => 'Votre livraison est en attente de prise en charge par le livreur.'],
+        'pris_en_charge' => ['title' => 'Livraison', 'body' => 'Votre livraison a été prise en charge par le livreur.'],
+        'en_transit' => ['title' => 'Livreur en route', 'body' => 'Votre livreur est en route pour vous livrer votre commande.'],
+        'livré' => ['title' => 'Livraison', 'body' => 'Votre livraison a été effectuée avec succès. Merci de votre confiance !'],
+        'échec' => ['title' => 'Livraison', 'body' => 'La tentative de livraison a échoué, nous allons vous recontacter.'],
+    ];
+
     public function __construct(private readonly PushNotificationService $pushNotifications) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -53,10 +64,19 @@ class DeliveryController extends Controller
         }
 
         $delivery->loadMissing('order.user');
+
+        $message = self::STATUS_MESSAGES[$delivery->delivery_status] ?? null;
+        $title = trim(($message['title'] ?? 'Livraison').' '.$delivery->order->order_reference);
+        $body = $message['body'] ?? "Votre livraison est maintenant : {$delivery->delivery_status}.";
+
+        // Was push-only before — the in-app inbox (UserNotification) never
+        // recorded these, so a shopper who missed/dismissed the push had no
+        // way to see it again later.
+        $delivery->order->user->userNotifications()->create(['title' => $title, 'body' => $body, 'type' => 'delivery_status']);
         $this->pushNotifications->sendToUser(
             $delivery->order->user,
-            'Livraison '.$delivery->order->order_reference,
-            "Votre livraison est maintenant : {$delivery->delivery_status}.",
+            $title,
+            $body,
             ['order_id' => $delivery->order_id, 'delivery_status' => $delivery->delivery_status]
         );
 

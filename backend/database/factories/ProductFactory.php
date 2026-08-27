@@ -25,8 +25,15 @@ class ProductFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name).'-'.Str::random(6),
             'description' => fake()->sentence(),
-            'brand_id' => Brand::factory(),
-            'category_id' => Category::factory(),
+            // Reuses an existing row when one's available rather than always
+            // minting a fresh fake brand/category — creating 10 throwaway
+            // products (e.g. via tinker, outside a RefreshDatabase-wrapped
+            // test) used to also leave 10 garbage "DuBuque, Lubowitz and
+            // Bosco"-style brands/categories behind in whatever database it
+            // ran against. Only falls back to Factory() when the table is
+            // genuinely empty (a fresh test database's very first call).
+            'brand_id' => Brand::inRandomOrder()->value('id') ?? Brand::factory(),
+            'category_id' => Category::inRandomOrder()->value('id') ?? Category::factory(),
             'reference' => strtoupper(fake()->unique()->bothify('REF-####??')),
             'is_active' => true,
         ];

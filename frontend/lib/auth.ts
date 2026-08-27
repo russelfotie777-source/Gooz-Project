@@ -1,3 +1,4 @@
+import { clearFavoritesCache } from "./favoritesStore";
 import type { User } from "./types";
 
 // Sanctum issues a Bearer token, not a session cookie (API.md §1), so it has
@@ -49,4 +50,8 @@ export function getSession(): StoredSession | null {
 
 export function clearSession(): void {
   window.localStorage.removeItem(STORAGE_KEY);
+  // Every logout/session-expiry path funnels through here — the one choke
+  // point that guarantees a next login (possibly a different account) never
+  // inherits the previous user's cached favorite ids.
+  clearFavoritesCache();
 }

@@ -23,6 +23,7 @@ class Order extends Model
         'shipping_phone',
         'shipping_latitude',
         'shipping_longitude',
+        'review_requested_at',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class Order extends Model
             'delivery_fees' => 'decimal:2',
             'shipping_latitude' => 'decimal:7',
             'shipping_longitude' => 'decimal:7',
+            'review_requested_at' => 'datetime',
         ];
     }
 

@@ -36,12 +36,43 @@
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-card);
     padding: 8px 0;
+    /* align-items: stretch alone doesn't cap this — with nothing else in
+       .row carrying a hard (non-min-) height, a long real category list
+       just pulled the whole row (hero banner included) taller to fit it.
+       max-height is the actual limit; stretch still applies below that,
+       so this still matches the hero's height exactly for a short list. */
+    max-height: 320px;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .categoryList {
     width: 100%;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    /* A thin, on-brand scrollbar instead of the chunky browser default —
+       only ever shows up once there are enough categories to need it. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  .categoryList::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .categoryList::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .categoryList::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-pill);
+  }
+
+  .categoryList::-webkit-scrollbar-thumb:hover {
+    background: var(--color-placeholder-strong);
   }
 
   .categoryLink {

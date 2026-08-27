@@ -1,0 +1,75 @@
+.page {
+  display: none;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--color-surface);
+}
+
+@media (min-width: 1024px) {
+  .page {
+    display: flex;
+  }
+}
+
+.main {
+  flex: 1;
+  padding: 40px 5% 80px;
+}
+
+.headingRow {
+  margin-bottom: 28px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--color-text);
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.message {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.guestPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--color-elevated);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 40px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.loginLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
