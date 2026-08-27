@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addCartItem } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
+import { loadFavoriteIds, onFavoritesUpdated, toggleFavorite } from "@/lib/favoritesStore";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
@@ -41,6 +42,30 @@ export default function ProductCard({
   const dict = useDictionary();
   const router = useLocaleRouter();
   const [cartStatus, setCartStatus] = useState<"idle" | "adding" | "added">("idle");
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+
+  // Synced from the shared favoritesStore cache (loaded once per session,
+  // not once per card) so the heart reflects real state on mount — including
+  // after a reload — and reacts instantly if the same product is
+  // favorited/unfavorited from another card or the favorites page.
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+
+    let cancelled = false;
+    loadFavoriteIds(session.token)
+      .then((ids) => {
+        if (!cancelled) setIsFavorite(ids.has(product.id));
+      })
+      .catch(() => {});
+
+    const unsubscribe = onFavoritesUpdated((ids) => setIsFavorite(ids.has(product.id)));
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [product.id]);
   const primaryImage =
     product.images.find((img) => img.is_primary) ?? product.images[0];
   // Grid-sized cards only ever need the small variant — thumbnail_url is
@@ -78,6 +103,30 @@ export default function ProductCard({
     }
   }
 
+  async function handleToggleWishlist() {
+    if (onToggleWishlist) {
+      onToggleWishlist(product);
+      return;
+    }
+
+    const session = getSession();
+    if (!session) {
+      router.push("/connexion");
+      return;
+    }
+
+    const next = !isFavorite;
+    setIsFavorite(next);
+    setFavoriteBusy(true);
+    try {
+      await toggleFavorite(session.token, product.id, next);
+    } catch {
+      setIsFavorite(!next);
+    } finally {
+      setFavoriteBusy(false);
+    }
+  }
+
   return (
     <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
@@ -94,11 +143,13 @@ export default function ProductCard({
         {discount && <span className={styles.discountTag}>-{discount}%</span>}
         <button
           type="button"
-          className={styles.wishlistButton}
+          className={`${styles.wishlistButton} ${isFavorite ? styles.wishlistButtonActive : ""}`}
           aria-label={dict.common.addToWishlist}
-          onClick={() => onToggleWishlist?.(product)}
+          aria-pressed={isFavorite}
+          disabled={favoriteBusy}
+          onClick={handleToggleWishlist}
         >
-          <HeartIcon />
+          <HeartIcon filled={isFavorite} />
         </button>
       </div>
 
@@ -140,9 +191,9 @@ export default function ProductCard({
   );
 }
 
-function HeartIcon() {
+function HeartIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg viewBox="0 0 18 18" width="14" height="14" fill="none">
+    <svg viewBox="0 0 18 18" width="14" height="14" fill={filled ? "currentColor" : "none"}>
       <path
         d="M9 15.6 2.6 9.3a4 4 0 0 1 5.7-5.6L9 4.4l.7-.7a4 4 0 0 1 5.7 5.6L9 15.6Z"
         stroke="currentColor"

@@ -12,6 +12,17 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class OrderController extends Controller
 {
+    // en_préparation/en_attente read fine with the underscore in code, not
+    // in a sentence a customer reads — this is purely presentational.
+    private const STATUS_LABELS = [
+        'en_attente' => 'en attente',
+        'confirmée' => 'confirmée',
+        'en_préparation' => 'en préparation',
+        'expédiée' => 'expédiée',
+        'livrée' => 'livrée',
+        'annulée' => 'annulée',
+    ];
+
     public function __construct(private readonly PushNotificationService $pushNotifications) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -43,10 +54,17 @@ class OrderController extends Controller
     {
         $order->update(['status' => $request->validated('status')]);
 
+        $title = 'Commande '.$order->order_reference;
+        $body = 'Le statut de votre commande est désormais : '.(self::STATUS_LABELS[$order->status] ?? $order->status).'.';
+
+        // Was push-only before — the in-app inbox (UserNotification) never
+        // recorded these, so a shopper who missed/dismissed the push had no
+        // way to see it again later.
+        $order->user->userNotifications()->create(['title' => $title, 'body' => $body, 'type' => 'order_status']);
         $this->pushNotifications->sendToUser(
             $order->user,
-            'Commande '.$order->order_reference,
-            "Le statut de votre commande est désormais : {$order->status}.",
+            $title,
+            $body,
             ['order_id' => $order->id, 'status' => $order->status]
         );
 

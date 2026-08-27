@@ -11,20 +11,25 @@ import styles from "./CategoryPage.module.css";
 
 interface CategoryPageProps {
   categorySlug: string;
+  /** From the ?page= search param (app/[lang]/categories/[slug]/page.tsx)
+   *  — lets a crawler hitting ?page=2 directly get that page server-rendered
+   *  instead of only ever seeing page 1 (see docs/seo-a-faire.md §4). */
+  page: number;
 }
 
 // Figma: desktop node 975:3578, mobile node 117:84. Reuses the same header/
 // hero/footer chrome as HomePage — only the CategoryResults section (price
 // filter + sort + the category's own products) is new.
-export default async function CategoryPage({ categorySlug }: CategoryPageProps) {
+export default async function CategoryPage({ categorySlug, page }: CategoryPageProps) {
   const categories = await getCategories();
   const category = categories.find((c) => c.slug === categorySlug);
   if (!category) notFound();
 
   const [categoryFirstPage, bestSellerProducts, otherProducts, banners] = await Promise.all([
-    // CategoryResults manages its own paging/filtering after this first
-    // page — see its own getProductsPage() calls.
-    getProductsPage({ category_id: category.id, per_page: 9 }),
+    // CategoryResults manages further paging/filtering client-side after
+    // this — see its own getProductsPage() calls — but starts from whatever
+    // page the URL asked for, not always page 1.
+    getProductsPage({ category_id: category.id, per_page: 9, page }),
     // "Best sellers" here is really just "first 4 of this category by
     // default sort" (no real popularity signal on this endpoint) — same as
     // before, just its own small fetch instead of slicing the (now paged)
@@ -55,6 +60,7 @@ export default async function CategoryPage({ categorySlug }: CategoryPageProps) 
           initialProducts={categoryFirstPage.products}
           initialLastPage={categoryFirstPage.lastPage}
           initialTotal={categoryFirstPage.total}
+          initialPage={page}
           categoryId={category.id}
         />
 

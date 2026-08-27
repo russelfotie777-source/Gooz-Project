@@ -10,11 +10,26 @@ use App\Models\ProductVariant;
 use App\Models\Stock;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Services\PushNotificationService;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class EnkapPaymentTest extends TestCase
 {
+    private const WEBHOOK_TOKEN = 'test-webhook-token';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['services.enkap.webhook_token' => self::WEBHOOK_TOKEN]);
+    }
+
+    private function webhookUrl(string $orderReference, ?string $token = self::WEBHOOK_TOKEN): string
+    {
+        return "/api/v1/webhooks/enkap/{$orderReference}".($token !== null ? '?token='.$token : '');
+    }
+
     private function fakeEnkap(string $orderStatus = 'SUCCESS'): void
     {
         Http::fake([
@@ -104,10 +119,25 @@ class EnkapPaymentTest extends TestCase
     {
         $this->fakeEnkap();
 
-        $response = $this->putJson('/api/v1/webhooks/enkap/ORD-DOES-NOT-EXIST');
+        $response = $this->putJson($this->webhookUrl('ORD-DOES-NOT-EXIST'));
 
         $response->assertNotFound();
         Http::assertNothingSent();
+    }
+
+    public function test_webhook_without_the_correct_token_is_rejected(): void
+    {
+        $this->fakeEnkap();
+        $user = User::factory()->create();
+        $this->checkoutOrderViaMobileMoney($user);
+        $order = Order::firstOrFail();
+
+        $this->putJson($this->webhookUrl($order->order_reference, token: null))->assertForbidden();
+        $this->putJson($this->webhookUrl($order->order_reference, token: 'wrong-token'))->assertForbidden();
+
+        $order->refresh();
+        $this->assertSame('en_attente', $order->status);
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/api/order/status'));
     }
 
     public function test_webhook_confirms_the_order_once_enkap_reports_success(): void
@@ -119,7 +149,7 @@ class EnkapPaymentTest extends TestCase
         $order = Order::firstOrFail();
         $this->assertSame('en_attente', $order->status);
 
-        $response = $this->putJson("/api/v1/webhooks/enkap/{$order->order_reference}");
+        $response = $this->putJson($this->webhookUrl($order->order_reference));
 
         $response->assertNoContent();
         $order->refresh();
@@ -136,11 +166,51 @@ class EnkapPaymentTest extends TestCase
 
         $order = Order::firstOrFail();
 
-        $this->putJson("/api/v1/webhooks/enkap/{$order->order_reference}")->assertNoContent();
+        $this->putJson($this->webhookUrl($order->order_reference))->assertNoContent();
 
         $order->refresh();
         $this->assertSame('en_attente', $order->status);
         $this->assertSame('en_attente', $order->payment->payment_status);
+    }
+
+    public function test_webhook_notifies_the_shopper_when_the_payment_fails(): void
+    {
+        $this->fakeEnkap(orderStatus: 'FAILED');
+        $user = User::factory()->create();
+        $this->checkoutOrderViaMobileMoney($user);
+        $order = Order::firstOrFail();
+
+        $this->mock(PushNotificationService::class, function ($mock) use ($user) {
+            $mock->shouldReceive('sendToUser')
+                ->once()
+                ->withArgs(fn ($notifiedUser) => $notifiedUser->is($user));
+        });
+
+        $this->putJson($this->webhookUrl($order->order_reference))->assertNoContent();
+
+        $order->refresh();
+        $this->assertSame('échoué', $order->payment->payment_status);
+        $this->assertDatabaseHas('user_notifications', ['user_id' => $user->id, 'type' => 'payment_failed']);
+    }
+
+    public function test_a_repeated_failed_status_check_does_not_notify_twice(): void
+    {
+        $this->fakeEnkap(orderStatus: 'FAILED');
+        $user = User::factory()->create();
+        $this->checkoutOrderViaMobileMoney($user);
+        $order = Order::firstOrFail();
+
+        // Only the transition into "échoué" should notify — a webhook retry
+        // or a manual admin recheck re-confirming the same failed status
+        // must not spam the shopper a second time.
+        $this->mock(PushNotificationService::class, function ($mock) {
+            $mock->shouldReceive('sendToUser')->once();
+        });
+
+        $this->putJson($this->webhookUrl($order->order_reference))->assertNoContent();
+        $this->putJson($this->webhookUrl($order->order_reference))->assertNoContent();
+
+        $this->assertDatabaseCount('user_notifications', 1);
     }
 
     public function test_payment_refresh_is_forbidden_for_another_users_order(): void

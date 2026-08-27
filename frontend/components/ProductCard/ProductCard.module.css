@@ -83,6 +83,10 @@
   color: #1f1f1f;
 }
 
+.wishlistButtonActive {
+  color: var(--color-danger);
+}
+
 .info {
   flex: 1;
   min-width: 0;

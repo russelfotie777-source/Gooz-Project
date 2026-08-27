@@ -169,6 +169,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* .pageNumber is a real <a> now (see CategoryResults.tsx) — undo the
+     browser default underline/link-blue it'd otherwise pick up. */
+  text-decoration: none;
 }
 
 .pageNumberActive {

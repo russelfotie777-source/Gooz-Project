@@ -60,6 +60,13 @@ return [
         // but we still need them locally to build the routes they point to.
         'notification_url' => env('ENKAP_NOTIFICATION_URL'),
         'return_url' => env('ENKAP_RETURN_URL'),
+        // Enkap doesn't sign its webhook calls (no HMAC/secret header to
+        // verify against), so this is the substitute: a long random value
+        // appended as ?token=... on the notification URL registered in
+        // Maviance's merchant portal — e.g.
+        // https://shopitech.com/api/v1/webhooks/enkap?token=<this value>.
+        // See EnkapWebhookController::handle().
+        'webhook_token' => env('ENKAP_WEBHOOK_TOKEN'),
     ],
 
     'firebase' => [

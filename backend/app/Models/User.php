@@ -97,4 +97,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserNotification::class)->latest();
     }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class)->latest();
+    }
 }

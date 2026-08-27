@@ -4,6 +4,7 @@ namespace App\Services\Enkap;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\PushNotificationService;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
@@ -25,7 +26,10 @@ class EnkapPaymentService
         'CANCELED' => 'échoué',
     ];
 
-    public function __construct(private readonly EnkapClient $client) {}
+    public function __construct(
+        private readonly EnkapClient $client,
+        private readonly PushNotificationService $pushNotifications,
+    ) {}
 
     /**
      * Registers the order with Enkap and returns the checkout redirect URL
@@ -102,6 +106,7 @@ class EnkapPaymentService
         // JSON string response).
         $providerStatus = (string) $response->json('status');
         $mapped = self::STATUS_MAP[$providerStatus] ?? $payment->payment_status;
+        $previousStatus = $payment->payment_status;
 
         $payment->update([
             'payment_status' => $mapped,
@@ -110,6 +115,37 @@ class EnkapPaymentService
 
         if ($mapped === 'payé' && $order->status === 'en_attente') {
             $order->update(['status' => 'confirmée']);
+
+            if ($order->user && ! $order->user->trashed()) {
+                $title = 'Commande '.$order->order_reference;
+                $body = 'Votre paiement a été confirmé — votre commande est en cours de préparation.';
+
+                $order->user->userNotifications()->create([
+                    'title' => $title,
+                    'body' => $body,
+                    'type' => 'order_status',
+                ]);
+                $this->pushNotifications->sendToUser($order->user, $title, $body, [
+                    'order_id' => $order->id,
+                    'status' => 'confirmée',
+                ]);
+            }
+        }
+
+        // Only on the transition into "échoué", not every re-check — this
+        // gets called repeatedly (webhook retries, the customer's return
+        // page, a manual admin recheck), and an already-failed payment
+        // re-checked later shouldn't notify the shopper a second time.
+        if ($mapped === 'échoué' && $previousStatus !== 'échoué' && $order->user && ! $order->user->trashed()) {
+            $title = 'Paiement échoué';
+            $body = "Le paiement de votre commande {$order->order_reference} n'a pas abouti. Vous pouvez réessayer depuis votre espace commandes.";
+
+            $order->user->userNotifications()->create([
+                'title' => $title,
+                'body' => $body,
+                'type' => 'payment_failed',
+            ]);
+            $this->pushNotifications->sendToUser($order->user, $title, $body);
         }
 
         return $mapped;

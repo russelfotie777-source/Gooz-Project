@@ -19,7 +19,14 @@ import {
 } from "@/lib/api";
 import styles from "./HomePage.module.css";
 
-export default async function HomePage() {
+interface HomePageProps {
+  /** From the ?page= search param (app/[lang]/page.tsx) — lets a crawler
+   *  hitting /?page=2 directly get that page's products server-rendered,
+   *  instead of only ever seeing page 1 (see docs/seo-a-faire.md §4). */
+  page: number;
+}
+
+export default async function HomePage({ page }: HomePageProps) {
   const [categories, brands, products, catalogueFirstPage, banners, homepageSections] = await Promise.all([
     getCategories(),
     getBrands(),
@@ -27,9 +34,10 @@ export default async function HomePage() {
     // not paginated UI, just "first N of a broad pool", so this doesn't
     // need CatalogueSection's own real pagination.
     getProducts({ per_page: PRODUCT_FETCH_CAP }),
-    // CatalogueSection manages its own paging/filtering after this first
-    // page — see its own getProductsPage() calls.
-    getProductsPage({ per_page: 8 }),
+    // CatalogueSection manages further paging client-side after this — see
+    // its own getProductsPage() calls — but starts from whatever page the
+    // URL asked for, not always page 1.
+    getProductsPage({ per_page: 8, page }),
     // Not fatal if it fails — the hero falls back to its static slide (see
     // HeroBanner) rather than taking the whole homepage down over a
     // secondary, non-essential fetch.
@@ -59,6 +67,7 @@ export default async function HomePage() {
         <CatalogueSection
           initialProducts={catalogueFirstPage.products}
           initialLastPage={catalogueFirstPage.lastPage}
+          initialPage={page}
           categories={categories}
           brands={brands}
         />

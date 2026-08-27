@@ -50,6 +50,7 @@ use App\Http\Controllers\DeliveryEstimateController;
 use App\Http\Controllers\DeliveryQuoteController;
 use App\Http\Controllers\DeviceTokenController;
 use App\Http\Controllers\EnkapWebhookController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\NeighborhoodController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
@@ -101,6 +102,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/orders/reference/{order:order_reference}', [OrderController::class, 'show']);
 
         Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
+
+        Route::get('/favorites', [FavoriteController::class, 'index']);
+        Route::post('/favorites/{product}', [FavoriteController::class, 'store']);
+        Route::delete('/favorites/{product}', [FavoriteController::class, 'destroy']);
 
         Route::get('/deliveries', [DeliveryController::class, 'index']);
         Route::patch('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus']);

@@ -8,7 +8,16 @@ import { useLang } from "./I18nProvider";
 // so navigation never silently drops it. External URLs, "#" anchors, and
 // already-prefixed hrefs pass through untouched.
 export function localizeHref(href: string, lang: string): string {
-  if (!href.startsWith("/") || href === `/${lang}` || href.startsWith(`/${lang}/`)) return href;
+  if (!href.startsWith("/")) return href;
+
+  // Only the path portion decides whether this is "already prefixed" — a
+  // query string tacked onto the bare locale root ("/fr?page=2") used to
+  // fail both the exact-match and the startsWith("/fr/") checks (there's no
+  // "/" right after "/fr" here, "?" is), double-prefixing it to
+  // "/fr/fr?page=2". Found via CatalogueSection/CategoryResults' paginated
+  // links, which are exactly this shape.
+  const path = href.split(/[?#]/, 1)[0];
+  if (path === `/${lang}` || path.startsWith(`/${lang}/`)) return href;
   return `/${lang}${href}`;
 }
 

@@ -4,6 +4,7 @@ import StructuredData from "@/components/StructuredData/StructuredData";
 import { getCategories } from "@/lib/api";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/getDictionary";
+import { parsePageParam } from "@/lib/pagination";
 import { canonicalAlternates } from "@/lib/seo";
 import { categoryBreadcrumb } from "@/lib/structuredData";
 
@@ -31,8 +32,15 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({ params }: { params: Promise<{ lang: string; slug: string }> }) {
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lang: string; slug: string }>;
+  searchParams: Promise<{ page?: string }>;
+}) {
   const { lang, slug } = await params;
+  const { page } = await searchParams;
   const resolvedLang: Locale = isLocale(lang) ? lang : "fr";
 
   // Duplicates generateMetadata's own getCategories() call — same
@@ -44,7 +52,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
   return (
     <>
       {category && <StructuredData data={categoryBreadcrumb(resolvedLang, category)} />}
-      <CategoryPage categorySlug={slug} />
+      <CategoryPage categorySlug={slug} page={parsePageParam(page)} />
     </>
   );
 }
