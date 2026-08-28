@@ -205,6 +205,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/admin/reports/daily-summary', [AdminReportController::class, 'dailySummary']);
         Route::get('/admin/reports/sales', [AdminReportController::class, 'sales']);
         Route::get('/admin/reports/orders-summary', [AdminReportController::class, 'ordersSummary']);
+        Route::get('/admin/reports/orders-detailed', [AdminReportController::class, 'customersDetailed']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-orders'])->group(function () {

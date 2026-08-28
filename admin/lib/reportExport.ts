@@ -117,3 +117,54 @@ export function exportOrdersSummaryToPdf(rows: OrdersSummaryRow[], filename: str
   });
   doc.save(`${filename}.pdf`);
 }
+
+export type CustomerDetailedRow = {
+  user_id: number;
+  client_name: string;
+  client_email: string | null;
+  client_phone: string;
+  order_count: number;
+  total_ordered: number;
+  unpaid_amount: number;
+  last_order_at: string;
+};
+
+const CUSTOMERS_DETAILED_HEADERS = [
+  "Client",
+  "Email",
+  "Téléphone",
+  "Commandes",
+  "Total commandé",
+  "Montant impayé",
+  "Dernière commande",
+];
+
+function customersDetailedToAoa(rows: CustomerDetailedRow[]): (string | number)[][] {
+  return rows.map((r) => [
+    r.client_name,
+    r.client_email ?? "",
+    r.client_phone,
+    r.order_count,
+    Number(r.total_ordered),
+    Number(r.unpaid_amount),
+    new Date(r.last_order_at).toLocaleString("fr-FR"),
+  ]);
+}
+
+export function exportCustomersDetailedToExcel(rows: CustomerDetailedRow[], filename: string) {
+  const sheet = utils.aoa_to_sheet([CUSTOMERS_DETAILED_HEADERS, ...customersDetailedToAoa(rows)]);
+  const book = utils.book_new();
+  utils.book_append_sheet(book, sheet, "Detailed Orders Report");
+  writeFile(book, `${filename}.xlsx`);
+}
+
+export function exportCustomersDetailedToPdf(rows: CustomerDetailedRow[], filename: string, title: string) {
+  const doc = new jsPDF();
+  doc.text(title, 14, 15);
+  autoTable(doc, {
+    head: [CUSTOMERS_DETAILED_HEADERS],
+    body: customersDetailedToAoa(rows),
+    startY: 20,
+  });
+  doc.save(`${filename}.pdf`);
+}

@@ -150,7 +150,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Rapport journalier", href: "/dashboard/rapports/journalier", icon: BarChart3, ready: true },
       { label: "Rapport des ventes", href: "/dashboard/rapports/ventes", icon: BarChart3, ready: true },
       { label: "Rapport récapitulatif des commandes", href: "/dashboard/rapports/commandes", icon: FileCheck2, ready: true },
-      { label: "Detailed Orders Report", href: "/dashboard/rapports/commandes-detaillees", icon: ShoppingBag },
+      { label: "Detailed Orders Report", href: "/dashboard/rapports/commandes-detaillees", icon: ShoppingBag, ready: true },
       { label: "Rapport des paiements", href: "/dashboard/rapports/paiements", icon: CreditCard },
       { label: "Rapport des paiements en attente", href: "/dashboard/rapports/paiements-attente", icon: CreditCard },
     ],
