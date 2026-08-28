@@ -168,3 +168,43 @@ export function exportCustomersDetailedToPdf(rows: CustomerDetailedRow[], filena
   });
   doc.save(`${filename}.pdf`);
 }
+
+export type PaymentReportRow = {
+  created_at: string;
+  order_reference: string;
+  client_name: string;
+  payment_method: string;
+  payment_status: string;
+  amount: number;
+};
+
+const PAYMENTS_HEADERS = ["Date", "Commande #", "Client", "Méthode", "Statut", "Montant"];
+
+function paymentsToAoa(rows: PaymentReportRow[]): (string | number)[][] {
+  return rows.map((r) => [
+    new Date(r.created_at).toLocaleString("fr-FR"),
+    r.order_reference,
+    r.client_name,
+    r.payment_method,
+    r.payment_status,
+    Number(r.amount),
+  ]);
+}
+
+export function exportPaymentsReportToExcel(rows: PaymentReportRow[], filename: string) {
+  const sheet = utils.aoa_to_sheet([PAYMENTS_HEADERS, ...paymentsToAoa(rows)]);
+  const book = utils.book_new();
+  utils.book_append_sheet(book, sheet, "Rapport des paiements");
+  writeFile(book, `${filename}.xlsx`);
+}
+
+export function exportPaymentsReportToPdf(rows: PaymentReportRow[], filename: string, title: string) {
+  const doc = new jsPDF();
+  doc.text(title, 14, 15);
+  autoTable(doc, {
+    head: [PAYMENTS_HEADERS],
+    body: paymentsToAoa(rows),
+    startY: 20,
+  });
+  doc.save(`${filename}.pdf`);
+}
