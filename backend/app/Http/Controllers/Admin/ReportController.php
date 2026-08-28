@@ -156,4 +156,55 @@ class ReportController extends Controller
             ],
         ]);
     }
+
+    public function customersDetailed(Request $request)
+    {
+        $from = $request->query('from')
+            ? Carbon::parse($request->query('from'))->startOfDay()
+            : now()->subDays(29)->startOfDay();
+
+        $to = $request->query('to')
+            ? Carbon::parse($request->query('to'))->endOfDay()
+            : now()->endOfDay();
+
+        $paymentStatus = $request->query('payment_status');
+        $paymentMethod = $request->query('payment_method');
+        $search = $request->query('q');
+        $perPage = min((int) $request->query('per_page', 10), 1000) ?: 10;
+
+        $paginator = Order::query()
+            ->join('users', 'users.id', '=', 'orders.user_id')
+            ->leftJoin('payments', 'payments.order_id', '=', 'orders.id')
+            ->whereBetween('orders.created_at', [$from, $to])
+            ->when($paymentStatus, fn ($q) => $q->where('payments.payment_status', $paymentStatus))
+            ->when($paymentMethod, fn ($q) => $q->where('payments.payment_method', $paymentMethod))
+            ->when($search, fn ($q) => $q->where(function ($query) use ($search) {
+                $query->where('users.name', 'like', "%{$search}%")
+                    ->orWhere('users.email', 'like', "%{$search}%")
+                    ->orWhere('users.phone', 'like', "%{$search}%");
+            }))
+            ->select(
+                'orders.user_id',
+                DB::raw('MAX(users.name) as client_name'),
+                DB::raw('MAX(users.email) as client_email'),
+                DB::raw('MAX(users.phone) as client_phone'),
+                DB::raw('COUNT(*) as order_count'),
+                DB::raw('SUM(orders.total_amount) as total_ordered'),
+                DB::raw("SUM(CASE WHEN payments.payment_status <> 'payé' OR payments.payment_status IS NULL THEN orders.total_amount ELSE 0 END) as unpaid_amount"),
+                DB::raw('MAX(orders.created_at) as last_order_at')
+            )
+            ->groupBy('orders.user_id')
+            ->orderByDesc(DB::raw('MAX(orders.created_at)'))
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
 }
