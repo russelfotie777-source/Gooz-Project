@@ -208,3 +208,43 @@ export function exportPaymentsReportToPdf(rows: PaymentReportRow[], filename: st
   });
   doc.save(`${filename}.pdf`);
 }
+
+export type PendingPaymentRow = {
+  order_reference: string;
+  client_name: string;
+  payment_status: string;
+  total_amount: number;
+  amount_due: number;
+  created_at: string;
+};
+
+const PENDING_PAYMENTS_HEADERS = ["Commande #", "Client", "État du paiement", "Total", "Montant dû", "Créé le"];
+
+function pendingPaymentsToAoa(rows: PendingPaymentRow[]): (string | number)[][] {
+  return rows.map((r) => [
+    r.order_reference,
+    r.client_name,
+    r.payment_status,
+    Number(r.total_amount),
+    Number(r.amount_due),
+    new Date(r.created_at).toLocaleString("fr-FR"),
+  ]);
+}
+
+export function exportPendingPaymentsToExcel(rows: PendingPaymentRow[], filename: string) {
+  const sheet = utils.aoa_to_sheet([PENDING_PAYMENTS_HEADERS, ...pendingPaymentsToAoa(rows)]);
+  const book = utils.book_new();
+  utils.book_append_sheet(book, sheet, "Paiements en attente");
+  writeFile(book, `${filename}.xlsx`);
+}
+
+export function exportPendingPaymentsToPdf(rows: PendingPaymentRow[], filename: string, title: string) {
+  const doc = new jsPDF();
+  doc.text(title, 14, 15);
+  autoTable(doc, {
+    head: [PENDING_PAYMENTS_HEADERS],
+    body: pendingPaymentsToAoa(rows),
+    startY: 20,
+  });
+  doc.save(`${filename}.pdf`);
+}
