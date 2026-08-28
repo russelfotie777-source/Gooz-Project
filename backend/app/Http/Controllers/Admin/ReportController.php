@@ -60,4 +60,49 @@ class ReportController extends Controller
             ],
         ]);
     }
+
+    public function sales(Request $request)
+    {
+        $from = $request->query('from')
+            ? Carbon::parse($request->query('from'))->startOfDay()
+            : now()->subDays(29)->startOfDay();
+
+        $to = $request->query('to')
+            ? Carbon::parse($request->query('to'))->endOfDay()
+            : now()->endOfDay();
+
+        $status = $request->query('status');
+        $search = $request->query('q');
+        $perPage = min((int) $request->query('per_page', 10), 1000) ?: 10;
+
+        $paginator = Order::query()
+            ->with('user')
+            ->whereBetween('created_at', [$from, $to])
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($search, fn ($q) => $q->where(function ($query) use ($search) {
+                $query->where('order_reference', 'like', "%{$search}%")
+                    ->orWhere('shipping_phone', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%"));
+            }))
+            ->latest()
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => collect($paginator->items())->map(fn (Order $order) => [
+                'order_reference' => $order->order_reference,
+                'client_name' => $order->user?->name ?? '—',
+                'total_amount' => $order->total_amount,
+                'status' => $order->status,
+                'created_at' => $order->created_at,
+            ]),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
 }
