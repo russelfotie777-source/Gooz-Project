@@ -147,7 +147,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Rapports",
     items: [
-      { label: "Rapport journalier", href: "/dashboard/rapports/journalier", icon: BarChart3 },
+      { label: "Rapport journalier", href: "/dashboard/rapports/journalier", icon: BarChart3, ready: true },
       { label: "Rapport des ventes", href: "/dashboard/rapports/ventes", icon: BarChart3 },
       { label: "Rapport récapitulatif des commandes", href: "/dashboard/rapports/commandes", icon: FileCheck2 },
       { label: "Detailed Orders Report", href: "/dashboard/rapports/commandes-detaillees", icon: ShoppingBag },
