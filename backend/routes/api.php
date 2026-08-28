@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\PurchaseInvoiceController as AdminPurchaseInvoice
 use App\Http\Controllers\Admin\PurchaseOrderController as AdminPurchaseOrderController;
 use App\Http\Controllers\Admin\AccountingPeriodController as AdminAccountingPeriodController;
 use App\Http\Controllers\Admin\CashSessionController as AdminCashSessionController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Admin\TicketController as AdminTicketController;
@@ -201,6 +202,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/admin/stats/overview', [AdminStatsController::class, 'overview']);
         Route::get('/admin/stats/revenue', [AdminStatsController::class, 'revenue']);
         Route::get('/admin/stats/top-products', [AdminStatsController::class, 'topProducts']);
+        Route::get('/admin/reports/daily-summary', [AdminReportController::class, 'dailySummary']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-orders'])->group(function () {
