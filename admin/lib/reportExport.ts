@@ -77,3 +77,43 @@ export function exportSalesReportToPdf(rows: SalesReportRow[], filename: string,
   });
   doc.save(`${filename}.pdf`);
 }
+
+export type OrdersSummaryRow = {
+  order_reference: string;
+  created_at: string;
+  client_name: string;
+  status: string;
+  payment_status: string;
+  total_amount: number;
+};
+
+const ORDERS_SUMMARY_HEADERS = ["Commande #", "Date", "Client", "Statut", "Paiement", "Total"];
+
+function ordersSummaryToAoa(rows: OrdersSummaryRow[]): (string | number)[][] {
+  return rows.map((r) => [
+    r.order_reference,
+    new Date(r.created_at).toLocaleDateString("fr-FR"),
+    r.client_name,
+    r.status,
+    r.payment_status,
+    Number(r.total_amount),
+  ]);
+}
+
+export function exportOrdersSummaryToExcel(rows: OrdersSummaryRow[], filename: string) {
+  const sheet = utils.aoa_to_sheet([ORDERS_SUMMARY_HEADERS, ...ordersSummaryToAoa(rows)]);
+  const book = utils.book_new();
+  utils.book_append_sheet(book, sheet, "Rapport récapitulatif");
+  writeFile(book, `${filename}.xlsx`);
+}
+
+export function exportOrdersSummaryToPdf(rows: OrdersSummaryRow[], filename: string, title: string) {
+  const doc = new jsPDF();
+  doc.text(title, 14, 15);
+  autoTable(doc, {
+    head: [ORDERS_SUMMARY_HEADERS],
+    body: ordersSummaryToAoa(rows),
+    startY: 20,
+  });
+  doc.save(`${filename}.pdf`);
+}
