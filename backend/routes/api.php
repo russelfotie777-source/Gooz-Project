@@ -203,6 +203,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/admin/stats/revenue', [AdminStatsController::class, 'revenue']);
         Route::get('/admin/stats/top-products', [AdminStatsController::class, 'topProducts']);
         Route::get('/admin/reports/daily-summary', [AdminReportController::class, 'dailySummary']);
+        Route::get('/admin/reports/sales', [AdminReportController::class, 'sales']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-orders'])->group(function () {
