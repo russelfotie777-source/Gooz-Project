@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -199,6 +200,52 @@ class ReportController extends Controller
 
         return response()->json([
             'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
+
+    public function payments(Request $request)
+    {
+        $from = $request->query('from')
+            ? Carbon::parse($request->query('from'))->startOfDay()
+            : now()->subDays(29)->startOfDay();
+
+        $to = $request->query('to')
+            ? Carbon::parse($request->query('to'))->endOfDay()
+            : now()->endOfDay();
+
+        $status = $request->query('status');
+        $paymentMethod = $request->query('payment_method');
+        $search = $request->query('q');
+        $perPage = min((int) $request->query('per_page', 10), 1000) ?: 10;
+
+        $paginator = Payment::query()
+            ->with(['order.user'])
+            ->whereBetween('payments.created_at', [$from, $to])
+            ->when($status, fn ($q) => $q->where('payment_status', $status))
+            ->when($paymentMethod, fn ($q) => $q->where('payment_method', $paymentMethod))
+            ->when($search, fn ($q) => $q->whereHas('order', fn ($o) => $o
+                ->where('order_reference', 'like', "%{$search}%")
+                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%"))))
+            ->latest()
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => collect($paginator->items())->map(fn (Payment $payment) => [
+                'created_at' => $payment->created_at,
+                'order_reference' => $payment->order?->order_reference,
+                'client_name' => $payment->order?->user?->name ?? '—',
+                'payment_method' => $payment->payment_method,
+                'payment_status' => $payment->payment_status,
+                'amount' => $payment->amount,
+            ]),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
