@@ -363,6 +363,7 @@
   font-size: 11px;
   color: #ffffff;
   text-transform: uppercase;
+  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -375,7 +376,8 @@
 .categoryIcon {
   width: 18px;
   height: 18px;
-  object-fit: contain;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .categoryLabel {
