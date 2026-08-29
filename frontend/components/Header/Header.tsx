@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { getAnnouncements, getCart, logout as apiLogout } from "@/lib/api";
+import { getAnnouncements, getCart, getCategories, logout as apiLogout } from "@/lib/api";
 import { clearSession, getSession } from "@/lib/auth";
 import { notifyCartUpdated, onCartUpdated } from "@/lib/cartEvents";
 import type { Locale } from "@/lib/i18n/config";
@@ -12,7 +12,7 @@ import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { splitName } from "@/lib/name";
 import { onSessionExpired } from "@/lib/sessionEvents";
 import { showToast } from "@/lib/toast";
-import type { Announcement, User } from "@/lib/types";
+import type { Announcement, Category, User } from "@/lib/types";
 import AnnouncementBar from "@/components/AnnouncementBar/AnnouncementBar";
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
 import styles from "./Header.module.css";
