@@ -262,3 +262,27 @@
   color: var(--color-text-muted);
   margin: 0;
 }
+
+.payButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  margin-top: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.payButton:disabled {
+  opacity: 0.6;
+}
+
+.payError {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-danger);
+}

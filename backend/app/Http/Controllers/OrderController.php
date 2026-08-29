@@ -30,4 +30,16 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
+
+    // Plain string, not implicit order:order_reference binding — see the
+    // route comment in routes/api.php for why (a retried mobile money
+    // payment gets a distinct reference from Enkap's side).
+    public function showByReference(Request $request, string $reference): OrderResource
+    {
+        $order = Order::findByAnyReference($reference);
+
+        abort_if(! $order, 404);
+
+        return $this->show($request, $order);
+    }
 }

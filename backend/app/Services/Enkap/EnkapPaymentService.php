@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Services\PushNotificationService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class EnkapPaymentService
@@ -38,8 +39,20 @@ class EnkapPaymentService
      */
     public function createOrder(Order $order, Payment $payment): string
     {
+        // Confirmed live against the real API: Enkap rejects a second
+        // /api/order call that reuses a merchantReference it already saw
+        // ("OBJECT_ALREADY_EXISTS"), even if that first attempt failed. The
+        // very first attempt uses the order's own reference (readable,
+        // matches what the customer already saw); a retry needs a distinct
+        // one. Stored on the payment — not the order, which never changes —
+        // so the webhook (called back by Enkap with whichever value we sent)
+        // can still resolve to the right order (see Order::findByAnyReference()).
+        $merchantReference = $payment->merchant_reference
+            ? $order->order_reference.'-R'.strtoupper(Str::random(4))
+            : $order->order_reference;
+
         $response = $this->client->post('/api/order', [
-            'merchantReference' => $order->order_reference,
+            'merchantReference' => $merchantReference,
             'description' => "Commande {$order->order_reference}",
             'totalAmount' => (float) $payment->amount,
             'currency' => 'XAF',
@@ -62,9 +75,17 @@ class EnkapPaymentService
         $data = $response->json();
 
         $payment->update([
+            'merchant_reference' => $merchantReference,
             'transaction_reference' => $data['orderTransactionId'],
             'checkout_url' => $data['redirectUrl'],
             'provider_response' => $data,
+            // Reset back to pending — matters for a retry after a prior
+            // "échoué", otherwise that stale status would make the very next
+            // refresh() call think it still needs a fresh order instead of
+            // actually checking this new transaction (see
+            // PaymentController::refresh()).
+            'payment_status' => 'en_attente',
+            'provider_status' => null,
         ]);
 
         return $data['redirectUrl'];
@@ -115,6 +136,7 @@ class EnkapPaymentService
 
         if ($mapped === 'payé' && $order->status === 'en_attente') {
             $order->update(['status' => 'confirmée']);
+            $this->clearPurchasedCartItems($order);
 
             if ($order->user && ! $order->user->trashed()) {
                 $title = 'Commande '.$order->order_reference;
@@ -149,5 +171,30 @@ class EnkapPaymentService
         }
 
         return $mapped;
+    }
+
+    // Mobile money orders leave the cart untouched at checkout (see
+    // CheckoutController::store()) precisely so this can run once the
+    // payment actually clears, instead of at order-creation time. Matches
+    // by product/variant rather than clearing the whole cart, so anything
+    // the shopper added to it *while* the payment was pending is left alone.
+    private function clearPurchasedCartItems(Order $order): void
+    {
+        if (! $order->user) {
+            return;
+        }
+
+        $cart = $order->user->carts()->where('is_active', true)->first();
+
+        if (! $cart) {
+            return;
+        }
+
+        foreach ($order->items as $item) {
+            $cart->items()
+                ->where('product_id', $item->product_id)
+                ->where('product_variant_id', $item->product_variant_id)
+                ->delete();
+        }
     }
 }

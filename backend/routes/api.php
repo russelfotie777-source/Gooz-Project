@@ -91,15 +91,19 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
-        // Bound by order_reference, not id: the customer lands back on the
-        // frontend return page carrying only the reference Enkap was given
-        // (see EnkapWebhookController's docblock for the matching webhook path).
-        Route::post('/orders/{order:order_reference}/payment/refresh', [PaymentController::class, 'refresh']);
+        // Plain string, not order:order_reference implicit binding: the
+        // customer lands back on the frontend return page carrying whichever
+        // reference Enkap was given, which is only order_reference on the
+        // first payment attempt — a retry gets a distinct one (Enkap rejects
+        // reusing the same merchantReference), so this has to be resolved
+        // via Order::findByAnyReference() (see EnkapWebhookController's
+        // docblock for the matching webhook path).
+        Route::post('/orders/{reference}/payment/refresh', [PaymentController::class, 'refresh']);
         // Same reason: the checkout confirmation screen only has the
         // reference (it's in the URL, see CheckoutConfirmationStep) and
         // needs to verify it — and that it belongs to this user — before
         // showing a "your order is confirmed" screen for it.
-        Route::get('/orders/reference/{order:order_reference}', [OrderController::class, 'show']);
+        Route::get('/orders/reference/{reference}', [OrderController::class, 'showByReference']);
 
         Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
 

@@ -107,7 +107,16 @@ class CheckoutController extends Controller
                 'payment_status' => 'en_attente',
             ]);
 
-            $cart->update(['is_active' => false]);
+            // Mobile money orders aren't final yet at this point — the
+            // customer still has to complete payment on Enkap's hosted page,
+            // and that can fail or be abandoned. Keeping the cart untouched
+            // means those items are still there if that happens (see
+            // EnkapPaymentService::clearPurchasedCartItems(), called once the
+            // payment actually clears). Cash orders have no such pending
+            // step, so they're settled immediately as before.
+            if ($request->validated('payment_method') !== 'mobile_money') {
+                $cart->update(['is_active' => false]);
+            }
 
             return $order;
         });

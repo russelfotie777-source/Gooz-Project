@@ -70,4 +70,17 @@ class Order extends Model
     {
         return $this->hasOne(Delivery::class);
     }
+
+    // order_reference is stable and is what the customer/frontend always
+    // uses, but Enkap calls back (webhook + return URL) with whatever
+    // merchantReference we last sent it — which diverges from
+    // order_reference after a retry (Enkap rejects reusing the same value;
+    // see EnkapPaymentService::createOrder()). Checking order_reference
+    // first covers the common, never-retried case with a single indexed
+    // lookup.
+    public static function findByAnyReference(string $reference): ?self
+    {
+        return static::where('order_reference', $reference)->first()
+            ?? Payment::where('merchant_reference', $reference)->first()?->order;
+    }
 }

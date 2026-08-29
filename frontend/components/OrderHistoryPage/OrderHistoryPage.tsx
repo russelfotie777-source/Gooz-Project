@@ -16,6 +16,7 @@ import {
   PAYMENT_METHOD_LABEL_KEYS,
   PAYMENT_STATUS_LABEL_KEYS,
 } from "./orderLabels";
+import { canRetryPayment, usePaymentRetry } from "@/lib/usePaymentRetry";
 import { useOrders } from "./useOrders";
 import styles from "./OrderHistoryPage.module.css";
 
@@ -28,6 +29,7 @@ export default function OrderHistoryPage() {
   const router = useLocaleRouter();
   const { status, orders } = useOrders();
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { retry, retryingId, retryErrorId } = usePaymentRetry();
 
   return (
     <div className={styles.page}>
@@ -139,6 +141,20 @@ export default function OrderHistoryPage() {
                           <p className={styles.metaValue}>{dict.orders[PAYMENT_STATUS_LABEL_KEYS[order.payment.payment_status]]}</p>
                         </div>
                       </div>
+
+                      {canRetryPayment(order) && (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.payButton}
+                            disabled={retryingId === order.id}
+                            onClick={() => retry(order)}
+                          >
+                            {retryingId === order.id ? dict.orders.payNowLoading : dict.orders.payNow}
+                          </button>
+                          {retryErrorId === order.id && <p className={styles.payError}>{dict.orders.payNowError}</p>}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

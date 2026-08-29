@@ -14,9 +14,12 @@ class EnkapWebhookController extends Controller
 
     /**
      * Enkap PUTs {"status": "..."} to <notificationUrl>/{merchantReference}
-     * whenever a payment's status changes. The body is deliberately
-     * ignored — we re-verify via GET /api/order/{txid}/status instead; see
-     * the comment on EnkapPaymentService::refreshStatus for why.
+     * whenever a payment's status changes — echoing back whichever
+     * merchantReference *we* sent when creating that specific Enkap order,
+     * which is only ever order_reference on the first attempt (see
+     * Order::findByAnyReference()). The body is deliberately ignored — we
+     * re-verify via GET /api/order/{txid}/status instead; see the comment
+     * on EnkapPaymentService::refreshStatus for why.
      *
      * Enkap has no HMAC/signature header to verify the CALLER either, so
      * ?token=... is the substitute — a long random value only we and
@@ -32,7 +35,7 @@ class EnkapWebhookController extends Controller
             return response()->noContent(403);
         }
 
-        $order = Order::where('order_reference', $orderReference)->with('payment')->first();
+        $order = Order::findByAnyReference($orderReference)?->loadMissing('payment');
 
         if (! $order || ! $order->payment) {
             Log::warning('enkap_webhook_unknown_order', ['order_reference' => $orderReference]);
