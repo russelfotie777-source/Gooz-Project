@@ -11,6 +11,7 @@ class Payment extends Model
         'order_id',
         'amount',
         'payment_method',
+        'merchant_reference',
         'payment_status',
         'transaction_reference',
         'checkout_url',

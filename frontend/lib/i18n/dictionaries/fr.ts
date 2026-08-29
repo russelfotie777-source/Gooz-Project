@@ -338,6 +338,8 @@ const fr = {
         "Une erreur technique nous empêche de confirmer le statut de votre paiement pour le moment. Si vous avez bien payé, votre commande est en sécurité — réessayez dans un instant.",
       failedTitle: "Le paiement n'a pas abouti",
       failedSubtitle: "Votre commande a bien été enregistrée, mais le paiement n'a pas pu être confirmé.",
+      retryPayment: "Réessayer le paiement",
+      retryPaymentError: "Impossible de relancer le paiement. Réessayez.",
       contactSupport: "Contactez-nous depuis votre profil pour obtenir de l'aide.",
       viewOrder: "Voir ma commande",
     },
@@ -564,6 +566,9 @@ const fr = {
     deliveryFee: "Frais de livraison",
     coupon: "Coupon",
     genericError: "Impossible de charger vos commandes.",
+    payNow: "Payer maintenant",
+    payNowLoading: "Redirection...",
+    payNowError: "Impossible de relancer le paiement. Réessayez.",
   },
   payments: {
     title: "Historique des paiements",

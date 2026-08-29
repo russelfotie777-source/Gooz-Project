@@ -271,4 +271,125 @@ class EnkapPaymentTest extends TestCase
 
         $this->assertDatabaseHas('payments', ['order_id' => $order->id, 'transaction_reference' => 'TXN-RETRY']);
     }
+
+    public function test_a_mobile_money_checkout_leaves_the_items_in_the_cart(): void
+    {
+        // Unlike a cash order, the purchase isn't final yet at this point —
+        // the shopper still has to complete payment on Enkap's page, and
+        // that can fail or be abandoned. The cart should still have their
+        // items if that happens.
+        $this->fakeEnkap();
+        $user = User::factory()->create();
+
+        $this->checkoutOrderViaMobileMoney($user);
+
+        $cart = $user->carts()->where('is_active', true)->first();
+        $this->assertNotNull($cart);
+        $this->assertSame(1, $cart->items()->count());
+    }
+
+    public function test_confirming_the_payment_removes_only_the_purchased_items_from_the_cart(): void
+    {
+        $this->fakeEnkap(orderStatus: 'SUCCESS');
+        $user = User::factory()->create();
+        $this->checkoutOrderViaMobileMoney($user);
+        $order = Order::firstOrFail();
+
+        // Added to the same still-active cart *after* checkout — simulates
+        // the shopper continuing to browse while their payment is pending.
+        $cart = $user->carts()->where('is_active', true)->firstOrFail();
+        $unrelatedProduct = Product::factory()->create();
+        $unrelatedVariant = ProductVariant::factory()->create(['product_id' => $unrelatedProduct->id]);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'product_id' => $unrelatedProduct->id,
+            'product_variant_id' => $unrelatedVariant->id,
+            'quantity' => 1,
+        ]);
+
+        $this->putJson($this->webhookUrl($order->order_reference))->assertNoContent();
+
+        $remaining = $cart->items()->get();
+        $this->assertCount(1, $remaining);
+        $this->assertSame($unrelatedProduct->id, $remaining->first()->product_id);
+    }
+
+    public function test_payment_refresh_starts_a_fresh_enkap_order_after_a_failed_payment(): void
+    {
+        // A dead ("échoué") transaction can't be rechecked back to life —
+        // the retry needs an entirely new Enkap order, not another status
+        // check against the same failed one. Sequenced (not a plain fake())
+        // for the same reason as the "retries enkap initiation" test above.
+        Http::fake([
+            '*/token' => Http::response(['access_token' => 'fake-token'], 200),
+            '*/api/order/status*' => Http::response(['status' => 'FAILED'], 200),
+        ]);
+        Http::fakeSequence('*/api/order')
+            ->push(['orderTransactionId' => 'TXN-1', 'redirectUrl' => 'https://pay.enkap.example/first'], 200)
+            ->push(['orderTransactionId' => 'TXN-RETRY-2', 'redirectUrl' => 'https://pay.enkap.example/retry-2'], 200);
+
+        $user = User::factory()->create();
+        $this->checkoutOrderViaMobileMoney($user);
+        $order = Order::firstOrFail();
+
+        $this->putJson($this->webhookUrl($order->order_reference))->assertNoContent();
+        $order->refresh();
+        $this->assertSame('échoué', $order->payment->payment_status);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson("/api/v1/orders/{$order->order_reference}/payment/refresh")
+            ->assertOk();
+
+        $order->refresh();
+        $this->assertSame('TXN-RETRY-2', $order->payment->transaction_reference);
+        $this->assertSame('https://pay.enkap.example/retry-2', $order->payment->checkout_url);
+        // Reset to pending, not stuck on the old "échoué" — otherwise the
+        // very next refresh() call would think it still needs a new order
+        // instead of actually checking this fresh transaction.
+        $this->assertSame('en_attente', $order->payment->payment_status);
+
+        // The actual bug this whole test guards against, confirmed live
+        // against the real Enkap API: a second /api/order call reusing the
+        // same merchantReference is rejected outright
+        // ("OBJECT_ALREADY_EXISTS") — so the retry must send a different one
+        // than the order's own (stable) order_reference.
+        $this->assertNotSame($order->order_reference, $order->payment->merchant_reference);
+        $this->assertStringStartsWith($order->order_reference, $order->payment->merchant_reference);
+    }
+
+    public function test_the_webhook_still_finds_the_order_after_a_retry_changed_the_merchant_reference(): void
+    {
+        Http::fake([
+            '*/token' => Http::response(['access_token' => 'fake-token'], 200),
+            '*/api/order/status*' => Http::response(['status' => 'SUCCESS'], 200),
+        ]);
+        Http::fakeSequence('*/api/order')
+            ->push(['orderTransactionId' => 'TXN-1', 'redirectUrl' => 'https://pay.enkap.example/first'], 200)
+            ->push(['orderTransactionId' => 'TXN-RETRY-2', 'redirectUrl' => 'https://pay.enkap.example/retry-2'], 200);
+
+        $user = User::factory()->create();
+        $this->checkoutOrderViaMobileMoney($user);
+        $order = Order::firstOrFail();
+
+        // Force the first attempt into "échoué" without going through the
+        // webhook (which would use up the FAILED-status fake this test
+        // doesn't register) — same technique as the notification tests.
+        $order->payment->update(['payment_status' => 'échoué']);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson("/api/v1/orders/{$order->order_reference}/payment/refresh")
+            ->assertOk();
+
+        $order->refresh();
+        $retriedReference = $order->payment->merchant_reference;
+        $this->assertNotSame($order->order_reference, $retriedReference);
+
+        // Enkap calls back with the retried reference, not the order's own —
+        // the webhook must still resolve it to this order.
+        $this->putJson($this->webhookUrl($retriedReference))->assertNoContent();
+
+        $order->refresh();
+        $this->assertSame('confirmée', $order->status);
+        $this->assertSame('payé', $order->payment->payment_status);
+    }
 }

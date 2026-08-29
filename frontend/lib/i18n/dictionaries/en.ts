@@ -330,6 +330,8 @@ const en: Dictionary = {
         "A technical error is preventing us from confirming your payment status right now. If you did pay, your order is safe — please try again in a moment.",
       failedTitle: "Payment did not go through",
       failedSubtitle: "Your order was recorded, but the payment could not be confirmed.",
+      retryPayment: "Retry payment",
+      retryPaymentError: "Couldn't restart the payment. Please try again.",
       contactSupport: "Contact us from your profile for help.",
       viewOrder: "View my order",
     },
@@ -555,6 +557,9 @@ const en: Dictionary = {
     deliveryFee: "Delivery fee",
     coupon: "Coupon",
     genericError: "Couldn't load your orders.",
+    payNow: "Pay now",
+    payNowLoading: "Redirecting...",
+    payNowError: "Couldn't restart the payment. Please try again.",
   },
   payments: {
     title: "Payment history",
