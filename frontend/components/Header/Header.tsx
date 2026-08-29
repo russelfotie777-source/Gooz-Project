@@ -43,20 +43,8 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   const rawRouter = useRouter();
   const router = useLocaleRouter();
 
-  const CATEGORIES = dict.header.quickCategories.map((label, i) => ({
-    id: ["promotion", "best-seller-1", "best-seller-2", "electromenager", "securite", "informatique"][i],
-    label,
-    icon: [
-      "/icon/header/promotion.svg",
-      "/icon/header/best-seller-1.svg",
-      "/icon/header/best-seller-2.svg",
-      "/icon/header/electromenager.svg",
-      "/icon/header/securite.svg",
-      "/icon/header/informatique.svg",
-    ][i],
-  }));
-
   const [query, setQuery] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -90,6 +78,14 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   useEffect(() => {
     getAnnouncements().then(setAnnouncements).catch(() => {});
     setAnnouncementsDismissed(sessionStorage.getItem(ANNOUNCEMENT_DISMISSED_KEY) === "1");
+  }, []);
+
+  // Was a fixed list of invented labels (Promotion/Best Seller/...) that
+  // never linked anywhere and didn't match the shop's real categories (no
+  // "Informatique" category actually exists) — real, clickable categories
+  // now, same source as CategoryList's mobile bar.
+  useEffect(() => {
+    getCategories().then(setCategories).catch(() => {});
   }, []);
 
   function dismissAnnouncements() {
@@ -307,11 +303,11 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
           </div>
 
           <nav className={styles.categoriesBar} aria-label={dict.header.categories}>
-            {CATEGORIES.map((cat) => (
-              <button key={cat.id} type="button" className={styles.categoryButton}>
-                <img src={cat.icon} alt="" className={styles.categoryIcon} />
-                <span className={styles.categoryLabel}>{cat.label}</span>
-              </button>
+            {categories.map((category) => (
+              <LocaleLink key={category.id} href={`/categories/${category.slug}`} className={styles.categoryButton}>
+                {category.image && <img src={category.image} alt="" className={styles.categoryIcon} />}
+                <span className={styles.categoryLabel}>{category.name}</span>
+              </LocaleLink>
             ))}
           </nav>
         </div>

@@ -36,14 +36,6 @@ const fr = {
     toggleToDark: "Activer le mode sombre",
     toggleToLight: "Activer le mode clair",
     announcementBrand: "Shopitech — Paiement Mobile Money sécurisé • Livraison partout au Cameroun",
-    quickCategories: [
-      "PROMOTION !!!",
-      "BEST SELLER",
-      "BEST SELLER",
-      "ELECTROMENAGER",
-      "SECURITE",
-      "INFORMATIQUE",
-    ],
   },
   bottomNav: {
     home: "Accueil",
