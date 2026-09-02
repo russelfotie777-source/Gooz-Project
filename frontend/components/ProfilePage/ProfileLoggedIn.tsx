@@ -45,6 +45,12 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage, onPr
       href: "/commandes",
     },
     {
+      icon: "/icon/Heart%20Icon%20Medium.svg",
+      title: dict.profile.favoriteProducts,
+      subtitle: dict.profile.favoriteProductsSubtitle,
+      href: "/favoris",
+    },
+    {
       icon: "/icon/profile/g-translate.svg",
       title: dict.profile.language,
       subtitle: dict.profile.languageName,

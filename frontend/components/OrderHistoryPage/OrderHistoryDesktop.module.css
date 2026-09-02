@@ -46,7 +46,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 40px;
@@ -76,7 +76,7 @@
 }
 
 .card {
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   overflow: hidden;
@@ -125,7 +125,7 @@
 }
 
 .statusPending {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--color-placeholder);
   color: var(--color-text-muted);
 }
 
@@ -146,12 +146,12 @@
 
 .statusDelivered {
   background: rgba(26, 156, 92, 0.15);
-  color: #1a9c5c;
+  color: var(--color-success);
 }
 
 .statusCancelled {
   background: rgba(224, 67, 60, 0.12);
-  color: #e0433c;
+  color: var(--color-danger);
 }
 
 .totalValue {
@@ -261,4 +261,28 @@
   font-size: 12px;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+.payButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  margin-top: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.payButton:disabled {
+  opacity: 0.6;
+}
+
+.payError {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--color-danger);
 }

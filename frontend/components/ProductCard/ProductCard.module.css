@@ -76,7 +76,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text);
+  /* Sits over a product photo, not the page — the white circle stays fixed
+     in both themes for contrast against varied images, so the icon must
+     stay a fixed dark color too (var(--color-text) would turn near-white in
+     dark mode and vanish against it). */
+  color: #1f1f1f;
+}
+
+.wishlistButtonActive {
+  color: var(--color-danger);
 }
 
 .info {
@@ -186,7 +194,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #1f1f1f;
+  background: var(--color-chrome-bg);
   color: var(--color-white);
   padding: 12px 18px;
   border-radius: 999px;

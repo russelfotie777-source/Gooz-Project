@@ -9,7 +9,7 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   padding: 16px;

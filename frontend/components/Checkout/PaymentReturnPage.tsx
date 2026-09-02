@@ -7,6 +7,7 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import type { Order } from "@/lib/types";
+import { usePaymentRetry } from "@/lib/usePaymentRetry";
 import CheckoutSuccessContent from "./CheckoutSuccessContent";
 import styles from "./CheckoutConfirmationStep.module.css";
 
@@ -36,6 +37,7 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
   const [checking, setChecking] = useState(true);
   const [checkFailed, setCheckFailed] = useState(false);
   const attemptsRef = useRef(0);
+  const { retry, retryingId, retryErrorId } = usePaymentRetry();
 
   async function check() {
     const session = getSession();
@@ -111,6 +113,15 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
       <div className={styles.page}>
         <h1 className={styles.title}>{dict.checkout.paymentReturn.failedTitle}</h1>
         <p className={styles.subtitle}>{dict.checkout.paymentReturn.failedSubtitle}</p>
+        <button
+          type="button"
+          className={styles.homeButton}
+          disabled={retryingId === order.id}
+          onClick={() => retry(order)}
+        >
+          {retryingId === order.id ? dict.orders.payNowLoading : dict.checkout.paymentReturn.retryPayment}
+        </button>
+        {retryErrorId === order.id && <p className={styles.contact}>{dict.checkout.paymentReturn.retryPaymentError}</p>}
         <p className={styles.contact}>{dict.checkout.paymentReturn.contactSupport}</p>
         <LocaleLink href="/commandes" className={styles.homeButton}>
           {dict.checkout.paymentReturn.viewOrder}

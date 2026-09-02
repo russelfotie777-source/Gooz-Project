@@ -1,5 +1,6 @@
 import type {
   Address,
+  Announcement,
   ApiPaymentMethod,
   AppNotification,
   AuthResponse,
@@ -10,6 +11,7 @@ import type {
   Category,
   City,
   DeliveryEstimate,
+  Favorite,
   HomepageSection,
   Neighborhood,
   Order,
@@ -332,6 +334,11 @@ export async function getBanners(location?: Banner["location"]): Promise<Banner[
   return data;
 }
 
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const { data } = await apiFetch<ApiCollection<Announcement>>("/announcements", CATALOG_CACHE);
+  return data;
+}
+
 // Admin-configured homepage sections (Admin\HomepageSectionController) —
 // resolved server-side (manual picks or an automatic strategy) into
 // products/categories/brands, see HomepageSectionController::present().
@@ -632,6 +639,19 @@ export async function createTicket(token: string, payload: TicketPayload): Promi
     body: JSON.stringify(payload),
   });
   return data;
+}
+
+export async function getFavorites(token: string): Promise<Favorite[]> {
+  const { data } = await authedFetch<ApiCollection<Favorite>>("/favorites", token);
+  return data;
+}
+
+export async function addFavorite(token: string, productId: number): Promise<void> {
+  await authedFetch<void>(`/favorites/${productId}`, token, { method: "POST" });
+}
+
+export async function removeFavorite(token: string, productId: number): Promise<void> {
+  await authedFetch<void>(`/favorites/${productId}`, token, { method: "DELETE" });
 }
 
 export type DevicePlatform = "android" | "ios" | "web";

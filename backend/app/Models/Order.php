@@ -23,6 +23,7 @@ class Order extends Model
         'shipping_phone',
         'shipping_latitude',
         'shipping_longitude',
+        'review_requested_at',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class Order extends Model
             'delivery_fees' => 'decimal:2',
             'shipping_latitude' => 'decimal:7',
             'shipping_longitude' => 'decimal:7',
+            'review_requested_at' => 'datetime',
         ];
     }
 
@@ -67,5 +69,18 @@ class Order extends Model
     public function delivery(): HasOne
     {
         return $this->hasOne(Delivery::class);
+    }
+
+    // order_reference is stable and is what the customer/frontend always
+    // uses, but Enkap calls back (webhook + return URL) with whatever
+    // merchantReference we last sent it — which diverges from
+    // order_reference after a retry (Enkap rejects reusing the same value;
+    // see EnkapPaymentService::createOrder()). Checking order_reference
+    // first covers the common, never-retried case with a single indexed
+    // lookup.
+    public static function findByAnyReference(string $reference): ?self
+    {
+        return static::where('order_reference', $reference)->first()
+            ?? Payment::where('merchant_reference', $reference)->first()?->order;
     }
 }

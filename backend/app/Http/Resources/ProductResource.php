@@ -12,6 +12,7 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'slug' => $this->slug,
             'description' => $this->description,
             'price_from' => $this->whenLoaded('variants', function () {
                 $prices = $this->variants->map(
@@ -33,6 +34,7 @@ class ProductResource extends JsonResource
                 fn () => $this->stocks->sum(fn ($stock) => $stock->quantity_available - $stock->quantity_reserved)
             ),
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

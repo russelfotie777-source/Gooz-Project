@@ -21,6 +21,7 @@ import {
   Bell,
   LayoutTemplate,
   Image,
+  Megaphone,
   Lock,
   Landmark,
   ArrowLeftRight,
@@ -110,6 +111,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Sections d'accueil", href: "/dashboard/homepage-sections", icon: LayoutTemplate, ready: true },
       { label: "Bannière", href: "/dashboard/bannieres", icon: Image, ready: true },
+      { label: "Annonces", href: "/dashboard/annonces", icon: Megaphone, ready: true },
     ],
   },
   {

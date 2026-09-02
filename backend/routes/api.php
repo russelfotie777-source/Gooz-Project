@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AddressController as AdminAddressController;
+use App\Http\Controllers\Admin\AnnouncementController as AdminAnnouncementController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\UserNotificationController as AdminUserNotificationController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
@@ -49,6 +51,7 @@ use App\Http\Controllers\DeliveryEstimateController;
 use App\Http\Controllers\DeliveryQuoteController;
 use App\Http\Controllers\DeviceTokenController;
 use App\Http\Controllers\EnkapWebhookController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\NeighborhoodController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
@@ -89,17 +92,25 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
-        // Bound by order_reference, not id: the customer lands back on the
-        // frontend return page carrying only the reference Enkap was given
-        // (see EnkapWebhookController's docblock for the matching webhook path).
-        Route::post('/orders/{order:order_reference}/payment/refresh', [PaymentController::class, 'refresh']);
+        // Plain string, not order:order_reference implicit binding: the
+        // customer lands back on the frontend return page carrying whichever
+        // reference Enkap was given, which is only order_reference on the
+        // first payment attempt — a retry gets a distinct one (Enkap rejects
+        // reusing the same merchantReference), so this has to be resolved
+        // via Order::findByAnyReference() (see EnkapWebhookController's
+        // docblock for the matching webhook path).
+        Route::post('/orders/{reference}/payment/refresh', [PaymentController::class, 'refresh']);
         // Same reason: the checkout confirmation screen only has the
         // reference (it's in the URL, see CheckoutConfirmationStep) and
         // needs to verify it — and that it belongs to this user — before
         // showing a "your order is confirmed" screen for it.
-        Route::get('/orders/reference/{order:order_reference}', [OrderController::class, 'show']);
+        Route::get('/orders/reference/{reference}', [OrderController::class, 'showByReference']);
 
         Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
+
+        Route::get('/favorites', [FavoriteController::class, 'index']);
+        Route::post('/favorites/{product}', [FavoriteController::class, 'store']);
+        Route::delete('/favorites/{product}', [FavoriteController::class, 'destroy']);
 
         Route::get('/deliveries', [DeliveryController::class, 'index']);
         Route::patch('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus']);
@@ -132,6 +143,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
     Route::get('/banners', [BannerController::class, 'index']);
+
+    Route::get('/announcements', [AnnouncementController::class, 'index']);
 
     Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
 
@@ -179,6 +192,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/banners', [AdminBannerController::class, 'store']);
         Route::put('/banners/{banner}', [AdminBannerController::class, 'update']);
         Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-announcements'])->group(function () {
+        Route::get('/admin/announcements', [AdminAnnouncementController::class, 'index']);
+        Route::get('/admin/announcements/{announcement}', [AdminAnnouncementController::class, 'show']);
+        Route::post('/admin/announcements', [AdminAnnouncementController::class, 'store']);
+        Route::put('/admin/announcements/{announcement}', [AdminAnnouncementController::class, 'update']);
+        Route::delete('/admin/announcements/{announcement}', [AdminAnnouncementController::class, 'destroy']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-homepage-sections'])->group(function () {

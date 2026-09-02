@@ -6,6 +6,7 @@ use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CategoryController extends Controller
 {
@@ -35,6 +36,10 @@ class CategoryController extends Controller
 
     public function show(Category $category): CategoryResource
     {
+        if (! $category->is_active) {
+            throw new NotFoundHttpException;
+        }
+
         return new CategoryResource($category);
     }
 }

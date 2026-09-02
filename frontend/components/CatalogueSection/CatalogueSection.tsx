@@ -1,9 +1,11 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Brand, Category, Product } from "@/lib/types";
 import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CatalogueSection.module.css";
 
@@ -11,6 +13,12 @@ interface CatalogueSectionProps {
   /** First page, fetched server-side so there's no loading flash on mount. */
   initialProducts: Product[];
   initialLastPage: number;
+  /** From the ?page= search param — kept in sync with it (see goToPage)
+   *  so page 2+ has a real, crawlable, shareable URL instead of only
+   *  existing as client-side state (docs/seo-a-faire.md §4). Filters
+   *  deliberately stay client-only — indexing every filter combination
+   *  would create near-duplicate pages that dilute crawl budget. */
+  initialPage: number;
   categories: Category[];
   /** Full catalogue-wide list, not just brands present in the current page
    *  (unlike before — the filter used to only ever show brands it happened
@@ -34,8 +42,17 @@ function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
   return next;
 }
 
-export default function CatalogueSection({ initialProducts, initialLastPage, categories, brands }: CatalogueSectionProps) {
+export default function CatalogueSection({
+  initialProducts,
+  initialLastPage,
+  initialPage,
+  categories,
+  brands,
+}: CatalogueSectionProps) {
   const dict = useDictionary();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const PRICE_RANGES = PRICE_RANGE_DEFS.map((r) => ({
     ...r,
     label: dict.home.catalogue.priceRanges[r.key],
@@ -44,7 +61,7 @@ export default function CatalogueSection({ initialProducts, initialLastPage, cat
   const [priceRangeId, setPriceRangeId] = useState<string | null>(null);
   const [selectedBrandIds, setSelectedBrandIds] = useState<Set<number>>(new Set());
   const [selectedColors, setSelectedColors] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(1);
+  const [page, setPageState] = useState(initialPage);
   const [products, setProducts] = useState(initialProducts);
   const [lastPage, setLastPage] = useState(initialLastPage);
   const [loading, setLoading] = useState(false);
@@ -107,32 +124,50 @@ export default function CatalogueSection({ initialProducts, initialLastPage, cat
     };
   }, [page, activeCategoryId, priceRangeId, selectedBrandIds, selectedColors]);
 
+  // Keeps ?page= in the address bar in sync with the current page — a
+  // crawler (or a shared link) landing on /?page=2 gets that page for real
+  // (see HomePage/getProductsPage above), and browser back/forward works.
+  // scroll:false because a page-2 link shouldn't jump the viewport back to
+  // the top of the document, just refresh the grid in place.
+  function pageHref(n: number): string {
+    const params = new URLSearchParams(searchParams.toString());
+    if (n > 1) params.set("page", String(n));
+    else params.delete("page");
+    const query = params.toString();
+    return `${pathname}${query ? `?${query}` : ""}`;
+  }
+
+  function goToPage(n: number) {
+    setPageState(n);
+    router.push(pageHref(n), { scroll: false });
+  }
+
   function toggleGroup(name: string) {
     setOpenGroup((current) => (current === name ? null : name));
   }
 
   function selectCategory(id: number | null) {
     setActiveCategoryId(id);
-    setPage(1);
+    goToPage(1);
   }
 
   function selectPriceRange(id: string) {
     setPriceRangeId((current) => (current === id ? null : id));
-    setPage(1);
+    goToPage(1);
   }
 
   function toggleBrand(id: number) {
     setSelectedBrandIds((current) => toggleInSet(current, id));
-    setPage(1);
+    goToPage(1);
   }
 
   function toggleColor(color: string) {
     setSelectedColors((current) => toggleInSet(current, color));
-    setPage(1);
+    goToPage(1);
   }
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} id="catalogue">
       <div className={styles.header}>
         <h2 className={styles.title}>{dict.home.catalogue.title}</h2>
         <button
@@ -259,27 +294,36 @@ export default function CatalogueSection({ initialProducts, initialLastPage, cat
           <button
             type="button"
             className={styles.pageArrow}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => goToPage(Math.max(1, page - 1))}
             disabled={page === 1 || loading}
             aria-label={dict.home.catalogue.previousPage}
           >
             ‹
           </button>
           {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
-            <button
+            // A real <a href> (not a plain button) — this is what actually
+            // lets a crawler discover page 2+ at all, by following a real
+            // link instead of needing to run an onClick handler. Clicking it
+            // still gets the fast client-side refetch via goToPage, same as
+            // before; e.preventDefault() just stops Next's own Link
+            // navigation from doing it a second time.
+            <LocaleLink
               key={n}
-              type="button"
+              href={pageHref(n)}
               className={`${styles.pageNumber} ${n === page ? styles.pageNumberActive : ""}`}
-              onClick={() => setPage(n)}
-              disabled={loading}
+              onClick={(e) => {
+                e.preventDefault();
+                goToPage(n);
+              }}
+              aria-current={n === page ? "page" : undefined}
             >
               {n}
-            </button>
+            </LocaleLink>
           ))}
           <button
             type="button"
             className={styles.pageArrow}
-            onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+            onClick={() => goToPage(Math.min(lastPage, page + 1))}
             disabled={page === lastPage || loading}
             aria-label={dict.home.catalogue.nextPage}
           >

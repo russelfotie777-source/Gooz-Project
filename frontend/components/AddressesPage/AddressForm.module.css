@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: #f5f7fa;
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   padding: 16px;
 }
@@ -30,7 +30,7 @@
 }
 
 .required {
-  color: #fe522e;
+  color: var(--color-danger);
   margin-right: 2px;
 }
 
@@ -38,8 +38,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--color-white);
-  border: 1px solid #e2e2e9;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px 14px;
 }
@@ -62,7 +62,7 @@
 }
 
 .input::placeholder {
-  color: rgba(0, 0, 0, 0.3);
+  color: var(--color-text-muted);
 }
 
 .checkboxRow {
@@ -85,7 +85,7 @@
 .error {
   font-family: var(--font-body);
   font-size: 13px;
-  color: #e0433c;
+  color: var(--color-danger);
   margin: 0;
 }
 
@@ -110,7 +110,7 @@
 }
 
 .cancelButton {
-  background: var(--color-white);
+  background: var(--color-elevated);
   border: 1.5px solid var(--color-border);
   color: var(--color-text);
 }

@@ -1,5 +1,5 @@
 .summaryCard {
-  background: #f5f7fa;
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.1);
   padding: 14px 16px;
@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f5f7fa;
+  background: var(--color-surface);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.1);
@@ -116,6 +116,8 @@
   padding: 0 12px;
   font-family: var(--font-body);
   font-size: 12px;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .couponApply {
@@ -147,7 +149,7 @@
   background: rgba(254, 82, 46, 0.08);
   font-family: var(--font-body);
   font-size: 13px;
-  color: #fe522e;
+  color: var(--color-danger);
   text-align: center;
 }
 
@@ -155,5 +157,5 @@
   margin: 8px 0 0;
   font-family: var(--font-body);
   font-size: 13px;
-  color: #1a9d5c;
+  color: var(--color-success);
 }

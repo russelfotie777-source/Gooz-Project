@@ -220,7 +220,7 @@
   padding: 0 14px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-pill);
-  background: var(--color-white);
+  background: var(--color-elevated);
   color: var(--color-text);
   font-family: var(--font-body);
   font-weight: 600;
@@ -299,14 +299,14 @@
   margin: 0;
   font-family: var(--font-body);
   font-size: 12px;
-  color: #e0433c;
+  color: var(--color-danger);
 }
 
 .locationListsRetry {
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 12px;
-  color: #e0433c;
+  color: var(--color-danger);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -327,7 +327,7 @@
   padding: 10px 36px 10px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-white);
+  background: var(--color-elevated);
   font-family: var(--font-body);
   font-size: 13px;
   color: var(--color-text);
@@ -377,7 +377,7 @@
   overflow: hidden;
   border: 2px dashed var(--color-accent-strong);
   color: var(--color-accent-strong);
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-md);
   padding: 10px;
   font-family: var(--font-body);
@@ -495,7 +495,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--color-white);
+  background: var(--color-elevated);
   box-shadow: var(--shadow-card);
 }
 
@@ -519,11 +519,11 @@
 }
 
 .addToCartSuccess {
-  color: #1a9b4c;
+  color: var(--color-success);
 }
 
 .addToCartError {
-  color: #fe522e;
+  color: var(--color-danger);
 }
 
 /* Feature badges — desktop only */
@@ -536,7 +536,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #f2f2f2;
+  background: var(--color-surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: 16px;
@@ -652,7 +652,11 @@
   justify-content: center;
   gap: 4px;
   padding: 6px 2px;
-  border: 0.5px solid rgba(0, 0, 0, 0.5);
+  /* var(--color-text-muted) matches this exact rgba(0,0,0,0.5) in light mode
+     — kept identical there, but this needs a border with real visual weight
+     (not the subtler var(--color-border) used for card outlines), which
+     text-muted's dark-mode value still gives. */
+  border: 0.5px solid var(--color-text-muted);
   border-radius: var(--radius-sm);
   flex: 1;
   min-width: 0;
@@ -725,6 +729,8 @@
   padding: 12px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-body);
   font-size: 13px;
   resize: vertical;
@@ -827,8 +833,8 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background: #fdfdfd;
-    border: 1px solid #c8c8c8;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: 20px;
     flex: 0 0 340px;

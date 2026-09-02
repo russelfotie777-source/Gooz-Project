@@ -27,19 +27,12 @@
   background: var(--color-bg);
 }
 
-.promoStrip {
-  background: var(--color-placeholder);
-  height: 56px;
-  width: 100%;
-  flex: 0 0 auto;
-}
-
 .mainRow {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 0 24px;
-  background: var(--color-text);
+  background: var(--color-chrome-bg);
   min-height: 66px;
   width: 100%;
 }
@@ -126,6 +119,14 @@
   align-items: center;
   gap: 14px;
   flex: 0 0 auto;
+}
+
+/* .mainRow is always var(--color-chrome-bg) (black) regardless of theme —
+   see globals.css — so this icon stays fixed white rather than following
+   --color-text like ThemeToggle's own default does. */
+.themeToggleDesktop {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .langWrapper {
@@ -226,7 +227,7 @@
   right: 0;
   z-index: 50;
   min-width: 170px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   padding: 6px;
@@ -344,7 +345,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  background: var(--color-text);
+  background: var(--color-chrome-bg);
   padding: 8px 24px;
   width: 100%;
   overflow-x: auto;
@@ -362,6 +363,7 @@
   font-size: 11px;
   color: #ffffff;
   text-transform: uppercase;
+  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -374,7 +376,8 @@
 .categoryIcon {
   width: 18px;
   height: 18px;
-  object-fit: contain;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .categoryLabel {
@@ -383,13 +386,6 @@
 }
 
 /* Mobile PWA header — Figma node 372:185 */
-
-.mobilePromoStrip {
-  background: var(--color-placeholder);
-  height: 50px;
-  margin: 10px 12px 0;
-  border-radius: 5px;
-}
 
 .mobileTopRow {
   display: flex;
@@ -453,12 +449,12 @@
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--color-text-muted);
   font-family: var(--font-body);
 }
 
 .mobileSearchInput::placeholder {
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--color-text-muted);
 }
 
 .mobileDetailSticky {
@@ -476,6 +472,13 @@
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, var(--shadow-card);
+}
+
+/* A translucent white streak would float over a dark page instead of
+   blending in — same frosted-glass effect, dark tint. */
+:global(html[data-theme="dark"]) .mobileDetailStickyScrolled {
+  background: rgba(18, 19, 23, 0.65);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, var(--shadow-card);
 }
 
 .mobileDetailStickyScrolled .mobileDetailSearchButton {
@@ -511,7 +514,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: var(--color-white);
+  background: var(--color-elevated);
   box-shadow: var(--shadow-card);
   border: none;
   cursor: pointer;
