@@ -10,12 +10,18 @@ import styles from "./HeroSection.module.css";
 interface HeroSectionProps {
   categories: Category[];
   banners: Banner[];
+  /** The two side ad slots — admin-managed (location homepage_ad_1/2), each
+   *  its own carousel. Optional: CategoryPage reuses this same component for
+   *  its own hero but never fetches these, so both slots simply render
+   *  nothing there. */
+  adSlotOne?: Banner[];
+  adSlotTwo?: Banner[];
 }
 
 // Desktop-only row from the Figma design (node 861:3811): a category shortcut
 // card + the hero carousel + two stacked ad-banner slots. The mobile layout
 // only shows the hero banner (see HeroSection.module.css) — untouched.
-export default function HeroSection({ categories, banners }: HeroSectionProps) {
+export default function HeroSection({ categories, banners, adSlotOne = [], adSlotTwo = [] }: HeroSectionProps) {
   const dict = useDictionary();
 
   return (
@@ -38,9 +44,11 @@ export default function HeroSection({ categories, banners }: HeroSectionProps) {
 
       <aside className={styles.adColumn} aria-hidden="true">
         <div className={styles.adBanner}>
-          <AdBannerCarousel />
+          <AdBannerCarousel banners={adSlotOne} />
         </div>
-        <div className={styles.adBanner} />
+        <div className={styles.adBanner}>
+          <AdBannerCarousel banners={adSlotTwo} />
+        </div>
       </aside>
     </div>
   );

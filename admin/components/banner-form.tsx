@@ -13,7 +13,7 @@ export type BannerFormValues = {
   link_url: string;
   product_id: number | null;
   product_name: string;
-  location: "homepage" | "category" | "search" | "checkout";
+  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout";
   starts_at: string;
   ends_at: string;
   is_active: boolean;
@@ -278,7 +278,9 @@ export function BannerForm({
               onChange={(e) => setLocation(e.target.value as BannerFormValues["location"])}
               className={inputClass}
             >
-              <option value="homepage" className="bg-[#12141c]">Page d&apos;accueil</option>
+              <option value="homepage" className="bg-[#12141c]">Page d&apos;accueil — carrousel principal</option>
+              <option value="homepage_ad_1" className="bg-[#12141c]">Page d&apos;accueil — bannière latérale 1</option>
+              <option value="homepage_ad_2" className="bg-[#12141c]">Page d&apos;accueil — bannière latérale 2</option>
               <option value="category" className="bg-[#12141c]">Page catégorie</option>
               <option value="search" className="bg-[#12141c]">Résultats de recherche</option>
               <option value="checkout" className="bg-[#12141c]">Paiement</option>

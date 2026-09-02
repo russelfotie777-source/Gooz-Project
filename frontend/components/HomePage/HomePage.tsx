@@ -27,25 +27,31 @@ interface HomePageProps {
 }
 
 export default async function HomePage({ page }: HomePageProps) {
-  const [categories, brands, products, catalogueFirstPage, banners, homepageSections] = await Promise.all([
-    getCategories(),
-    getBrands(),
-    // Feeds the curated carousels below (on sale / popular / recommended) —
-    // not paginated UI, just "first N of a broad pool", so this doesn't
-    // need CatalogueSection's own real pagination.
-    getProducts({ per_page: PRODUCT_FETCH_CAP }),
-    // CatalogueSection manages further paging client-side after this — see
-    // its own getProductsPage() calls — but starts from whatever page the
-    // URL asked for, not always page 1.
-    getProductsPage({ per_page: 8, page }),
-    // Not fatal if it fails — the hero falls back to its static slide (see
-    // HeroBanner) rather than taking the whole homepage down over a
-    // secondary, non-essential fetch.
-    getBanners("homepage").catch(() => []),
-    // Same reasoning: admin-configured sections are additive to the
-    // hand-built ones below, never required for the page to render.
-    getHomepageSections().catch(() => []),
-  ]);
+  const [categories, brands, products, catalogueFirstPage, banners, adSlotOne, adSlotTwo, homepageSections] =
+    await Promise.all([
+      getCategories(),
+      getBrands(),
+      // Feeds the curated carousels below (on sale / popular / recommended) —
+      // not paginated UI, just "first N of a broad pool", so this doesn't
+      // need CatalogueSection's own real pagination.
+      getProducts({ per_page: PRODUCT_FETCH_CAP }),
+      // CatalogueSection manages further paging client-side after this — see
+      // its own getProductsPage() calls — but starts from whatever page the
+      // URL asked for, not always page 1.
+      getProductsPage({ per_page: 8, page }),
+      // Not fatal if it fails — the hero falls back to its static slide (see
+      // HeroBanner) rather than taking the whole homepage down over a
+      // secondary, non-essential fetch.
+      getBanners("homepage").catch(() => []),
+      // The two side ad slots next to the hero carousel — same "never fatal"
+      // reasoning, and an empty list here just means that slot renders
+      // nothing (see AdBannerCarousel).
+      getBanners("homepage_ad_1").catch(() => []),
+      getBanners("homepage_ad_2").catch(() => []),
+      // Same reasoning: admin-configured sections are additive to the
+      // hand-built ones below, never required for the page to render.
+      getHomepageSections().catch(() => []),
+    ]);
 
   const saleProducts = products.filter((p) => p.variants.some((v) => v.is_promotion));
   const popularProducts = products.slice(0, 4);
@@ -53,12 +59,12 @@ export default async function HomePage({ page }: HomePageProps) {
 
   return (
     <div className={styles.page}>
-      <Header cartCount={2} />
+      <Header />
 
       <main className={styles.main}>
         <CategoryList categories={categories} />
 
-        <HeroSection categories={categories} banners={banners} />
+        <HeroSection categories={categories} banners={banners} adSlotOne={adSlotOne} adSlotTwo={adSlotTwo} />
 
         <ProductSection titleKey="saleTitle" products={saleProducts} cardLayout="row" />
 

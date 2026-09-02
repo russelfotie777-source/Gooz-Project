@@ -1,18 +1,49 @@
 .banner {
   position: relative;
-  display: flex;
-  align-items: center;
   background: var(--color-chrome-bg);
   border-radius: var(--radius-md);
+  /* Always visible — the fallback slide's product image deliberately pops
+     outside this box (see .imageWrapper), and the nav buttons below sit
+     half outside it too (see .navButtonPrev/Next). A background-image
+     naturally respects border-radius on its own element without needing
+     overflow:hidden, so nothing here relies on clipping. */
   overflow: visible;
   min-height: 170px;
-  padding: 20px;
 }
 
-.bannerWithImage {
+.slide {
+  /* relative, not absolute: this needs to stay in normal flow so its
+     content height still pushes .banner taller than min-height when it
+     needs to (a real banner's title/description, or the fallback's own
+     text, can run longer than 170px on narrow screens) — .scrim and
+     .imageWrapper below still position themselves against this box either
+     way. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-radius: inherit;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+/* Toggled by HeroBanner while it swaps to the next slide's content —
+   fades out, THEN the content changes (while invisible), THEN fades back
+   in, so there's never a hard cut or a flash of the bare banner background
+   between two slides. */
+.slideFading {
+  opacity: 0;
+}
+
+.slideWithImage {
   background-size: cover;
   background-position: center;
-  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide {
+    transition: none;
+  }
 }
 
 .scrim {
@@ -74,16 +105,26 @@
 
 .dots {
   display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
+  z-index: 3;
 }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  /* Buttons carry browser-default padding/border that isn't square, which
+     is what was making these render as ovals instead of true circles. */
+  padding: 0;
+  border: none;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
 }
 
 .dotActive {
@@ -174,6 +215,9 @@
 @media (min-width: 1024px) {
   .banner {
     min-height: 220px;
+  }
+
+  .slide {
     padding: 28px 32px;
   }
 

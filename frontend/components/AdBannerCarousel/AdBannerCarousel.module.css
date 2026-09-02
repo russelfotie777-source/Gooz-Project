@@ -12,63 +12,19 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 1;
+  transition: opacity 0.25s ease;
 }
 
-.enterFade {
-  animation: adBannerFadeIn 0.5s ease both;
-}
-
-/* Vertical "reel" entrance, matching AnnouncementBar's slot-machine roll —
-   slides down from above with a slight overshoot bounce before settling. */
-.enterReel {
-  animation: adBannerReelIn 0.42s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-}
-
-/* Enters from the left edge, moving right. */
-.enterSlide {
-  animation: adBannerSlideIn 0.45s ease-out both;
-}
-
-@keyframes adBannerFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes adBannerReelIn {
-  0% {
-    opacity: 0;
-    transform: translateY(70%);
-    filter: blur(3px);
-  }
-  55% {
-    opacity: 1;
-    filter: blur(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes adBannerSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+/* Toggled while the carousel swaps to the next image — fades out, THEN the
+   src changes (while invisible), THEN fades back in, so there's never a
+   hard cut or a flash of the frame's bare background between two slides. */
+.imageFading {
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .enterFade,
-  .enterReel,
-  .enterSlide {
-    animation: none;
+  .image {
+    transition: none;
   }
 }

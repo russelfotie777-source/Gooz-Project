@@ -31,6 +31,7 @@ class RolePermission extends Model
         'manage-accounting',
         'manage-company-profile',
         'manage-announcements',
+        'manage-app-promo',
     ];
 
     /**

@@ -136,6 +136,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Paramètres",
     items: [
       { label: "Paramètres panier", href: "/dashboard/parametres-panier", icon: ShoppingCart, ready: true },
+      { label: "Widget téléchargement app", href: "/dashboard/promo-app", icon: Smartphone, ready: true },
     ],
   },
   {

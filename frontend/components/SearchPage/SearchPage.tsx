@@ -27,7 +27,7 @@ export default async function SearchPage({ query, page }: SearchPageProps) {
 
   return (
     <div className={styles.page}>
-      <Header cartCount={2} />
+      <Header />
 
       <main className={styles.main}>
         <CategoryResults
