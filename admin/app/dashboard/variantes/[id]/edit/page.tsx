@@ -186,7 +186,7 @@ export default function EditVariantPage() {
                 ) : (
                   <UploadCloud className="h-5 w-5 text-white/30" />
                 )}
-                <span className="px-1 text-[11px] leading-tight text-brand-blue">Ajouter</span>
+                <span className="px-1 text-xs leading-tight text-brand-blue">Ajouter</span>
                 <input
                   type="file"
                   accept="image/*"

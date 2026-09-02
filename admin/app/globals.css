@@ -24,6 +24,25 @@
   --color-brand-ink: var(--color-brand-ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Bumped type scale — the default Tailwind sizes read too small for a
+     dashboard meant to be read at a glance. Spacing tokens are untouched. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.3125rem;
+  --text-xl--line-height: 1.875rem;
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 2.375rem;
+  --text-4xl: 2.5rem;
+  --text-4xl--line-height: 2.875rem;
 }
 
 body {
