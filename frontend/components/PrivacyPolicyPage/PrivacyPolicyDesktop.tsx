@@ -16,7 +16,7 @@ export default function PrivacyPolicyDesktop() {
 
   return (
     <div className={styles.page}>
-      <Header cartCount={2} />
+      <Header />
 
       <main className={styles.main}>
         <LegalArticle content={content} />

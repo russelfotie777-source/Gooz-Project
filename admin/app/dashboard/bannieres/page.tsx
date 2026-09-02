@@ -10,9 +10,18 @@ type Banner = {
   id: number;
   title: string | null;
   image: string;
-  location: "homepage" | "category" | "search" | "checkout";
+  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout";
   position: number;
   is_active: boolean;
+};
+
+const LOCATION_LABELS: Record<Banner["location"], string> = {
+  homepage: "Accueil — carrousel",
+  homepage_ad_1: "Accueil — latérale 1",
+  homepage_ad_2: "Accueil — latérale 2",
+  category: "Page catégorie",
+  search: "Recherche",
+  checkout: "Paiement",
 };
 
 export default function BannersPage() {
@@ -109,7 +118,7 @@ export default function BannersPage() {
                 <td className="px-5 py-3 font-medium text-white">{banner.title ?? "—"}</td>
                 <td className="px-5 py-3">
                   <span className="rounded-full bg-brand-orange/10 px-2.5 py-1 text-xs font-medium text-brand-orange">
-                    {banner.location}
+                    {LOCATION_LABELS[banner.location]}
                   </span>
                 </td>
                 <td className="px-5 py-3">

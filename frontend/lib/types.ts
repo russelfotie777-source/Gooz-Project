@@ -108,6 +108,18 @@ export interface Product {
   updated_at: string;
 }
 
+export interface AppPromoImage {
+  id: number;
+  image: string;
+  is_active: boolean;
+  position: number;
+}
+
+export interface AppPromoSetting {
+  is_active: boolean;
+  images: AppPromoImage[];
+}
+
 export interface Banner {
   id: number;
   title: string;
@@ -116,7 +128,7 @@ export interface Banner {
   link_url: string | null;
   link_type: "external" | "product";
   product: Product | null;
-  location: "homepage" | "category" | "search" | "checkout";
+  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout";
   position: number;
   starts_at: string;
   ends_at: string;
