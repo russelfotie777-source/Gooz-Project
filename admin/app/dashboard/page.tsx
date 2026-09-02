@@ -110,7 +110,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <h1 className="mb-6 text-2xl font-bold">Tableau de bord</h1>
+      <h1 className="mb-6 text-3xl font-bold tracking-tight">Tableau de bord</h1>
 
       {error && (
         <p className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -263,10 +263,10 @@ function StatCard({
   return (
     <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
       <p className="text-sm text-white/40">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-white">{value}</p>
+      <p className="mt-2 text-4xl font-bold tracking-tight text-white">{value}</p>
       <p className={`mt-2 flex items-center gap-1.5 text-xs font-medium ${colorClass}`}>
-        <Icon className="h-3.5 w-3.5" />
-        {note}
+        <Icon className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate">{note}</span>
       </p>
       <Sparkline colorClass={colorClass} path={sparklinePath} />
     </div>

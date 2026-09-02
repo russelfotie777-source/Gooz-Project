@@ -139,7 +139,7 @@ export default function RapportCommandesDetailleesPage() {
       <div className="rounded-2xl border border-white/5 bg-white/[0.03]">
         <div className="flex flex-wrap items-end gap-4 border-b border-white/5 p-4">
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-white/40">
               Date de début
             </label>
             <input
@@ -150,7 +150,7 @@ export default function RapportCommandesDetailleesPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-white/40">
               Date de fin
             </label>
             <input
@@ -161,7 +161,7 @@ export default function RapportCommandesDetailleesPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-white/40">
               Client
             </label>
             <input
@@ -173,7 +173,7 @@ export default function RapportCommandesDetailleesPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-white/40">
               État du paiement
             </label>
             <select
@@ -192,7 +192,7 @@ export default function RapportCommandesDetailleesPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-white/40">
               Canal
             </label>
             <select
