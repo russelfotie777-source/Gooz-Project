@@ -28,14 +28,9 @@ const en: Dictionary = {
     back: "Back",
     info: "Information",
     categories: "Quick categories",
-    quickCategories: [
-      "PROMOTION !!!",
-      "BEST SELLER",
-      "BEST SELLER",
-      "APPLIANCES",
-      "SECURITY",
-      "ELECTRONICS",
-    ],
+    toggleToDark: "Switch to dark mode",
+    toggleToLight: "Switch to light mode",
+    announcementBrand: "Shopitech — Secure Mobile Money payment • Delivery all across Cameroon",
   },
   bottomNav: {
     home: "Home",
@@ -327,6 +322,8 @@ const en: Dictionary = {
         "A technical error is preventing us from confirming your payment status right now. If you did pay, your order is safe — please try again in a moment.",
       failedTitle: "Payment did not go through",
       failedSubtitle: "Your order was recorded, but the payment could not be confirmed.",
+      retryPayment: "Retry payment",
+      retryPaymentError: "Couldn't restart the payment. Please try again.",
       contactSupport: "Contact us from your profile for help.",
       viewOrder: "View my order",
     },
@@ -418,6 +415,8 @@ const en: Dictionary = {
     paymentHistorySubtitle: "View all your past payments",
     orderHistory: "Order history",
     orderHistorySubtitle: "View all your past orders",
+    favoriteProducts: "My favorites",
+    favoriteProductsSubtitle: "Find the products you liked",
     contactUs: "Contact us",
     helpNeeds: "Help needed",
     privacyPolicy: "Privacy policy",
@@ -550,6 +549,9 @@ const en: Dictionary = {
     deliveryFee: "Delivery fee",
     coupon: "Coupon",
     genericError: "Couldn't load your orders.",
+    payNow: "Pay now",
+    payNowLoading: "Redirecting...",
+    payNowError: "Couldn't restart the payment. Please try again.",
   },
   payments: {
     title: "Payment history",
@@ -626,6 +628,16 @@ const en: Dictionary = {
     markRead: "Mark as read",
     markAllRead: "Mark all as read",
   },
+  favorites: {
+    title: "My favorites",
+    subtitle: "Find all the products you liked here",
+    loading: "Loading...",
+    loginPrompt: "Sign in to see your favorites.",
+    login: "Sign in",
+    genericError: "We couldn't load your favorites right now. Check your connection and try again.",
+    empty: "You have no favorite products yet.",
+    emptyCta: "Browse the catalogue",
+  },
   errorBoundary: {
     title: "Something went wrong",
     subtitle: "This page failed to load. Check your connection and try again.",
@@ -639,6 +651,12 @@ const en: Dictionary = {
   },
   loadingPage: {
     label: "Loading...",
+  },
+  seo: {
+    categoryDescription: (name: string): string =>
+      `Shop ${name} at the best price on Shopitech. Fast delivery and secure payment.`,
+    productDescriptionFallback: (name: string): string =>
+      `${name} available on Shopitech, at the best price, with fast delivery and secure payment.`,
   },
 };
 

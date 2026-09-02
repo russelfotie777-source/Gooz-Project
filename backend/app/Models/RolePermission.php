@@ -30,6 +30,7 @@ class RolePermission extends Model
         'manage-homepage-sections',
         'manage-accounting',
         'manage-company-profile',
+        'manage-announcements',
     ];
 
     /**

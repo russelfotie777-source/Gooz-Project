@@ -64,7 +64,7 @@
   --curve-r: clamp(48px, 5vw, 80px);
   position: relative;
   flex: 1 1 0;
-  background: var(--color-white);
+  background: var(--color-bg);
 }
 
 /* The seam between the two panels is drawn as two small radial-gradient
@@ -85,8 +85,8 @@
     circle at bottom left,
     var(--color-accent-strong) 0,
     var(--color-accent-strong) var(--curve-r),
-    var(--color-white) var(--curve-r),
-    var(--color-white) 100%
+    var(--color-bg) var(--curve-r),
+    var(--color-bg) 100%
   );
 }
 
@@ -99,8 +99,8 @@
   pointer-events: none;
   background: radial-gradient(
     circle at top right,
-    var(--color-white) 0,
-    var(--color-white) var(--curve-r),
+    var(--color-bg) 0,
+    var(--color-bg) var(--curve-r),
     var(--color-accent-strong) var(--curve-r),
     var(--color-accent-strong) 100%
   );
@@ -144,11 +144,11 @@
   font-weight: 700;
   font-size: clamp(22px, 1.8vw, 32px);
   line-height: 1.25;
-  color: #1f1f1f;
+  color: var(--color-text);
 }
 
 .formHeadline span {
-  color: #c0c0c0;
+  color: var(--color-text-muted);
 }
 
 .form {
@@ -161,7 +161,7 @@
   display: flex;
   gap: 8px;
   padding: 4px;
-  background: #f4f4f6;
+  background: var(--color-surface);
   border-radius: 10px;
 }
 
@@ -179,7 +179,7 @@
 }
 
 .modeTabActive {
-  background: var(--color-white);
+  background: var(--color-elevated);
   color: var(--color-text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
@@ -197,18 +197,19 @@
 }
 
 .required {
-  color: #fe522e;
+  color: var(--color-danger);
   margin-right: 2px;
 }
 
 .input {
   height: clamp(38px, 2.6vw, 44px);
-  border: 1px solid #e2e2e9;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 0 clamp(12px, 1vw, 16px);
   font-family: var(--font-body);
   font-size: clamp(12.5px, 0.85vw, 14px);
   color: var(--color-text);
+  background: var(--color-elevated);
   outline: none;
   transition: border-color 0.2s ease;
 }
@@ -222,9 +223,10 @@
   align-items: center;
   gap: 6px;
   height: clamp(38px, 2.6vw, 44px);
-  border: 1px solid #e2e2e9;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 0 clamp(10px, 0.8vw, 14px);
+  background: var(--color-elevated);
   transition: border-color 0.2s ease;
 }
 
@@ -297,7 +299,7 @@
   white-space: nowrap;
   font-family: var(--font-body);
   font-size: clamp(11px, 0.7vw, 12.5px);
-  color: #525252;
+  color: var(--color-text-muted);
 }
 
 .checkbox {
@@ -380,7 +382,7 @@
   margin: -8px 0 0;
   font-family: var(--font-body);
   font-size: clamp(12px, 0.8vw, 13px);
-  color: #fe522e;
+  color: var(--color-danger);
   text-align: center;
 }
 
@@ -393,14 +395,14 @@
 .dividerLine {
   flex: 1;
   height: 1px;
-  background: #e5e5e5;
+  background: var(--color-border);
 }
 
 .dividerLabel {
   font-family: var(--font-body);
   font-style: normal;
   font-size: clamp(11px, 0.7vw, 12px);
-  color: #a3a3a3;
+  color: var(--color-text-muted);
 }
 
 .snsRow {
@@ -417,8 +419,8 @@
   width: clamp(38px, 2.6vw, 44px);
   height: clamp(38px, 2.6vw, 44px);
   border-radius: 50%;
-  border: 1px solid #e5e5e5;
-  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  background: var(--color-elevated);
   padding: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -470,12 +472,12 @@
   text-align: center;
   font-family: var(--font-body);
   font-size: clamp(12px, 0.8vw, 14px);
-  color: #818183;
+  color: var(--color-text-muted);
 }
 
 .switchLink {
   font-weight: 600;
-  color: #06c;
+  color: var(--color-primary);
 }
 
 .exiting .leftContent {

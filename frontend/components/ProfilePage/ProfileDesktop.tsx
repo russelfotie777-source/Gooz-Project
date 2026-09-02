@@ -47,6 +47,12 @@ export default function ProfileDesktop() {
       subtitle: dict.profile.orderHistorySubtitle,
       href: "/commandes",
     },
+    {
+      icon: "/icon/Heart%20Icon%20Medium.svg",
+      title: dict.profile.favoriteProducts,
+      subtitle: dict.profile.favoriteProductsSubtitle,
+      href: "/favoris",
+    },
   ];
 
   const SUPPORT_ITEMS = [

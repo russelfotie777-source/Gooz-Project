@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background: #e7e8ea;
+  background: var(--color-surface);
   padding-bottom: calc(var(--bottom-nav-height) + 32px);
 }
 
@@ -88,7 +88,7 @@
 }
 
 .card {
-  background: #f5f7fa;
+  background: var(--color-elevated);
   border-radius: 16px;
   box-shadow: var(--shadow-card);
   padding: 16px;
@@ -166,7 +166,7 @@
 }
 
 .actionButtonDanger {
-  color: #e0433c;
+  color: var(--color-danger);
   margin-left: auto;
 }
 
@@ -193,7 +193,7 @@
 }
 
 .confirmYes {
-  background: #e0433c;
+  background: var(--color-danger);
   color: var(--color-white);
   border: none;
   border-radius: var(--radius-sm);

@@ -1,9 +1,11 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CategoryResults.module.css";
 
@@ -15,6 +17,10 @@ interface CategoryResultsProps {
   initialProducts: Product[];
   initialLastPage: number;
   initialTotal: number;
+  /** From the ?page= search param — kept in sync with it (see goToPage) so
+   *  page 2+ has a real, crawlable, shareable URL (docs/seo-a-faire.md §4).
+   *  Sort/price filters deliberately stay client-only. */
+  initialPage: number;
   /** "search" swaps the empty-state wording and the heading format ("no
    * product matches your search" / "Results for ..." instead of the plain
    * category name) — same filter/sort/pagination UI either way. */
@@ -40,11 +46,15 @@ export default function CategoryResults({
   initialProducts,
   initialLastPage,
   initialTotal,
+  initialPage,
   mode = "category",
   categoryId,
   searchQuery,
 }: CategoryResultsProps) {
   const dict = useDictionary();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isEmptySearch = mode === "search" && (searchQuery ?? "").trim() === "";
   const noResultsMessage = isEmptySearch
     ? dict.search.emptyPrompt
@@ -65,7 +75,7 @@ export default function CategoryResults({
     max: null,
   });
   const [sort, setSort] = useState<SortOption>("");
-  const [page, setPage] = useState(1);
+  const [page, setPageState] = useState(initialPage);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [products, setProducts] = useState(initialProducts);
   const [lastPage, setLastPage] = useState(initialLastPage);
@@ -119,16 +129,34 @@ export default function CategoryResults({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, sort, appliedRange, categoryId, searchQuery, mode]);
 
+  // Keeps ?page= in the address bar in sync with the current page — a
+  // crawler (or a shared link) landing on this URL with ?page=2 gets that
+  // page for real (see CategoryPage/SearchPage's own getProductsPage call),
+  // and browser back/forward works. scroll:false so paging doesn't jump the
+  // viewport back to the top of the document.
+  function pageHref(n: number): string {
+    const params = new URLSearchParams(searchParams.toString());
+    if (n > 1) params.set("page", String(n));
+    else params.delete("page");
+    const query = params.toString();
+    return `${pathname}${query ? `?${query}` : ""}`;
+  }
+
+  function goToPage(n: number) {
+    setPageState(n);
+    router.push(pageHref(n), { scroll: false });
+  }
+
   function applyPriceFilter() {
     setAppliedRange({
       min: minPrice.trim() ? Number(minPrice) : null,
       max: maxPrice.trim() ? Number(maxPrice) : null,
     });
-    setPage(1);
+    goToPage(1);
   }
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} id="catalogue">
       <div className={styles.resultBar}>
         <p className={styles.count}>{dict.category.resultsFound(total)}</p>
         <h1 className={styles.pageTitle}>{heading}</h1>
@@ -140,7 +168,7 @@ export default function CategoryResults({
             value={sort}
             onChange={(e) => {
               setSort(e.target.value as SortOption);
-              setPage(1);
+              goToPage(1);
             }}
           >
             <option value="">{dict.category.sortDefault}</option>
@@ -209,27 +237,36 @@ export default function CategoryResults({
           <button
             type="button"
             className={styles.pageArrow}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => goToPage(Math.max(1, page - 1))}
             disabled={page === 1 || loading}
             aria-label={dict.category.previousPage}
           >
             ‹
           </button>
           {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
-            <button
+            // A real <a href> (not a plain button) — this is what actually
+            // lets a crawler discover page 2+ at all, by following a real
+            // link instead of needing to run an onClick handler. Clicking it
+            // still gets the fast client-side refetch via goToPage, same as
+            // before; e.preventDefault() just stops Next's own Link
+            // navigation from doing it a second time.
+            <LocaleLink
               key={n}
-              type="button"
+              href={pageHref(n)}
               className={`${styles.pageNumber} ${n === page ? styles.pageNumberActive : ""}`}
-              onClick={() => setPage(n)}
-              disabled={loading}
+              onClick={(e) => {
+                e.preventDefault();
+                goToPage(n);
+              }}
+              aria-current={n === page ? "page" : undefined}
             >
               {n}
-            </button>
+            </LocaleLink>
           ))}
           <button
             type="button"
             className={styles.pageArrow}
-            onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+            onClick={() => goToPage(Math.min(lastPage, page + 1))}
             disabled={page === lastPage || loading}
             aria-label={dict.category.nextPage}
           >

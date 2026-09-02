@@ -12,59 +12,76 @@
   color: var(--color-text);
 }
 
-.track {
-  display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 4px 2px;
+.trackWrapper {
+  overflow: hidden;
+  width: 100%;
+  /* Soft fade at both edges instead of a hard clip — logos entering/leaving
+     don't pop in and out abruptly. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
 }
 
-.track::-webkit-scrollbar {
-  display: none;
+.track {
+  display: flex;
+  width: max-content;
+  animation: brandsMarquee var(--marquee-duration, 25s) linear infinite;
+}
+
+/* Pausing on hover/focus lets someone actually read a logo instead of it
+   sliding past — small thing, but a continuously-moving strip with no way
+   to stop it reads as an oversight, not a feature. */
+.trackWrapper:hover .track,
+.trackWrapper:focus-within .track {
+  animation-play-state: paused;
+}
+
+@keyframes brandsMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* Exactly one .logoSet's width (there are two, back-to-back) — the loop
+       point is seamless because copy #2 is pixel-identical to copy #1. */
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
+
+.logoSet {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  /* Matches the inter-item gap so the seam between the two back-to-back
+     copies reads identically to the gap between any two other logos. */
+  padding-right: 40px;
 }
 
 .item {
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: 76px;
-}
-
-.badge {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--color-placeholder);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
+  height: 40px;
 }
 
 .logo {
-  width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  display: block;
 }
 
-.initial {
+.fallbackName {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 22px;
-  color: var(--color-primary);
-}
-
-.name {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 12px;
-  color: var(--color-text);
-  text-align: center;
+  font-size: 15px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 @media (min-width: 1024px) {
@@ -72,27 +89,20 @@
     font-size: 22px;
   }
 
-  .track {
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 32px;
+  .logoSet {
+    gap: 64px;
+    padding-right: 64px;
   }
 
   .item {
-    width: 96px;
-    gap: 10px;
+    height: 56px;
   }
 
-  .badge {
-    width: 80px;
-    height: 80px;
+  .logo {
+    max-width: 160px;
   }
 
-  .initial {
-    font-size: 28px;
-  }
-
-  .name {
-    font-size: 14px;
+  .fallbackName {
+    font-size: 18px;
   }
 }

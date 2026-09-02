@@ -49,7 +49,7 @@
   top: calc(var(--header-height) + 24px);
   display: flex;
   flex-direction: column;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 24px 18px;
@@ -146,7 +146,7 @@
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 13.5px;
-  color: #e0433c;
+  color: var(--color-danger);
   text-align: left;
   cursor: pointer;
   transition: background 0.15s;
@@ -169,7 +169,7 @@
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 13.5px;
-  color: #e0433c;
+  color: var(--color-danger);
   text-align: left;
   cursor: pointer;
   transition: background 0.15s;
@@ -241,7 +241,7 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 22px 26px;
@@ -302,7 +302,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 18px;
@@ -361,7 +361,7 @@
 }
 
 .sectionCard {
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 20px 22px;
@@ -436,7 +436,7 @@
 /* Guest content panel */
 
 .guestPanel {
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 56px 48px;

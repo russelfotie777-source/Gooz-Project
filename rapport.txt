@@ -1,0 +1,238 @@
+================================================================
+RAPPORT D'AUDIT — PRÉPARATION AU DÉPLOIEMENT STORE (PLAY STORE / APP STORE)
+Projet : Shopitech (Gooz-Project) — PWA Next.js
+Auditeur : analyse technique (30 ans d'expérience simulée en publication store)
+Date : 24 août 2026
+Branche analysée : feature/wally@frontend
+================================================================
+
+VERDICT GLOBAL
+---------------
+Niveau de maturité : PWA "web installable" solide (~70%), mais 0% packagée
+pour les stores. Aucun projet natif (TWA Android / wrapper iOS) n'existe
+encore dans le repo, et aucune infrastructure de production (domaine HTTPS,
+hébergement, CI/CD) n'est en place. Il reste un vrai chantier de
+"packaging + release engineering", distinct du travail PWA déjà fait, qui
+est lui de bonne qualité.
+
+Note indicative : 6.5/10 pour la fondation PWA — 1/10 pour la préparation
+concrète aux stores (rien n'a encore été généré/soumis).
+
+
+1. CE QUI EST DÉJÀ BIEN FAIT (points forts)
+--------------------------------------------
+
+1.1 Manifest Web App (frontend/public/manifest.json)
+  - name, short_name, description, start_url, scope, display: "standalone",
+    orientation, background_color, theme_color : tous présents et cohérents.
+  - Icônes 192x192, 512x512 (purpose "any") + une icône 512x512
+    "maskable" dédiée. Dimensions vérifiées (headers PNG) : correctes.
+    C'est la partie la plus souvent bâclée par les débutants — ici c'est
+    fait dans les règles.
+
+1.2 Service worker (frontend/public/sw.js)
+  - Un seul SW pour tout le scope "/" (mutualise offline + Firebase
+    Messaging en arrière-plan) — bon choix architectural, évite le
+    problème classique de deux SW qui se battent sur le même scope.
+  - Stratégie network-first avec fallback cache + page offline.html
+    dédiée. Le garde-fou "IS_PRODUCTION" pour ne pas intercepter le
+    trafic HMR/Turbopack en dev est une bonne pratique, bien commentée.
+  - Nettoyage des anciens caches à l'activation (cache versionné
+    "shopitech-v1").
+
+1.3 Metadata / SEO / i18n (frontend/app/[lang]/layout.tsx + proxy.ts)
+  - Metadata API Next.js utilisée correctement : manifest lié,
+    favicon.ico + apple-touch-icon (180x180, taille standard iOS)
+    déclarés, theme-color aligné sur la couleur de marque.
+  - hreflang / alternates.languages pour fr/en — bon point pour le
+    référencement une fois sur le Play Store (App Indexing).
+  - proxy.ts (renommage Next 16 de middleware.ts) redirige "/" vers
+    "/fr" ou "/en" selon cookie/Accept-Language : le start_url "/" du
+    manifest reste donc installable (répond 200 via redirection propre).
+
+1.4 Authentification adaptée au mobile packagé
+  - Auth par Bearer token (Sanctum) et non par cookie de session
+    (frontend/lib/api.ts, lib/auth.ts). C'est exactement le bon choix :
+    une auth par cookie de session aurait posé de sérieux problèmes une
+    fois packagée en TWA/WebView (partitionnement des cookies tiers,
+    SameSite). Là, rien à refaire côté auth pour le packaging natif.
+  - Le commentaire dans config/cors.php mentionne déjà explicitement
+    "Capacitor/TWA" comme cible prévue — l'intention existe, mais aucune
+    implémentation ne l'accompagne encore.
+
+1.5 Pages légales déjà rédigées
+  - politique-confidentialite et conditions-utilisation existent et
+    sont rédigées en détail (fr/en), avec mention explicite dans le code
+    "required by Google Play Console / App Store Connect before a
+    listing can go live". C'est un point que beaucoup de projets
+    oublient jusqu'au dernier moment — ici c'est anticipé.
+
+1.6 Notifications Push
+  - Firebase Cloud Messaging intégré (service worker + backend
+    Laravel avec FirebaseMessaging.php / FirebaseIdTokenVerifier.php).
+  - Le fichier de credentials Firebase (storage/app/firebase/service-
+    account.json) est correctement exclu du repo (.gitignore backend).
+
+1.7 Sécurité de base
+  - CORS configuré avec origines explicites (pas de wildcard "*"),
+    supports_credentials désactivé cohérent avec l'auth par token.
+  - Aucun secret Firebase/API sensible trouvé committé dans le repo.
+
+
+2. CE QUI MANQUE — BLOQUANT POUR GOOGLE PLAY STORE (voie TWA)
+----------------------------------------------------------------
+
+La voie standard pour publier une PWA sur le Play Store est le "Trusted
+Web Activity" (TWA), généré via Bubblewrap ou PWABuilder. Rien de tout
+cela n'existe encore :
+
+2.1 Pas de domaine de production HTTPS
+  - .env.local / .env.example pointent uniquement vers
+    http://localhost:8000 ou 127.0.0.1:8001. Aucun Dockerfile,
+    docker-compose, vercel.json ni pipeline CI/CD trouvé dans le repo.
+  - Un TWA a une exigence absolue : l'app Android doit pointer vers un
+    domaine HTTPS de production réel et stable. Sans ça, impossible de
+    générer les Digital Asset Links ni de soumettre quoi que ce soit.
+    ==> C'est le vrai bloqueur n°1, avant tout le reste.
+
+2.2 Pas de fichier Digital Asset Links
+  - Aucun /.well-known/assetlinks.json trouvé. Ce fichier doit être
+    servi sur le domaine de prod et contenir l'empreinte SHA-256 du
+    certificat de signature Android — il ne peut être généré qu'une
+    fois le domaine de prod ET le keystore Android en place.
+
+2.3 Pas de projet Android (TWA) généré
+  - Aucune trace de Bubblewrap (twa-manifest.json), ni de projet
+    Android Studio/Gradle. C'est l'étape qui empaquette réellement
+    l'app en .aab pour l'upload sur Play Console.
+
+2.4 Manifest.json incomplet pour une soumission "propre"
+  - Champs recommandés absents : "id" (identifiant stable de l'app web,
+    évite les doublons Play Store si l'URL change), "categories",
+    "lang", "dir", "screenshots" (recommandés par Bubblewrap/PWABuilder
+    pour préremplir la fiche Play Store), "shortcuts" (facultatif mais
+    valorisé par l'audit PWA Lighthouse).
+
+2.5 Assets et formulaires Play Console (rien de spécifique au code, mais
+    à préparer en parallèle) :
+  - Feature graphic (1024x500), captures d'écran par form factor,
+    icône haute résolution 512x512 (déjà présente, réutilisable),
+    formulaire "Data safety" (déclaration des données collectées —
+    la politique de confidentialité existante servira de base),
+    questionnaire de classification du contenu, compte développeur
+    Google Play (25 $ à vie si pas déjà fait).
+
+2.6 Pas de rate limiting visible sur l'API (routes/api.php)
+  - Pas bloquant pour la validation store, mais recommandé avant une
+    mise en production publique (throttle middleware Laravel).
+
+
+3. CE QUI MANQUE — BLOQUANT POUR L'APPLE APP STORE
+-----------------------------------------------------
+
+3.1 Contrainte Apple à connaître AVANT de se lancer
+  - Apple refuse historiquement (guideline 4.2 "Minimum Functionality")
+    les apps qui ne sont qu'un simple wrapper de site web sans valeur
+    ajoutée native. Une TWA "à l'Android" n'existe pas sur iOS. Pour
+    passer la revue Apple, il faut soit :
+      a) empaqueter via Capacitor (ou équivalent) en ajoutant de vraies
+         capacités natives (push APNs natif, partage natif, biométrie,
+         etc.) — travail de dev supplémentaire réel, pas cosmétique ;
+      b) soit renoncer à l'App Store et distribuer via "Ajouter à
+         l'écran d'accueil" depuis Safari — depuis iOS 16.4, les PWA
+         installées supportent même les push notifications web. C'est
+         gratuit, plus rapide, et évite la revue Apple, mais moins
+         visible qu'une fiche App Store.
+  - Il faut trancher ce choix avec le porteur de produit avant
+    d'investir du temps dev : ce n'est pas qu'une question technique.
+
+3.2 Rien n'existe encore côté iOS
+  - Aucun projet Capacitor/Xcode dans le repo.
+  - Metadata iOS incomplète dans layout.tsx : pas de bloc
+    "appleWebApp" (Next.js Metadata API) donc pas de meta
+    apple-mobile-web-app-capable / apple-mobile-web-app-status-bar-style
+    — sans ça, une PWA ajoutée à l'écran d'accueil iOS s'ouvre parfois
+    encore dans Safari au lieu du mode standalone, et n'a pas d'écran de
+    démarrage (splash screen) natif.
+  - Pas de compte développeur Apple mentionné (99 $/an), ni de
+    App Store Connect, ni de certificats de signature/push APNs.
+
+
+4. POINTS DE SÉCURITÉ / CONFORMITÉ À TRAITER AVANT SOUMISSION
+-----------------------------------------------------------------
+
+4.1 Stockage du token en localStorage (frontend/lib/auth.ts)
+  - Choix assumé et commenté dans le code, cohérent pour une PWA web
+    pure. Mais si le passage à un wrapper natif (Capacitor) se
+    confirme, il vaut mieux migrer vers un stockage sécurisé natif
+    (Keychain/Keystore via un plugin Capacitor) plutôt que localStorage,
+    plus exposé au XSS.
+
+4.2 APP_DEBUG=true par défaut (backend/.env.example)
+  - Normal en local, mais à vérifier explicitement dans le futur .env
+    de production (doit être "false" ; sinon fuite de stack traces).
+
+4.3 CORS_ALLOWED_ORIGINS encore sur localhost uniquement
+  - À mettre à jour avec le(s) domaine(s) de production réels dès
+    qu'ils existent (le code le prévoit déjà via variable d'env, donc
+    c'est une simple configuration, pas un changement de code).
+
+4.4 next.config.ts : remotePatterns limité à localhost/127.0.0.1
+  - Idem : à étendre au domaine d'API de production, sinon
+    next/image refusera d'optimiser les images produits en prod.
+
+
+5. PLAN D'ACTION PRIORISÉ
+-----------------------------
+
+Phase 0 — Décisions produit (à trancher avant tout code)
+  1. Choisir la stratégie iOS : Capacitor natif vs PWA Safari seule
+     (App Store ou non). Impacte tout le reste du planning iOS.
+  2. Nom de domaine de production définitif (obligatoire pour Android).
+
+Phase 1 — Mise en production web (préalable absolu aux deux stores)
+  3. Héberger frontend + backend sur un domaine HTTPS stable
+     (Vercel pour le Next.js par ex., + hébergeur PHP/Laravel avec
+     HTTPS pour l'API).
+  4. Mettre à jour CORS_ALLOWED_ORIGINS, next.config.ts remotePatterns,
+     NEXT_PUBLIC_API_URL, APP_DEBUG=false avec les vraies valeurs de prod.
+  5. Compléter manifest.json : "id", "categories", "lang", "dir",
+     idéalement "screenshots".
+  6. Ajouter le bloc Metadata "appleWebApp" dans layout.tsx (meta iOS
+     standalone + status bar).
+  7. Faire tourner Lighthouse PWA audit en prod pour confirmer
+     l'installabilité à 100%.
+
+Phase 2 — Android / Play Store
+  8. Générer le projet TWA avec Bubblewrap (ou PWABuilder) à partir du
+     manifest de prod.
+  9. Générer le keystore de signature, récupérer l'empreinte SHA-256,
+     publier /.well-known/assetlinks.json sur le domaine.
+  10. Créer le compte développeur Google Play, remplir fiche store
+      (captures, feature graphic, Data safety form en s'appuyant sur
+      la politique de confidentialité déjà rédigée).
+  11. Build .aab, upload en test interne, puis production.
+
+Phase 3 — iOS / App Store (si option Capacitor retenue)
+  12. Initialiser le projet Capacitor iOS, intégrer au moins une
+      fonctionnalité native réelle (push APNs, partage natif...) pour
+      satisfaire la guideline 4.2.
+  13. Compte développeur Apple, certificats, App Store Connect,
+      captures d'écran, App Privacy "nutrition label" (basé sur la
+      politique de confidentialité existante).
+  14. Soumission à la revue Apple (prévoir des allers-retours, la
+      revue humaine peut rejeter pour des raisons subjectives).
+
+  (Si option "PWA Safari seule" retenue à la place : il suffit de
+  finaliser la Phase 1, rien de plus n'est requis côté store.)
+
+
+6. RÉSUMÉ EN UNE PHRASE
+--------------------------
+La fondation PWA (manifest, service worker, icônes, auth par token,
+pages légales) est du travail sérieux et bien pensé pour un futur
+packaging natif ; mais tout ce qui est spécifique aux stores eux-mêmes
+— domaine de production, TWA Android, Digital Asset Links, projet iOS,
+comptes développeur — reste entièrement à faire, et c'est un chantier
+distinct du développement web déjà réalisé.
+================================================================

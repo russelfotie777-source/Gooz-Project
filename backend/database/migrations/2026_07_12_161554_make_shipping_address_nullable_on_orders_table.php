@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         // shipping_address doesn't apply to "retrait" (pickup) orders, so it
-        // can no longer be a required column. Raw SQL avoids a doctrine/dbal
-        // dependency just for this column-type change.
-        DB::statement('ALTER TABLE orders MODIFY shipping_address TEXT NULL');
+        // can no longer be a required column. NOT NULL is a real constraint
+        // SQLite enforces too — ->change() works natively on both without
+        // doctrine/dbal on this Laravel version (a MySQL-only raw ALTER
+        // MODIFY here would leave the column still NOT NULL under the test
+        // suite's SQLite database, an actual schema gap, not a harmless
+        // skip).
+        Schema::table('orders', function (Blueprint $table) {
+            $table->text('shipping_address')->nullable()->change();
+        });
     }
 
     /**
@@ -21,6 +28,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE orders MODIFY shipping_address TEXT NOT NULL');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->text('shipping_address')->nullable(false)->change();
+        });
     }
 };

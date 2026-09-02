@@ -39,6 +39,7 @@ export interface Category {
   slug: string;
   image: string | null;
   is_active: boolean;
+  updated_at: string;
 }
 
 export interface ProductImage {
@@ -92,6 +93,7 @@ export interface AuthResponse {
 export interface Product {
   id: number;
   name: string;
+  slug: string;
   description: string | null;
   /** Cheapest variant's effective price (promo if on sale, else base). Null if the product has no variants loaded/at all. */
   price_from: number | null;
@@ -103,6 +105,7 @@ export interface Product {
   variants: ProductVariant[];
   stock_quantity?: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Banner {
@@ -118,6 +121,14 @@ export interface Banner {
   starts_at: string;
   ends_at: string;
   is_active: boolean;
+}
+
+export interface Announcement {
+  id: number;
+  text: string;
+  icon: string | null;
+  link_url: string | null;
+  position: number;
 }
 
 interface HomepageSectionBase {
@@ -139,6 +150,12 @@ export type HomepageSection =
   | (HomepageSectionBase & { content_type: "products"; products: Product[] })
   | (HomepageSectionBase & { content_type: "categories"; categories: Category[] })
   | (HomepageSectionBase & { content_type: "brands"; brands: Brand[] });
+
+export interface Favorite {
+  id: number;
+  product: Product;
+  created_at: string;
+}
 
 // Named AppNotification, not Notification — that name is already the
 // browser's own global (Notification API), used elsewhere in lib/firebase.

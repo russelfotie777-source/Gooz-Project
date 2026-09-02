@@ -30,6 +30,13 @@ class AuthController extends Controller
             'password' => Hash::make($request->validated('password')),
         ]);
 
+        // is_active/role/status aren't mass-assignable and are never set
+        // above — without this, UserResource below would serialize them as
+        // null in the signup response (the row itself is fine, only this
+        // in-memory copy is missing the DB's own defaults). Same fix as
+        // social() just above.
+        $user->refresh();
+
         $token = $user->createToken($request->userAgent() ?? 'api')->plainTextToken;
 
         return response()->json([
@@ -99,6 +106,14 @@ class AuthController extends Controller
                     'firebase_uid' => $uid,
                     'auth_provider' => $provider,
                 ]);
+                // is_active isn't mass-assignable and was never set above, so
+                // without this the in-memory $user still has it unset/null
+                // right after create() — the is_active check just below would
+                // then reject every brand-new signup as "suspended", even
+                // though the row itself correctly got the column's DB
+                // default. refresh() pulls that (and any other DB-computed
+                // default) back in.
+                $user->refresh();
             } catch (QueryException $e) {
                 // Unique constraint on `email` — another account (a
                 // different firebase_uid) already claimed it.

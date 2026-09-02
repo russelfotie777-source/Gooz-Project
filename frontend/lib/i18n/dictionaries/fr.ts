@@ -33,14 +33,9 @@ const fr = {
     back: "Retour",
     info: "Informations",
     categories: "Catégories rapides",
-    quickCategories: [
-      "PROMOTION !!!",
-      "BEST SELLER",
-      "BEST SELLER",
-      "ELECTROMENAGER",
-      "SECURITE",
-      "INFORMATIQUE",
-    ],
+    toggleToDark: "Activer le mode sombre",
+    toggleToLight: "Activer le mode clair",
+    announcementBrand: "Shopitech — Paiement Mobile Money sécurisé • Livraison partout au Cameroun",
   },
   bottomNav: {
     home: "Accueil",
@@ -335,6 +330,8 @@ const fr = {
         "Une erreur technique nous empêche de confirmer le statut de votre paiement pour le moment. Si vous avez bien payé, votre commande est en sécurité — réessayez dans un instant.",
       failedTitle: "Le paiement n'a pas abouti",
       failedSubtitle: "Votre commande a bien été enregistrée, mais le paiement n'a pas pu être confirmé.",
+      retryPayment: "Réessayer le paiement",
+      retryPaymentError: "Impossible de relancer le paiement. Réessayez.",
       contactSupport: "Contactez-nous depuis votre profil pour obtenir de l'aide.",
       viewOrder: "Voir ma commande",
     },
@@ -427,6 +424,8 @@ const fr = {
     paymentHistorySubtitle: "Consulter tous vos anciens paiements",
     orderHistory: "Historique des commandes",
     orderHistorySubtitle: "Consulter toutes vos anciennes commandes",
+    favoriteProducts: "Mes favoris",
+    favoriteProductsSubtitle: "Retrouver les produits que vous avez aimés",
     contactUs: "Nous contacter",
     helpNeeds: "Besoins d'aide",
     privacyPolicy: "Politique de confidentialité",
@@ -559,6 +558,9 @@ const fr = {
     deliveryFee: "Frais de livraison",
     coupon: "Coupon",
     genericError: "Impossible de charger vos commandes.",
+    payNow: "Payer maintenant",
+    payNowLoading: "Redirection...",
+    payNowError: "Impossible de relancer le paiement. Réessayez.",
   },
   payments: {
     title: "Historique des paiements",
@@ -635,6 +637,16 @@ const fr = {
     markRead: "Marquer comme lu",
     markAllRead: "Tout marquer comme lu",
   },
+  favorites: {
+    title: "Mes favoris",
+    subtitle: "Retrouvez ici tous les produits que vous avez aimés",
+    loading: "Chargement...",
+    loginPrompt: "Connectez-vous pour voir vos favoris.",
+    login: "Se connecter",
+    genericError: "Impossible de charger vos favoris pour le moment. Vérifiez votre connexion et réessayez.",
+    empty: "Vous n'avez aucun produit favori pour le moment.",
+    emptyCta: "Parcourir le catalogue",
+  },
   errorBoundary: {
     title: "Un problème est survenu",
     subtitle: "Le chargement de cette page a échoué. Vérifiez votre connexion et réessayez.",
@@ -648,6 +660,16 @@ const fr = {
   },
   loadingPage: {
     label: "Chargement...",
+  },
+  // Generated meta descriptions for pages with no admin-editable
+  // description of their own (categories) or a description too short/absent
+  // to reuse as-is (products) — see generateMetadata in the relevant
+  // app/[lang]/**/page.tsx files.
+  seo: {
+    categoryDescription: (name: string): string =>
+      `Achetez ${name} au meilleur prix sur Shopitech. Livraison rapide et paiement sécurisé.`,
+    productDescriptionFallback: (name: string): string =>
+      `${name} disponible sur Shopitech, au meilleur prix, avec livraison rapide et paiement sécurisé.`,
   },
 };
 

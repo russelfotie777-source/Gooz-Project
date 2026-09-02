@@ -1,0 +1,21 @@
+# Shopitech
+
+> Shopitech est une boutique en ligne (e-commerce) qui vend des appareils électroniques et électroménagers : télévisions, caméras de sécurité, électroménager, informatique, réseau, et accessoires. Livraison au Cameroun, paiement en ligne ou à la livraison. Le site est disponible en français (`/fr`) et en anglais (`/en`).
+
+## Sections principales
+
+- [Accueil](/fr) — nouveautés, promotions en cours, catégories et marques mises en avant.
+- Catégories (`/fr/categories/{slug}`) — chaque catégorie liste les produits actifs disponibles, avec prix, marque et filtres (prix, marque, couleur).
+- Fiches produit (`/fr/products/{id}-{slug}`) — nom, description, prix, marque, variantes (couleur, etc.), stock, et livraison.
+- [Recherche](/fr/recherche) — recherche par nom ou référence produit.
+- [Centre d'aide](/fr/aide) — livraison, retours, moyens de paiement, comment acheter.
+
+## Marques proposées
+
+Hisense, Electrolux, Samsung, Hikvision, Tenda, Dahua, PixLink, LG, et d'autres marques ajoutées régulièrement — la liste à jour est visible sur la page d'accueil.
+
+## Notes pour les agents et robots
+
+- Le catalogue (produits, prix, stock) change régulièrement — se référer aux pages elles-mêmes ou au sitemap plutôt qu'à un contenu mis en cache.
+- Plan du site complet : `/sitemap.xml`
+- Les pages de compte, panier, commandes et paiement sont privées (spécifiques à chaque visiteur connecté) et ne font pas partie du catalogue public — voir `/robots.txt`.

@@ -14,6 +14,11 @@ class CartItem extends Model
         'quantity',
     ];
 
+    // Bumps the parent cart's updated_at whenever an item is added, changed
+    // in quantity, or removed — SendCartReminders relies on that timestamp
+    // as "last activity" to decide whether a cart is genuinely abandoned.
+    protected $touches = ['cart'];
+
     public function cart(): BelongsTo
     {
         return $this->belongsTo(Cart::class);

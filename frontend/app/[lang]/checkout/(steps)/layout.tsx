@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
 import { CheckoutProvider } from "@/components/Checkout/CheckoutContext";
+import { NOINDEX } from "@/lib/seo";
+
+export const metadata: Metadata = { robots: NOINDEX };
 
 // CheckoutProvider fetches the real cart itself (client-side, needs the
 // localStorage token) and keeps form/selection state alive across the 4

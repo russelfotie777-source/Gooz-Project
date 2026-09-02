@@ -14,7 +14,7 @@
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--color-white);
+  background: var(--color-elevated);
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
   padding: 22px;
@@ -115,7 +115,7 @@
 }
 
 .tabActive {
-  background: var(--color-white);
+  background: var(--color-elevated);
   color: var(--color-text);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
@@ -165,19 +165,19 @@
 .input,
 .select,
 .textarea {
-  border: 1px solid #e2e2e9;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 11px 13px;
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--color-text);
-  background: var(--color-white);
+  background: var(--color-bg);
   outline: none;
 }
 
 .input::placeholder,
 .textarea::placeholder {
-  color: rgba(0, 0, 0, 0.3);
+  color: var(--color-text-muted);
 }
 
 .select {
@@ -196,14 +196,14 @@
 .error {
   font-family: var(--font-body);
   font-size: 13px;
-  color: #e0433c;
+  color: var(--color-danger);
   margin: 0;
 }
 
 .success {
   font-family: var(--font-body);
   font-size: 13px;
-  color: #1a9c5c;
+  color: var(--color-success);
   margin: 0;
 }
 
@@ -342,11 +342,11 @@
 
 .statusResolved {
   background: rgba(26, 156, 92, 0.15);
-  color: #1a9c5c;
+  color: var(--color-success);
 }
 
 .statusClosed {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--color-placeholder);
   color: var(--color-text-muted);
 }
 

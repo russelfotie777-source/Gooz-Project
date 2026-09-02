@@ -11,12 +11,16 @@ class Cart extends Model
     protected $fillable = [
         'user_id',
         'is_active',
+        'reminder_count',
+        'last_reminder_at',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'reminder_count' => 'integer',
+            'last_reminder_at' => 'datetime',
         ];
     }
 
