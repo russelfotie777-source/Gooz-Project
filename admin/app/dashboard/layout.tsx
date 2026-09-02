@@ -73,17 +73,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <LogoWordmark className="text-white" />
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 overflow-y-auto px-3 py-5">
           {visibleSections.map((section) => {
             const isOpen = openSections[section.title];
             return (
-              <div key={section.title} className="mb-1">
+              <div key={section.title} className="mb-6 last:mb-0">
                 {section.title !== "Tableau de bord" && (
                   <button
                     onClick={() =>
                       setOpenSections((prev) => ({ ...prev, [section.title]: !prev[section.title] }))
                     }
-                    className="flex w-full items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-white/30 transition-colors hover:text-white/50"
+                    className="mb-1 flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/30 transition-colors hover:text-white/50"
                   >
                     {section.title}
                     <ChevronDown
@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
 
                 {isOpen && (
-                  <ul className="flex flex-col gap-0.5">
+                  <ul className="flex flex-col gap-1">
                     {section.items.map((item) => {
                       const isActive = pathname === item.href;
                       const Icon = item.icon;
@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <li key={item.href}>
                           <Link
                             href={item.href}
-                            className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                            className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                               isActive
                                 ? "bg-brand-orange text-white shadow-lg shadow-brand-orange/20"
                                 : "text-white/50 hover:bg-white/5 hover:text-white"
