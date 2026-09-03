@@ -39,7 +39,7 @@ class RolePermission extends Model
      * User::hasPermission()) so they're deliberately not configurable here
      * — that would risk an admin locking themselves out.
      */
-    public const CONFIGURABLE_ROLES = ['manager', 'staff', 'stagiaire'];
+    public const CONFIGURABLE_ROLES = ['manager', 'staff', 'stagiaire', 'comptable'];
 
     protected $fillable = [
         'role',

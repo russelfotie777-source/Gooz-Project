@@ -14,6 +14,7 @@ const ROLE_LABELS: Record<string, string> = {
   manager: "Manager",
   staff: "Staff",
   stagiaire: "Stagiaire",
+  comptable: "Comptable",
 };
 
 const PERMISSION_LABELS: Record<string, string> = {
