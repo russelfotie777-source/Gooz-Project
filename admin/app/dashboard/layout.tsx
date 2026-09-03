@@ -7,6 +7,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { apiFetch, clearToken } from "@/lib/api";
 import { LogoWordmark } from "@/components/logo";
 import { NAV_SECTIONS } from "@/lib/nav";
+import { canAccessAdminPanel } from "@/lib/roles";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       apiFetch<{ data: { id: number; role: string } }>("/me")
         .then(({ data: user }) => {
           if (cancelled) return;
-          if (user.role !== "admin") {
+          if (!canAccessAdminPanel(user.role)) {
             clearToken();
             router.replace("/login");
             return;
