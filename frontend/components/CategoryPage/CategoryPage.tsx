@@ -48,7 +48,7 @@ export default async function CategoryPage({ categorySlug, page }: CategoryPageP
 
   return (
     <div className={styles.page}>
-      <Header cartCount={2} />
+      <Header />
 
       <main className={styles.main}>
         <HeroSection categories={categories} banners={banners} />

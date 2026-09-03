@@ -21,7 +21,7 @@ class UpdateBannerRequest extends FormRequest
             'link_type' => ['sometimes', 'required', Rule::in(['external', 'product'])],
             'link_url' => [Rule::requiredIf($this->link_type === 'external'), 'nullable', 'url', 'max:2048'],
             'product_id' => [Rule::requiredIf($this->link_type === 'product'), 'nullable', 'integer', 'exists:products,id'],
-            'location' => ['sometimes', 'required', Rule::in(['homepage', 'category', 'search', 'checkout'])],
+            'location' => ['sometimes', 'required', Rule::in(['homepage', 'homepage_ad_1', 'homepage_ad_2', 'category', 'search', 'checkout'])],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'is_active' => ['boolean'],

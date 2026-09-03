@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import MaintenanceIllustration from "@/components/MaintenanceIllustration/MaintenanceIllustration";
 import styles from "./error.module.css";
 
 // The single safety net for every server page under app/[lang]/ (home,
@@ -26,6 +27,7 @@ export default function RootError({
 
   return (
     <div className={styles.page}>
+      <MaintenanceIllustration className={styles.illustration} />
       <h1 className={styles.title}>{dict.errorBoundary.title}</h1>
       <p className={styles.subtitle}>{dict.errorBoundary.subtitle}</p>
       <div className={styles.actions}>

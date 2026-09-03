@@ -1,51 +1,60 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { resolveMediaUrl } from "@/lib/api";
+import type { Banner } from "@/lib/types";
 import styles from "./AdBannerCarousel.module.css";
 
-type Transition = "fade" | "reel" | "slide";
-
-interface Slide {
-  src: string;
-  transition: Transition;
+interface AdBannerCarouselProps {
+  /** Admin-managed (location homepage_ad_1/2 — see Admin\BannerController).
+   *  As many as an admin adds; an empty list renders nothing, same as the
+   *  main hero when it has no active banners. */
+  banners: Banner[];
 }
 
-// Hardcoded, like the ad-column slots themselves (see HeroSection's own
-// comment) — there's no admin/CMS wiring for this slot yet. Each slide
-// carries its own entrance style rather than one shared transition: the
-// 2nd slide rolls in like a slot-machine reel, the 3rd slides in from the
-// left — see the matching .enterReel/.enterSlide keyframes below.
-const SLIDES: Slide[] = [
-  { src: "/images/bann2.webp", transition: "fade" },
-  { src: "/images/bann3.jpg", transition: "reel" },
-  { src: "/images/bann4.jpg", transition: "slide" },
-];
-
 const SLIDE_MS = 4500;
+// Half of .image's CSS transition-duration (see AdBannerCarousel.module.css)
+// — the image only swaps once fully faded out, so there's never a hard cut
+// or a flash of the frame's bare background between two slides.
+const FADE_MS = 250;
 
-const TRANSITION_CLASS: Record<Transition, string> = {
-  fade: styles.enterFade,
-  reel: styles.enterReel,
-  slide: styles.enterSlide,
-};
-
-export default function AdBannerCarousel() {
+export default function AdBannerCarousel({ banners }: AdBannerCarouselProps) {
   const [index, setIndex] = useState(0);
+  const [displayIndex, setDisplayIndex] = useState(0);
+  const [fading, setFading] = useState(false);
+  const slideCount = banners.length;
 
   useEffect(() => {
-    if (SLIDES.length <= 1) return;
-    const timer = window.setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), SLIDE_MS);
-    return () => window.clearInterval(timer);
-  }, []);
+    setIndex(0);
+    setDisplayIndex(0);
+  }, [banners]);
 
-  const slide = SLIDES[index];
+  useEffect(() => {
+    if (index === displayIndex) return;
+    setFading(true);
+    const timer = window.setTimeout(() => {
+      setDisplayIndex(index);
+      setFading(false);
+    }, FADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [index, displayIndex]);
+
+  useEffect(() => {
+    if (slideCount <= 1) return;
+    const timer = window.setInterval(() => setIndex((i) => (i + 1) % slideCount), SLIDE_MS);
+    return () => window.clearInterval(timer);
+  }, [slideCount]);
+
+  const banner = banners[displayIndex];
+  if (!banner) return null;
 
   return (
     <div className={styles.frame}>
-      {/* key={index} forces a remount on every advance, which is what makes
-          the entrance keyframe actually replay instead of the src just
-          swapping in place. */}
-      <img key={index} src={slide.src} alt="" className={`${styles.image} ${TRANSITION_CLASS[slide.transition]}`} />
+      <img
+        src={resolveMediaUrl(banner.image)}
+        alt={banner.title}
+        className={`${styles.image} ${fading ? styles.imageFading : ""}`}
+      />
     </div>
   );
 }

@@ -178,9 +178,11 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
         <div className={styles.desktopSticky}>
           <div className={styles.mainRow}>
+            {/* Not needed for now — see the mobile menu button below too.
             <button type="button" className={styles.menuButton} aria-label={dict.header.menu}>
               <img src="/icon/header/hamburger.svg" alt="" className={styles.menuIcon} />
             </button>
+            */}
 
             <LocaleLink href="/" aria-label={dict.header.catalogueTitle}>
               <img
@@ -374,9 +376,11 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
             <div className={styles.mobileSticky}>
               <div className={styles.mobileTopRow}>
+                {/* Not needed for now — see the desktop menu button above too.
                 <button type="button" className={styles.mobileMenuButton} aria-label={dict.header.menu}>
                   <img src="/icon/header-mobile/menu.svg" alt="" className={styles.mobileMenuIcon} />
                 </button>
+                */}
 
                 <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
 

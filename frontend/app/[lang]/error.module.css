@@ -9,6 +9,12 @@
   text-align: center;
 }
 
+.illustration {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 4px;
+}
+
 .title {
   font-family: var(--font-heading);
   font-weight: 700;

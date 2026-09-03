@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Sora, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import Script from "next/script";
+import AppDownloadPromo from "@/components/AppDownloadPromo/AppDownloadPromo";
 import PushNotificationRegistrar from "@/components/PushNotificationRegistrar/PushNotificationRegistrar";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar/ServiceWorkerRegistrar";
 import StructuredData from "@/components/StructuredData/StructuredData";
@@ -142,6 +143,7 @@ export default async function RootLayout({
           {children}
           <WhatsAppButton />
           <SupportButton />
+          <AppDownloadPromo />
           <ServiceWorkerRegistrar />
           <PushNotificationRegistrar />
           <ToastProvider />

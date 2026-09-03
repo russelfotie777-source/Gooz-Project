@@ -36,6 +36,7 @@ const PERMISSION_LABELS: Record<string, string> = {
   "manage-accounting": "Gérer la comptabilité",
   "manage-company-profile": "Gérer le profil entreprise",
   "manage-announcements": "Gérer les annonces",
+  "manage-app-promo": "Gérer le widget de téléchargement app",
 };
 
 export default function RolesPermissionsPage() {
