@@ -6,12 +6,13 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
 
-type StaffRole = "super_admin" | "manager" | "staff" | "stagiaire" | "delivery";
+type StaffRole = "super_admin" | "manager" | "staff" | "stagiaire" | "comptable" | "delivery";
 
 const ROLES: { value: StaffRole; label: string }[] = [
   { value: "stagiaire", label: "Stagiaire" },
   { value: "staff", label: "Staff" },
   { value: "manager", label: "Manager" },
+  { value: "comptable", label: "Comptable" },
   { value: "delivery", label: "Driver" },
   { value: "super_admin", label: "Super admin" },
 ];
