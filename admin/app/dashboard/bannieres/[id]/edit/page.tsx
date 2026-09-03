@@ -15,7 +15,7 @@ type BannerDetail = {
   link_type: "external" | "product";
   link_url: string | null;
   product: { id: number; name: string } | null;
-  location: "homepage" | "category" | "search" | "checkout";
+  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout";
   starts_at: string | null;
   ends_at: string | null;
   is_active: boolean;

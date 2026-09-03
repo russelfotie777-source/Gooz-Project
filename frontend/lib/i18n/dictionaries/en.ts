@@ -72,6 +72,14 @@ const en: Dictionary = {
   whatsapp: {
     label: "Chat with us on WhatsApp",
   },
+  appPromo: {
+    kicker: "Welcome offer",
+    title: "Get the app",
+    highlight: "FREE delivery",
+    suffix: "on your 1st order!",
+    cta: "Install now",
+    close: "Close",
+  },
   home: {
     browseByCategory: "Browse by category",
     categoriesNav: "Categories",
@@ -639,15 +647,19 @@ const en: Dictionary = {
     emptyCta: "Browse the catalogue",
   },
   errorBoundary: {
-    title: "Something went wrong",
-    subtitle: "This page failed to load. Check your connection and try again.",
+    title: "This page is under maintenance",
+    subtitle:
+      "Looks like there's a small technical hiccup on our end. The rest of the store is working normally — please try again in a moment.",
     retry: "Try again",
     backHome: "Back to home",
+    browseCatalog: "Search for a product",
   },
   notFoundPage: {
-    title: "Page not found",
-    subtitle: "The page you're looking for doesn't exist anymore.",
+    title: "This page is under maintenance",
+    subtitle:
+      "The page you're looking for isn't available right now — it may have moved, or it's being updated. The rest of the store is working normally.",
     backHome: "Back to home",
+    browseCatalog: "Search for a product",
   },
   loadingPage: {
     label: "Loading...",

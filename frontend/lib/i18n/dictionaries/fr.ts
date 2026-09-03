@@ -77,6 +77,14 @@ const fr = {
   whatsapp: {
     label: "Discuter avec nous sur WhatsApp",
   },
+  appPromo: {
+    kicker: "Offre de bienvenue",
+    title: "Téléchargez l'appli",
+    highlight: "Livraison GRATUITE",
+    suffix: "sur votre 1ère commande !",
+    cta: "Installer maintenant",
+    close: "Fermer",
+  },
   home: {
     browseByCategory: "Parcourir par catégorie",
     categoriesNav: "Catégories",
@@ -648,15 +656,19 @@ const fr = {
     emptyCta: "Parcourir le catalogue",
   },
   errorBoundary: {
-    title: "Un problème est survenu",
-    subtitle: "Le chargement de cette page a échoué. Vérifiez votre connexion et réessayez.",
+    title: "Cette page est en maintenance",
+    subtitle:
+      "On dirait qu'il y a un petit souci technique de notre côté. Le reste de la boutique fonctionne normalement — réessayez dans un instant.",
     retry: "Réessayer",
     backHome: "Retour à l'accueil",
+    browseCatalog: "Rechercher un produit",
   },
   notFoundPage: {
-    title: "Page introuvable",
-    subtitle: "La page que vous cherchez n'existe pas ou plus.",
+    title: "Cette page est en maintenance",
+    subtitle:
+      "La page que vous cherchez n'est pas disponible pour le moment — elle a peut-être été déplacée, ou est en cours de mise à jour. Le reste de la boutique fonctionne normalement.",
     backHome: "Retour à l'accueil",
+    browseCatalog: "Rechercher un produit",
   },
   loadingPage: {
     label: "Chargement...",

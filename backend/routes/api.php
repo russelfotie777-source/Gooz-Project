@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AddressController as AdminAddressController;
 use App\Http\Controllers\Admin\AnnouncementController as AdminAnnouncementController;
+use App\Http\Controllers\Admin\AppPromoImageController as AdminAppPromoImageController;
+use App\Http\Controllers\Admin\AppPromoSettingController as AdminAppPromoSettingController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\UserNotificationController as AdminUserNotificationController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AppPromoController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\BrandController;
@@ -145,6 +148,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/banners', [BannerController::class, 'index']);
 
     Route::get('/announcements', [AnnouncementController::class, 'index']);
+
+    Route::get('/app-promo', [AppPromoController::class, 'show']);
 
     Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
 
@@ -310,6 +315,16 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'can:manage-cart-settings'])->group(function () {
         Route::get('/admin/cart-settings', [AdminCartSettingController::class, 'show']);
         Route::put('/admin/cart-settings', [AdminCartSettingController::class, 'update']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-app-promo'])->group(function () {
+        Route::get('/admin/app-promo', [AdminAppPromoSettingController::class, 'show']);
+        Route::put('/admin/app-promo', [AdminAppPromoSettingController::class, 'update']);
+
+        Route::get('/admin/app-promo/images', [AdminAppPromoImageController::class, 'index']);
+        Route::post('/admin/app-promo/images', [AdminAppPromoImageController::class, 'store']);
+        Route::patch('/admin/app-promo/images/{appPromoImage}', [AdminAppPromoImageController::class, 'update']);
+        Route::delete('/admin/app-promo/images/{appPromoImage}', [AdminAppPromoImageController::class, 'destroy']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-company-profile'])->group(function () {

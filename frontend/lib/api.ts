@@ -3,6 +3,7 @@ import type {
   Announcement,
   ApiPaymentMethod,
   AppNotification,
+  AppPromoSetting,
   AuthResponse,
   Banner,
   Brand,
@@ -336,6 +337,11 @@ export async function getBanners(location?: Banner["location"]): Promise<Banner[
 
 export async function getAnnouncements(): Promise<Announcement[]> {
   const { data } = await apiFetch<ApiCollection<Announcement>>("/announcements", CATALOG_CACHE);
+  return data;
+}
+
+export async function getAppPromo(): Promise<AppPromoSetting> {
+  const { data } = await apiFetch<ApiResource<AppPromoSetting>>("/app-promo", CATALOG_CACHE);
   return data;
 }
 

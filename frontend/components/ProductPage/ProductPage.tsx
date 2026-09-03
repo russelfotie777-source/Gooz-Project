@@ -14,7 +14,7 @@ interface ProductPageProps {
 export default function ProductPage({ product, recommendedProducts }: ProductPageProps) {
   return (
     <div className={styles.page}>
-      <Header cartCount={2} variant="detail" />
+      <Header variant="detail" />
 
       <main className={styles.main}>
         <div className={styles.adBanner}>
