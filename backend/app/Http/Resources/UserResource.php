@@ -16,6 +16,7 @@ class UserResource extends JsonResource
             'phone_verified_at' => $this->phone_verified_at,
             'email' => $this->email,
             'role' => $this->role,
+            'permissions' => $this->when($this->isAdmin(), fn () => $this->allPermissions()),
             'is_active' => $this->is_active,
             'status' => $this->status,
             'status_reason' => $this->status_reason,

@@ -41,7 +41,7 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'super_admin', 'manager', 'staff', 'stagiaire'], true);
+        return in_array($this->role, ['admin', 'super_admin', 'manager', 'staff', 'stagiaire', 'comptable'], true);
     }
 
     /**
@@ -61,6 +61,26 @@ class User extends Authenticatable
         }
 
         return RolePermission::where('role', $this->role)->where('permission', $permission)->exists();
+    }
+
+    /**
+     * Every permission this user actually holds — used by the admin frontend
+     * to hide sidebar links the user can't use, instead of letting them
+     * click through to a page that fails to load.
+     *
+     * @return list<string>
+     */
+    public function allPermissions(): array
+    {
+        if (in_array($this->role, ['admin', 'super_admin'], true)) {
+            return RolePermission::ALL;
+        }
+
+        if (! $this->isAdmin()) {
+            return [];
+        }
+
+        return RolePermission::where('role', $this->role)->pluck('permission')->all();
     }
 
     public function carts(): HasMany

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Lock, Phone, ShieldAlert } from "lucide-react";
 import { ApiError, apiFetch, setToken } from "@/lib/api";
 import { LogoWordmark } from "@/components/logo";
+import { canAccessAdminPanel } from "@/lib/roles";
 
 type LoginResponse = {
   user: { id: number; name: string; phone: string; role: string; is_active: boolean };
@@ -30,7 +31,7 @@ export default function LoginPage() {
         body: JSON.stringify({ phone, password, device_name: "admin-web" }),
       });
 
-      if (data.user.role !== "admin") {
+      if (!canAccessAdminPanel(data.user.role)) {
         setError("Ce compte n'a pas les droits administrateur.");
         return;
       }

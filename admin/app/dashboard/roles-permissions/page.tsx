@@ -14,6 +14,7 @@ const ROLE_LABELS: Record<string, string> = {
   manager: "Manager",
   staff: "Staff",
   stagiaire: "Stagiaire",
+  comptable: "Comptable",
 };
 
 const PERMISSION_LABELS: Record<string, string> = {
@@ -35,6 +36,7 @@ const PERMISSION_LABELS: Record<string, string> = {
   "manage-accounting": "Gérer la comptabilité",
   "manage-company-profile": "Gérer le profil entreprise",
   "manage-announcements": "Gérer les annonces",
+  "manage-app-promo": "Gérer le widget de téléchargement app",
 };
 
 export default function RolesPermissionsPage() {

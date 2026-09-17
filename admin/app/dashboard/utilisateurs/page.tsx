@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, Eye, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
 
-type StaffRole = "admin" | "super_admin" | "manager" | "staff" | "stagiaire" | "delivery";
+type StaffRole = "admin" | "super_admin" | "manager" | "staff" | "stagiaire" | "comptable" | "delivery";
 
 type StaffUser = {
   id: number;
@@ -17,7 +17,7 @@ type StaffUser = {
   created_at: string;
 };
 
-const ROLES: StaffRole[] = ["admin", "super_admin", "manager", "staff", "stagiaire", "delivery"];
+const ROLES: StaffRole[] = ["admin", "super_admin", "manager", "staff", "stagiaire", "comptable", "delivery"];
 
 const ROLE_LABELS: Record<StaffRole, string> = {
   admin: "Admin",
@@ -25,6 +25,7 @@ const ROLE_LABELS: Record<StaffRole, string> = {
   manager: "Manager",
   staff: "Staff",
   stagiaire: "Stagiaire",
+  comptable: "Comptable",
   delivery: "Driver",
 };
 
@@ -34,6 +35,7 @@ const ROLE_STYLES: Record<StaffRole, string> = {
   manager: "bg-violet-500/10 text-violet-400",
   staff: "bg-sky-500/10 text-sky-400",
   stagiaire: "bg-amber-500/10 text-amber-400",
+  comptable: "bg-teal-500/10 text-teal-400",
   delivery: "bg-emerald-500/10 text-emerald-400",
 };
 
