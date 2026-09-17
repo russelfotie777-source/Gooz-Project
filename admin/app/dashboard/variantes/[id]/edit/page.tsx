@@ -7,7 +7,7 @@ import { ChevronRight, ImageOff, Star, Trash2, UploadCloud } from "lucide-react"
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
 import { VariantForm, ProductOption } from "@/components/variant-form";
 
-type VariantImage = { id: number; image_url: string; is_primary: boolean };
+type VariantImage = { id: number; image_url: string; is_primary: boolean; alt_text: string | null };
 
 type Variant = {
   id: number;
@@ -85,6 +85,14 @@ export default function EditVariantPage() {
     }
   }
 
+  async function saveAltText(imageId: number, altText: string) {
+    try {
+      await apiFetch(`/images/${imageId}`, { method: "PUT", body: JSON.stringify({ alt_text: altText || null }) });
+    } catch (err) {
+      setImageError(err instanceof ApiError ? err.message : "Échec de l'enregistrement du texte alternatif.");
+    }
+  }
+
   async function deleteImage(imageId: number) {
     if (!confirm("Supprimer cette image ?")) return;
     try {
@@ -143,24 +151,34 @@ export default function EditVariantPage() {
 
             <div className="flex flex-wrap gap-4">
               {variant.images.map((image) => (
-                <div key={image.id} className="group relative h-24 w-24">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={image.image_url}
-                    alt=""
-                    className="h-24 w-24 rounded-lg object-cover ring-1 ring-white/10"
+                <div key={image.id} className="flex w-24 flex-col gap-1">
+                  <div className="group relative h-24 w-24">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={image.image_url}
+                      alt=""
+                      className="h-24 w-24 rounded-lg object-cover ring-1 ring-white/10"
+                    />
+                    {image.is_primary && (
+                      <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-orange text-white">
+                        <Star className="h-3 w-3" fill="currentColor" />
+                      </span>
+                    )}
+                    <button
+                      onClick={() => deleteImage(image.id)}
+                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <input
+                    key={image.id}
+                    defaultValue={image.alt_text ?? ""}
+                    onBlur={(e) => saveAltText(image.id, e.target.value)}
+                    placeholder="Texte alternatif"
+                    title="Texte alternatif (SEO/accessibilité) — enregistré automatiquement"
+                    className="w-24 rounded border border-white/10 bg-white/5 px-1.5 py-1 text-[10px] text-white outline-none placeholder:text-white/25 focus:border-brand-orange/60"
                   />
-                  {image.is_primary && (
-                    <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-orange text-white">
-                      <Star className="h-3 w-3" fill="currentColor" />
-                    </span>
-                  )}
-                  <button
-                    onClick={() => deleteImage(image.id)}
-                    className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
                 </div>
               ))}
 

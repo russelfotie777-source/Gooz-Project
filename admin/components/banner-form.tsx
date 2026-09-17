@@ -9,6 +9,7 @@ export type ProductOption = { id: number; name: string };
 export type BannerFormValues = {
   title: string;
   description: string;
+  show_overlay: boolean;
   link_type: "external" | "product";
   link_url: string;
   product_id: number | null;
@@ -63,6 +64,7 @@ export function BannerForm({
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [showOverlay, setShowOverlay] = useState(initial?.show_overlay ?? true);
   const [linkType, setLinkType] = useState<BannerFormValues["link_type"]>(initial?.link_type ?? "external");
   const [linkUrl, setLinkUrl] = useState(initial?.link_url ?? "");
   const [productId, setProductId] = useState<number | null>(initial?.product_id ?? null);
@@ -107,6 +109,7 @@ export function BannerForm({
     const formData = new FormData();
     formData.set("title", title);
     if (description) formData.set("description", description);
+    formData.set("show_overlay", showOverlay ? "1" : "0");
     formData.set("link_type", linkType);
     if (linkType === "external") {
       formData.set("link_url", linkUrl);
@@ -267,6 +270,27 @@ export function BannerForm({
               className={inputClass}
             />
             <p className="mt-1 text-xs text-white/30">Saisissez une description facultative pour cette bannière.</p>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-sm text-white/70">Calque du site</label>
+            <button
+              type="button"
+              onClick={() => setShowOverlay((v) => !v)}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                showOverlay ? "bg-brand-orange" : "bg-white/10"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  showOverlay ? "translate-x-5" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+            <p className="mt-1 text-xs text-white/30">
+              Désactivez si le visuel contient déjà son propre titre/bouton (le site n&apos;ajoutera alors ni voile
+              sombre ni texte par-dessus — juste l&apos;image, cliquable en entier).
+            </p>
           </div>
 
           <div>

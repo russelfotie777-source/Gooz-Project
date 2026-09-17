@@ -17,6 +17,7 @@ class StoreProductImageRequest extends FormRequest
             'image' => ['required', 'image', 'max:4096'],
             'product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'is_primary' => ['boolean'],
+            'alt_text' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

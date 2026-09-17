@@ -266,6 +266,21 @@
   margin: 0;
 }
 
+.descriptionClamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.descriptionToggle {
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--color-accent-strong);
+}
+
 .detailsRow {
   display: flex;
   flex-direction: column;
@@ -770,7 +785,14 @@
   animation: ease 0.3s;
 }
 
-@media (min-width: 1024px) {
+/* 901px, not the site's usual 1024px: Header.module.css switches to its
+   own desktop chrome (full nav, no hamburger, position:sticky) at
+   max-width:900px. Below 1024px but above that, the header was already
+   "desktop" while this component was still "mobile" — .buyRow stayed
+   position:fixed with z-index:30, which is higher than the sticky header's
+   z-index:20, so the fixed bottom buy bar rendered on top of the header as
+   the page scrolled. Matching the same breakpoint here closes that gap. */
+@media (min-width: 901px) {
   .topRow {
     flex-direction: row;
     gap: 40px;

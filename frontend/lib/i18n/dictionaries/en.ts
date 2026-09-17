@@ -169,6 +169,8 @@ const en: Dictionary = {
     variantFallbackLabel: (id: number) => `Option ${id}`,
     aboutProduct: "About this product",
     noDescription: "No description available.",
+    readMore: "Read more",
+    readLess: "Read less",
     buyNow: "Buy",
     buyNowMobile: "Buy now",
     addedToCartMessage: "Added to cart!",

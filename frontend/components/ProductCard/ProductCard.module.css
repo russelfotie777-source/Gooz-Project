@@ -49,6 +49,16 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Product photos carry the Shopitech watermark band across their top
+     edge on purpose (so a saved/shared copy is still traceable to us), but
+     a thumbnail-sized card doesn't need to show it twice next to the site's
+     own header. Zooming in — anchored low, not center — pushes the top
+     strip out of frame while cropping only a little off the bottom, so the
+     product itself (usually centered or slightly below-center) stays fully
+     visible. Doesn't affect the full photo on the product detail page,
+     which renders through its own component, not this one. */
+  transform: scale(1.25);
+  transform-origin: 50% 75%;
 }
 
 .discountTag {

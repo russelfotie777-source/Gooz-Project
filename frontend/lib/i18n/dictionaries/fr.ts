@@ -174,6 +174,8 @@ const fr = {
     variantFallbackLabel: (id: number) => `Option ${id}`,
     aboutProduct: "À propos du produit",
     noDescription: "Aucune description disponible.",
+    readMore: "Voir plus",
+    readLess: "Voir moins",
     buyNow: "Acheter",
     buyNowMobile: "Acheter maintenant",
     addedToCartMessage: "Ajouté au panier !",

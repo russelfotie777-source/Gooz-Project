@@ -177,6 +177,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('/variants/{variant}', [AdminProductVariantController::class, 'destroy']);
 
         Route::post('/products/{product}/images', [AdminProductImageController::class, 'store']);
+        Route::put('/images/{image}', [AdminProductImageController::class, 'update']);
         Route::delete('/images/{image}', [AdminProductImageController::class, 'destroy']);
 
         Route::get('/admin/stocks', [AdminStockController::class, 'index']);

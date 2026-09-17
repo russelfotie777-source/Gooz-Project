@@ -48,6 +48,7 @@ export interface ProductImage {
   /** Grid/card-sized variant (~400px) — null for images uploaded before this existed. */
   thumbnail_url: string | null;
   is_primary: boolean;
+  alt_text: string | null;
   product_variant_id: number | null;
 }
 
@@ -95,6 +96,8 @@ export interface Product {
   name: string;
   slug: string;
   description: string | null;
+  /** Short SEO summary for <meta name="description">/Open Graph — distinct from the long on-page `description`. Falls back to it when empty. */
+  meta_description: string | null;
   /** Cheapest variant's effective price (promo if on sale, else base). Null if the product has no variants loaded/at all. */
   price_from: number | null;
   reference: string;
@@ -124,6 +127,7 @@ export interface Banner {
   id: number;
   title: string;
   description: string | null;
+  show_overlay: boolean;
   image: string;
   link_url: string | null;
   link_type: "external" | "product";

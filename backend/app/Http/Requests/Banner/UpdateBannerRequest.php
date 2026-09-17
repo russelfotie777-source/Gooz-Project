@@ -17,6 +17,7 @@ class UpdateBannerRequest extends FormRequest
         return [
             'title' => ['sometimes', 'required', 'string', 'min:3', 'max:100'],
             'description' => ['nullable', 'string'],
+            'show_overlay' => ['boolean'],
             'image' => ['nullable', 'image', 'max:2048'],
             'link_type' => ['sometimes', 'required', Rule::in(['external', 'product'])],
             'link_url' => [Rule::requiredIf($this->link_type === 'external'), 'nullable', 'url', 'max:2048'],

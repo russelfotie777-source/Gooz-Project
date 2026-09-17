@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductImage\StoreProductImageRequest;
+use App\Http\Requests\ProductImage\UpdateProductImageRequest;
 use App\Http\Resources\ProductImageResource;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -37,9 +38,25 @@ class ProductImageController extends Controller
             'image_url' => Storage::disk('public')->url($detailPath),
             'thumbnail_url' => Storage::disk('public')->url($thumbnailPath),
             'is_primary' => $request->boolean('is_primary'),
+            'alt_text' => $request->validated('alt_text'),
         ]);
 
         return new ProductImageResource($image);
+    }
+
+    // Lets an admin fix an alt text typo or swap which photo is primary
+    // without deleting and re-uploading the file itself.
+    public function update(UpdateProductImageRequest $request, ProductImage $image): ProductImageResource
+    {
+        $data = $request->validated();
+
+        if ($request->boolean('is_primary')) {
+            $image->product->images()->update(['is_primary' => false]);
+        }
+
+        $image->update($data);
+
+        return new ProductImageResource($image->fresh());
     }
 
     public function destroy(ProductImage $image)

@@ -17,6 +17,7 @@ class StoreBannerRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'min:3', 'max:100'],
             'description' => ['nullable', 'string'],
+            'show_overlay' => ['boolean'],
             'image' => ['required', 'image', 'max:2048'],
             'link_type' => ['required', Rule::in(['external', 'product'])],
             'link_url' => [Rule::requiredIf($this->link_type === 'external'), 'nullable', 'url', 'max:2048'],

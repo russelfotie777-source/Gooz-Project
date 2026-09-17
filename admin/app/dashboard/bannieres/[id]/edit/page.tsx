@@ -11,6 +11,7 @@ type BannerDetail = {
   id: number;
   title: string | null;
   description: string | null;
+  show_overlay: boolean;
   image: string;
   link_type: "external" | "product";
   link_url: string | null;
@@ -54,6 +55,7 @@ export default function EditBannerPage() {
     ? {
         title: banner.title ?? "",
         description: banner.description ?? "",
+        show_overlay: banner.show_overlay,
         link_type: banner.link_type,
         link_url: banner.link_url ?? "",
         product_id: banner.product?.id ?? null,
