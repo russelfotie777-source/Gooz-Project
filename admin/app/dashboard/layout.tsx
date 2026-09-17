@@ -6,12 +6,14 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, LogOut } from "lucide-react";
 import { apiFetch, clearToken } from "@/lib/api";
 import { LogoWordmark } from "@/components/logo";
-import { NAV_SECTIONS } from "@/lib/nav";
+import { NAV_SECTIONS, visibleNavSections } from "@/lib/nav";
+import { canAccessAdminPanel } from "@/lib/roles";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [checking, setChecking] = useState(true);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(NAV_SECTIONS.map((s) => [s.title, true]))
   );
@@ -20,14 +22,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     let cancelled = false;
 
     function checkMe() {
-      apiFetch<{ data: { id: number; role: string } }>("/me")
+      apiFetch<{ data: { id: number; role: string; permissions?: string[] } }>("/me")
         .then(({ data: user }) => {
           if (cancelled) return;
-          if (user.role !== "admin") {
+          if (!canAccessAdminPanel(user.role)) {
             clearToken();
             router.replace("/login");
             return;
           }
+          setPermissions(user.permissions ?? []);
           setChecking(false);
         })
         .catch(() => {
@@ -53,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }
 
-  const visibleSections = useMemo(() => NAV_SECTIONS, []);
+  const visibleSections = useMemo(() => visibleNavSections(permissions), [permissions]);
 
   if (checking) {
     return (

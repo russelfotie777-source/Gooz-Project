@@ -19,7 +19,7 @@ class StoreStaffUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^\+?[0-9]{8,15}$/', 'unique:users,phone'],
             'password' => ['required', Password::defaults()],
-            'role' => ['required', Rule::in(['stagiaire', 'staff', 'manager', 'delivery', 'super_admin'])],
+            'role' => ['required', Rule::in(['stagiaire', 'staff', 'manager', 'delivery', 'super_admin', 'comptable'])],
         ];
     }
 }
