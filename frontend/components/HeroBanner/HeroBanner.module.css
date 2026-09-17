@@ -25,6 +25,11 @@
   border-radius: inherit;
   opacity: 1;
   transition: opacity 0.25s ease;
+  /* A show_overlay:false slide's only child (.fullLink) is
+     position:absolute, so it contributes no height in normal flow — without
+     this, the slide collapses to just its padding and .banner's min-height
+     shows through as bare background underneath a short image band. */
+  min-height: inherit;
 }
 
 /* Toggled by HeroBanner while it swaps to the next slide's content —
@@ -52,6 +57,13 @@
   z-index: 1;
   border-radius: inherit;
   background: linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0) 100%);
+}
+
+.fullLink {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
 }
 
 .content {

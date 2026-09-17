@@ -11,6 +11,7 @@ export type ProductFormValues = {
   reference: string;
   is_active: boolean;
   description: string;
+  meta_description: string;
 };
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -61,6 +62,7 @@ export function ProductForm({
   const [reference, setReference] = useState(initial?.reference ?? "");
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [metaDescription, setMetaDescription] = useState(initial?.meta_description ?? "");
 
   function buildPayload(): Record<string, unknown> {
     return {
@@ -70,6 +72,7 @@ export function ProductForm({
       reference: reference || null,
       is_active: isActive,
       description: description || null,
+      meta_description: metaDescription || null,
     };
   }
 
@@ -150,6 +153,21 @@ export function ProductForm({
               rows={5}
               className={inputClass}
             />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-sm text-white/70">Méta-description SEO</label>
+            <textarea
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value.slice(0, 300))}
+              rows={2}
+              maxLength={300}
+              placeholder="Résumé court affiché dans les résultats Google. Vide = la description ci-dessus est réutilisée."
+              className={inputClass}
+            />
+            <p className={`mt-1 text-xs ${metaDescription.length > 160 ? "text-brand-orange" : "text-white/30"}`}>
+              {metaDescription.length}/160 caractères recommandés (300 max)
+            </p>
           </div>
         </div>
 

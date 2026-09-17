@@ -74,24 +74,43 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
         style={banner ? { backgroundImage: `url(${resolveMediaUrl(banner.image)})` } : undefined}
       >
         {banner ? (
-          <>
-            <div className={styles.scrim} aria-hidden="true" />
-            <div className={styles.content}>
-              <h1 className={styles.title}>{banner.title}</h1>
-              {banner.description && <p className={styles.description}>{banner.description}</p>}
-              {banner.link_type === "product" && banner.product ? (
-                <LocaleLink href={productPath(banner.product)} className={styles.cta}>
-                  {dict.home.heroCta}
-                </LocaleLink>
-              ) : (
-                banner.link_url && (
-                  <a href={banner.link_url} target="_blank" rel="noopener noreferrer" className={styles.cta}>
-                    {dict.home.heroCtaExternal}
-                  </a>
-                )
-              )}
-            </div>
-          </>
+          banner.show_overlay ? (
+            <>
+              <div className={styles.scrim} aria-hidden="true" />
+              <div className={styles.content}>
+                <h1 className={styles.title}>{banner.title}</h1>
+                {banner.description && <p className={styles.description}>{banner.description}</p>}
+                {banner.link_type === "product" && banner.product ? (
+                  <LocaleLink href={productPath(banner.product)} className={styles.cta}>
+                    {dict.home.heroCta}
+                  </LocaleLink>
+                ) : (
+                  banner.link_url && (
+                    <a href={banner.link_url} target="_blank" rel="noopener noreferrer" className={styles.cta}>
+                      {dict.home.heroCtaExternal}
+                    </a>
+                  )
+                )}
+              </div>
+            </>
+          ) : (
+            // The creative already has its own text/CTA baked in — no
+            // scrim, no title/description block. The whole slide just
+            // becomes a click target (title kept as the accessible label
+            // since there's no visible heading for it here).
+            (banner.link_type === "product" && banner.product && (
+              <LocaleLink href={productPath(banner.product)} className={styles.fullLink} aria-label={banner.title} />
+            )) ||
+            (banner.link_url && (
+              <a
+                href={banner.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.fullLink}
+                aria-label={banner.title}
+              />
+            ))
+          )
         ) : (
           <>
             <div className={styles.content}>

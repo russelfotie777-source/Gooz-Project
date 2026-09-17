@@ -14,6 +14,7 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            'meta_description' => $this->meta_description,
             'price_from' => $this->whenLoaded('variants', function () {
                 $prices = $this->variants->map(
                     fn ($variant) => $variant->is_promotion && $variant->promo_price

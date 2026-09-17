@@ -60,7 +60,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       ? selectedVariant.images
       : product.images.length > 0
         ? product.images
-        : [{ id: 0, image_url: PLACEHOLDER_IMAGE, is_primary: true, product_variant_id: null }];
+        : [{ id: 0, image_url: PLACEHOLDER_IMAGE, is_primary: true, alt_text: null, product_variant_id: null }];
   // Real products will eventually have several angles; pad with the same
   // image for now so the thumbnail rail/dots always show their full slots.
   const images = Array.from({ length: GALLERY_SIZE }, (_, i) => ({
@@ -87,6 +87,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [comment, setComment] = useState("");
   const [addStatus, setAddStatus] = useState<"idle" | "adding" | "added" | "error">("idle");
   const [addMessage, setAddMessage] = useState<string | null>(null);
+  // A long description used to push the buy button far down the page —
+  // clamped to a few lines by default, expandable on demand, so the layout
+  // stays predictable regardless of how much the admin writes.
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   // Stock is tracked per variant, not per product (a product can be
   // in-stock overall while the specific variant picked is sold out, or vice
@@ -214,7 +218,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 <div className={styles.swipeSlide} key={image.id}>
                   <Image
                     src={failedImageIds.has(image.id) ? PLACEHOLDER_IMAGE : (image.image_url ?? PLACEHOLDER_IMAGE)}
-                    alt={product.name}
+                    alt={image.alt_text || product.name}
                     className={styles.mainImage}
                     fill
                     sizes="(min-width: 1024px) 50vw, 100vw"
@@ -328,9 +332,24 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
               <div className={styles.descriptionBlock}>
                 <h2 className={styles.descriptionTitle}>{dict.product.aboutProduct}</h2>
-                <p className={styles.description}>
+                <p
+                  className={`${styles.description} ${!descriptionExpanded ? styles.descriptionClamped : ""}`}
+                >
                   {product.description ?? dict.product.noDescription}
                 </p>
+                {/* Rough length check, not an exact line count — cheap and
+                    good enough: short descriptions never show the toggle,
+                    long ones always do (the clamp CSS is what actually
+                    limits it to a few lines either way). */}
+                {product.description && product.description.length > 220 && (
+                  <button
+                    type="button"
+                    className={styles.descriptionToggle}
+                    onClick={() => setDescriptionExpanded((v) => !v)}
+                  >
+                    {descriptionExpanded ? dict.product.readLess : dict.product.readMore}
+                  </button>
+                )}
               </div>
 
               <div className={styles.buyRow}>

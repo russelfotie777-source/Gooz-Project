@@ -133,7 +133,7 @@ export default function ProductCard({
         <LocaleLink href={productPath(product)} className={styles.imageLink}>
           <Image
             src={imageSrc}
-            alt={product.name}
+            alt={primaryImage?.alt_text || product.name}
             className={styles.image}
             fill
             sizes={layout === "row" ? "96px" : "(min-width: 1024px) 280px, 45vw"}

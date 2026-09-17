@@ -11,6 +11,7 @@ type Product = {
   id: number;
   name: string;
   description: string | null;
+  meta_description: string | null;
   reference: string | null;
   is_active: boolean;
   category: { id: number } | null;
@@ -76,6 +77,7 @@ export default function EditProductPage() {
             reference: product.reference ?? "",
             is_active: product.is_active,
             description: product.description ?? "",
+            meta_description: product.meta_description ?? "",
           }}
           submitting={submitting}
           error={error}

@@ -13,6 +13,7 @@ class ProductImage extends Model
         'image_url',
         'thumbnail_url',
         'is_primary',
+        'alt_text',
     ];
 
     protected function casts(): array

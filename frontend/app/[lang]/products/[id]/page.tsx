@@ -32,7 +32,9 @@ export async function generateMetadata({
 
   const primaryImage = product.images.find((img) => img.is_primary) ?? product.images[0];
   const description =
-    product.description?.trim() || getDictionary(resolvedLang).seo.productDescriptionFallback(product.name);
+    product.meta_description?.trim() ||
+    product.description?.trim() ||
+    getDictionary(resolvedLang).seo.productDescriptionFallback(product.name);
   const path = productPath(product).replace(/^\//, "");
 
   return {
