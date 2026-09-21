@@ -24,6 +24,15 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
+# Apache's own mime.types doesn't reliably include image/avif yet (it's a
+# recent addition) — without this, uploaded .avif photos get served as
+# application/octet-stream instead, which some browsers refuse to render
+# inline as an <img>/background-image. No effect locally (`php artisan
+# serve` doesn't read .htaccess), only matters behind real Apache.
+<IfModule mod_mime.c>
+    AddType image/avif .avif
+</IfModule>
+
 # gzip/deflate compression for the JSON API responses and any static assets
 # served straight from public/ — no effect locally (`php artisan serve`
 # doesn't read .htaccess at all), only takes effect once this runs behind a
