@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Brand;
 
+use App\Services\ImageResizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -24,7 +25,7 @@ class StoreBrandRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', 'unique:brands,name'],
             'slug' => ['required', 'string', 'max:255', 'unique:brands,slug'],
-            'logo' => ['nullable', 'image', 'max:4096'],
+            'logo' => ['nullable', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
             'description' => ['nullable', 'string'],
             'country_origin' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],

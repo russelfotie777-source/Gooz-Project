@@ -35,6 +35,15 @@ class ImageResizer
 
     public const LOSSY_OUTPUT_EXTENSION = 'avif';
 
+    // Laravel's built-in `image` validation rule hardcodes its own allowed
+    // list (jpg, jpeg, png, gif, bmp, webp — see ValidatesAttributes::
+    // validateImage()) and has no option to extend it, so every upload
+    // request that needs to accept .avif has to use this explicit `mimes`
+    // rule instead of the `image` shorthand. Centralized here (rather than
+    // duplicating the string in every StoreXRequest) so the list only
+    // needs updating in one place.
+    public const UPLOAD_MIMES_RULE = 'mimes:jpg,jpeg,png,gif,bmp,webp,avif';
+
     public const LOSSY_MEDIA_TYPES = [
         'image/jpeg', 'image/jpg', 'image/pjpeg', 'image/x-jpeg',
         'image/webp', 'image/x-webp',

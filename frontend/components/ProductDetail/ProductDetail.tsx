@@ -39,7 +39,6 @@ interface ProductDetailProps {
 // Figma: desktop node 975:5613, mobile node 223:189. The delivery box,
 // feature badges and the two accordions only exist in the desktop design —
 // mobile stops at description + buy button + reviews (see .module.css).
-const GALLERY_SIZE = 3;
 
 export default function ProductDetail({ product }: ProductDetailProps) {
   const dict = useDictionary();
@@ -61,17 +60,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       : product.images.length > 0
         ? product.images
         : [{ id: 0, image_url: PLACEHOLDER_IMAGE, is_primary: true, alt_text: null, product_variant_id: null }];
-  // Real products will eventually have several angles; pad with the same
-  // image for now so the thumbnail rail/dots always show their full slots.
-  const images = Array.from({ length: GALLERY_SIZE }, (_, i) => ({
-    ...baseImages[i % baseImages.length],
-    id: i,
-  }));
+  // Show exactly however many photos this product/variant actually has —
+  // no padding, no truncating. baseImages already falls back to a single
+  // placeholder slot when there are none at all.
+  const images = baseImages;
   const [activeImage, setActiveImage] = useState(0);
   // next/image needs a stable src per <Image> — imperatively mutating the
   // DOM node's src (the old <img onError> pattern) fights React's own
-  // re-renders here, so failures are tracked in state instead, keyed by the
-  // gallery slot's id (0..GALLERY_SIZE-1).
+  // re-renders here, so failures are tracked in state instead, keyed by
+  // each image's own (real, backend) id.
   const [failedImageIds, setFailedImageIds] = useState<Set<number>>(new Set());
   const trackRef = useRef<HTMLDivElement>(null);
   const [cities, setCities] = useState<City[]>([]);

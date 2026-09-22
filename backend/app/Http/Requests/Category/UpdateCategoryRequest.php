@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Category;
 
+use App\Services\ImageResizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class UpdateCategoryRequest extends FormRequest
                 'sometimes', 'required', 'string', 'max:255',
                 Rule::unique('categories', 'slug')->ignore($this->route('category')),
             ],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => ['nullable', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
             'is_active' => ['boolean'],
         ];
     }
