@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Category;
 
+use App\Services\ImageResizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -24,7 +25,7 @@ class StoreCategoryRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:categories,slug'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => ['nullable', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
             'is_active' => ['boolean'],
         ];
     }

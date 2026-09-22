@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Banner;
 
+use App\Services\ImageResizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,7 @@ class UpdateBannerRequest extends FormRequest
             'title' => ['sometimes', 'required', 'string', 'min:3', 'max:100'],
             'description' => ['nullable', 'string'],
             'show_overlay' => ['boolean'],
-            'image' => ['nullable', 'image', 'max:2048'],
+            'image' => ['nullable', ImageResizer::UPLOAD_MIMES_RULE, 'max:2048'],
             'link_type' => ['sometimes', 'required', Rule::in(['external', 'product'])],
             'link_url' => [Rule::requiredIf($this->link_type === 'external'), 'nullable', 'url', 'max:2048'],
             'product_id' => [Rule::requiredIf($this->link_type === 'product'), 'nullable', 'integer', 'exists:products,id'],
