@@ -14,7 +14,7 @@ export type BannerFormValues = {
   link_url: string;
   product_id: number | null;
   product_name: string;
-  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout";
+  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout" | "product";
   starts_at: string;
   ends_at: string;
   is_active: boolean;
@@ -308,6 +308,7 @@ export function BannerForm({
               <option value="category" className="bg-[#12141c]">Page catégorie</option>
               <option value="search" className="bg-[#12141c]">Résultats de recherche</option>
               <option value="checkout" className="bg-[#12141c]">Paiement</option>
+              <option value="product" className="bg-[#12141c]">Fiche produit — bannière publicitaire</option>
             </select>
             <p className="mt-1 text-xs text-white/30">Choisissez où cette bannière sera affichée.</p>
           </div>

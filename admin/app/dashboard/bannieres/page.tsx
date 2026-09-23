@@ -10,7 +10,7 @@ type Banner = {
   id: number;
   title: string | null;
   image: string;
-  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout";
+  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout" | "product";
   position: number;
   is_active: boolean;
 };
@@ -22,6 +22,7 @@ const LOCATION_LABELS: Record<Banner["location"], string> = {
   category: "Page catégorie",
   search: "Recherche",
   checkout: "Paiement",
+  product: "Fiche produit — bannière pub",
 };
 
 export default function BannersPage() {

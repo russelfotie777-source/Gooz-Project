@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductPage from "@/components/ProductPage/ProductPage";
 import StructuredData from "@/components/StructuredData/StructuredData";
-import { getProduct, getProducts, resolveMediaUrl } from "@/lib/api";
+import { getBanners, getProduct, getProducts, resolveMediaUrl } from "@/lib/api";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { productPath } from "@/lib/productUrl";
@@ -62,6 +62,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
   // otherwise loaded fine; just show it with no recommendations.
   const otherProducts = await getProducts({ per_page: 8 }).catch(() => []);
   const recommendedProducts = otherProducts.filter((p) => p.id !== product.id).slice(0, 4);
+  const adBanners = await getBanners("product").catch(() => []);
 
   const absoluteUrl = `${SITE_URL}${localizedPath(resolvedLang, productPath(product).replace(/^\//, ""))}`;
   const primaryImage = product.images.find((img) => img.is_primary) ?? product.images[0];
@@ -72,7 +73,7 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
         data={productSchema(product, absoluteUrl, primaryImage ? resolveMediaUrl(primaryImage.image_url) : undefined)}
       />
       <StructuredData data={productBreadcrumb(resolvedLang, product, absoluteUrl)} />
-      <ProductPage product={product} recommendedProducts={recommendedProducts} />
+      <ProductPage product={product} recommendedProducts={recommendedProducts} adBanners={adBanners} />
     </>
   );
 }
