@@ -1,0 +1,27 @@
+.frame {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.slide {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+/* Toggled while the carousel swaps to the next image — fades out, THEN the
+   src changes (while invisible), THEN fades back in, so there's never a
+   hard cut or a flash of the frame's bare background between two slides. */
+.slideFading {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide {
+    transition: none;
+  }
+}

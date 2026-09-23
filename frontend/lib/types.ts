@@ -132,7 +132,7 @@ export interface Banner {
   link_url: string | null;
   link_type: "external" | "product";
   product: Product | null;
-  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout";
+  location: "homepage" | "homepage_ad_1" | "homepage_ad_2" | "category" | "search" | "checkout" | "product";
   position: number;
   starts_at: string;
   ends_at: string;
