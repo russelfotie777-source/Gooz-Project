@@ -36,6 +36,7 @@ import {
   FileCheck2,
   Banknote,
   ClipboardList,
+  Sparkles,
 } from "lucide-react";
 
 export type NavItem = {
@@ -119,6 +120,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Sections d'accueil", href: "/dashboard/homepage-sections", icon: LayoutTemplate, ready: true, permission: "manage-homepage-sections" },
       { label: "Bannière", href: "/dashboard/bannieres", icon: Image, ready: true, permission: "manage-products" },
       { label: "Annonces", href: "/dashboard/annonces", icon: Megaphone, ready: true, permission: "manage-announcements" },
+      { label: "Bannières pub accueil", href: "/dashboard/homepage-ads", icon: Sparkles, ready: true, permission: "manage-homepage-ads" },
     ],
   },
   {

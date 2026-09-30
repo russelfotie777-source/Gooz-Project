@@ -96,15 +96,23 @@
   .adColumn {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     flex: 0 0 220px;
+    /* Back to matching the hero's height (align-items: stretch from .row,
+       same as .categoryCard) now that FlashSacrificeCard/MysteryBoxCard
+       have had their non-essential text trimmed to fit — see min-height: 0
+       below for why that alone isn't enough to make stretch behave. */
+    min-height: 0;
   }
 
   .adBanner {
+    /* flex: 1 (not 0 0 auto) so the two cards split the stretched height
+       evenly rather than each just taking its own natural size — same
+       min-height: 0 reasoning as .adColumn: a flex item's default
+       min-height is "auto" (content-based), which can otherwise still win
+       over the even split. */
     flex: 1;
-    background: var(--color-primary-soft);
-    border-radius: var(--radius-md);
-    overflow: hidden;
+    min-height: 0;
   }
 }
 

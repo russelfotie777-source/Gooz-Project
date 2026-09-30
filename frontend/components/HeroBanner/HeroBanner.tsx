@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { resolveMediaUrl } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { productPath } from "@/lib/productUrl";
+import { sampleEdgeColor } from "@/lib/sampleEdgeColor";
 import type { Banner } from "@/lib/types";
 import styles from "./HeroBanner.module.css";
 
@@ -22,6 +23,29 @@ const AUTO_ADVANCE_MS = 6000;
 // frame — the whole point of that slide's look.
 const FADE_MS = 250;
 
+// The fallback slide's decorative product photo isn't fixed to a single
+// image anymore — it swipes/autoplays between these, independently of the
+// outer banner carousel above (that one crossfades whole slides; this one
+// only swaps the photo, text/CTA stay put).
+const PRODUCT_IMAGES = ["/images/hero/product-camera.png", "/images/hero/blender.png"];
+const PRODUCT_IMAGE_AUTOPLAY_MS = 4000;
+const SWIPE_THRESHOLD_PX = 40;
+// Duration of each half of the "door" flip (outgoing image rotating to
+// edge-on, then the incoming one rotating in from the opposite edge) — see
+// the productPhase state machine below. Kept short: this plays on every
+// autoplay tick, so it needs to read as a flourish, not a wait.
+const PRODUCT_FLIP_HALF_MS = 280;
+
+// Every image except PRODUCT_IMAGES[0] (the camera, which keeps its own
+// static circle-decoration.svg — see circleWrapper below) gets this instead:
+// a halo sampled from its own edges, a ground grid tinted with that same
+// color, and a mirrored reflection — all three driven off one sampled
+// color so it reads as one scene, not three effects stacked on top of
+// each other. Shown before the real color is known and if sampling fails.
+const FALLBACK_PRODUCT_HALO = "rgba(255, 149, 0, 0.35)";
+
+type ProductPhase = "idle" | "closing" | "openingStart" | "openingEnd";
+
 // Slide 0 is always the static Shopitech brand slide — a permanent first
 // slide, not just a fallback shown only when no banners are configured.
 // Real banners (managed in the admin — see BannerController) are appended
@@ -32,6 +56,17 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
   const [index, setIndex] = useState(0);
   const [displayIndex, setDisplayIndex] = useState(0);
   const [fading, setFading] = useState(false);
+  const [productImageIndex, setProductImageIndex] = useState(0);
+  // productDisplayIndex/productPhase mirror the outer index/displayIndex/
+  // fading pattern above, but drive a 3D door-flip (rotateY) instead of an
+  // opacity crossfade — see the effect below for the 4-step sequence.
+  const [productDisplayIndex, setProductDisplayIndex] = useState(0);
+  const [productPhase, setProductPhase] = useState<ProductPhase>("idle");
+  const [productHaloColor, setProductHaloColor] = useState(FALLBACK_PRODUCT_HALO);
+  const productFlipTimers = useRef<number[]>([]);
+  const productFlipRafs = useRef<number[]>([]);
+  const productSwipeStartX = useRef(0);
+  const productSwipeActive = useRef(false);
   const slideCount = banners.length + 1;
   const hasMultipleSlides = slideCount > 1;
 
@@ -61,6 +96,105 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
   }
 
   const banner = displayIndex > 0 ? banners[displayIndex - 1] : null;
+
+  useEffect(() => {
+    if (banner || PRODUCT_IMAGES.length <= 1) return;
+    const timer = window.setInterval(
+      () => setProductImageIndex((i) => (i + 1) % PRODUCT_IMAGES.length),
+      PRODUCT_IMAGE_AUTOPLAY_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [banner]);
+
+  // Drives the door-flip in 4 steps whenever productImageIndex (the target,
+  // set by autoplay/swipe below) moves away from productDisplayIndex (what's
+  // actually rendered):
+  //   1. "closing"     — the displayed image transitions 0deg -> 90deg
+  //                       (CSS transition; it visually vanishes edge-on).
+  //   2. "openingStart"— swap productDisplayIndex to the target image, and
+  //                       render it instantly (no transition) at -90deg —
+  //                       the opposite edge, ready to swing in.
+  //   3. "openingEnd"  — one paint later (double rAF, so the -90deg frame
+  //                       actually commits first), transition it -90 -> 0.
+  //   4. "idle"        — hand off to the idle turntable keyframe animation,
+  //                       which starts from 0deg so there's no visible jump.
+  useEffect(() => {
+    if (productImageIndex === productDisplayIndex) return;
+
+    productFlipTimers.current.forEach((id) => window.clearTimeout(id));
+    productFlipTimers.current = [];
+    productFlipRafs.current.forEach((id) => cancelAnimationFrame(id));
+    productFlipRafs.current = [];
+
+    setProductPhase("closing");
+
+    const closeTimer = window.setTimeout(() => {
+      setProductDisplayIndex(productImageIndex);
+      setProductPhase("openingStart");
+
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => setProductPhase("openingEnd"));
+        productFlipRafs.current.push(raf2);
+      });
+      productFlipRafs.current.push(raf1);
+
+      const openTimer = window.setTimeout(() => setProductPhase("idle"), PRODUCT_FLIP_HALF_MS);
+      productFlipTimers.current.push(openTimer);
+    }, PRODUCT_FLIP_HALF_MS);
+    productFlipTimers.current.push(closeTimer);
+
+    return () => {
+      productFlipTimers.current.forEach((id) => window.clearTimeout(id));
+      productFlipTimers.current = [];
+      productFlipRafs.current.forEach((id) => cancelAnimationFrame(id));
+      productFlipRafs.current = [];
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productImageIndex]);
+
+  // Only sampled/used for non-camera images (index 0 keeps its own static
+  // decoration, see circleWrapper) — no point paying for a fetch+decode the
+  // camera slide will never render.
+  useEffect(() => {
+    if (productDisplayIndex === 0) return;
+    // These are local /public files (not backend-served storage), so unlike
+    // ProductAdBanner's use of this same helper, the path is passed as-is —
+    // resolveMediaUrl would incorrectly prefix it with the backend origin.
+    let cancelled = false;
+    sampleEdgeColor(PRODUCT_IMAGES[productDisplayIndex]).then((color) => {
+      if (!cancelled && color) setProductHaloColor(color);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [productDisplayIndex]);
+
+  // Shared by circleWrapper (camera only) and productExtras (every other
+  // image) — both fade in/out on the same 4-step schedule as the product
+  // image itself, just gated by a different "is this my image?" condition.
+  function phaseVisibilityClass(active: boolean): string {
+    if (!active) return "";
+    if (productPhase === "closing") return styles.phaseClosing;
+    if (productPhase === "openingStart") return styles.phaseOpeningStart;
+    if (productPhase === "openingEnd") return styles.phaseOpeningEnd;
+    return styles.phaseVisible;
+  }
+
+  function handleProductPointerDown(e: React.PointerEvent) {
+    productSwipeStartX.current = e.clientX;
+    productSwipeActive.current = true;
+  }
+
+  function handleProductPointerUp(e: React.PointerEvent) {
+    if (!productSwipeActive.current) return;
+    productSwipeActive.current = false;
+    const deltaX = e.clientX - productSwipeStartX.current;
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return;
+    setProductImageIndex((i) => {
+      const next = i + (deltaX < 0 ? 1 : -1);
+      return (next + PRODUCT_IMAGES.length) % PRODUCT_IMAGES.length;
+    });
+  }
 
   return (
     <section className={styles.banner}>
@@ -133,11 +267,59 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
             {/* Deliberately allowed to spill outside the banner's box (see
                 .imageWrapper's negative top/bottom insets) — .banner stays
                 overflow:visible always so this never gets clipped. */}
-            <div className={styles.imageWrapper} aria-hidden="true">
-              <div className={styles.circleWrapper}>
+            <div
+              className={styles.imageWrapper}
+              aria-hidden="true"
+              onPointerDown={handleProductPointerDown}
+              onPointerUp={handleProductPointerUp}
+              onPointerCancel={() => {
+                productSwipeActive.current = false;
+              }}
+            >
+              {/* Every image except the camera (index 0): a grid tinted with
+                  that image's own sampled color behind it, plus its halo —
+                  one color, two effects, faded in/out on the same schedule
+                  as everything else here. The camera never gets this; it
+                  keeps circleWrapper below instead. */}
+              <div
+                className={`${styles.productExtras} ${phaseVisibilityClass(productDisplayIndex !== 0)}`}
+                style={{ "--product-halo-color": productHaloColor } as React.CSSProperties}
+              >
+                <div className={styles.productGrid} />
+                <div className={styles.productHalo} />
+              </div>
+
+              {/* Tied to the camera specifically (PRODUCT_IMAGES[0]), not to
+                  "an image is showing" in general — fades out in step with
+                  the camera closing away, and back in as it opens into
+                  view, so it never lingers behind the blender. */}
+              <div className={`${styles.circleWrapper} ${phaseVisibilityClass(productDisplayIndex === 0)}`}>
                 <img src="/images/hero/circle-decoration.svg" alt="" className={styles.circleDecoration} />
               </div>
-              <img src="/images/hero/product-camera.png" alt="" className={styles.productImage} />
+
+              <div
+                className={`${styles.productShadow} ${
+                  productPhase === "closing"
+                    ? styles.productShadowSquish
+                    : productPhase === "openingStart"
+                      ? styles.productShadowSquishInstant
+                      : productPhase === "openingEnd"
+                        ? styles.productShadowRelax
+                        : styles.productShadowIdle
+                }`}
+              />
+
+              {PRODUCT_IMAGES.map((src, i) => {
+                const isDisplayed = i === productDisplayIndex;
+                let phaseClass = "";
+                if (isDisplayed) {
+                  if (productPhase === "idle") phaseClass = styles.productImageActive;
+                  else if (productPhase === "closing") phaseClass = styles.productImageClosing;
+                  else if (productPhase === "openingStart") phaseClass = styles.productImageOpeningStart;
+                  else if (productPhase === "openingEnd") phaseClass = styles.productImageOpeningEnd;
+                }
+                return <img key={src} src={src} alt="" draggable={false} className={`${styles.productImage} ${phaseClass}`} />;
+              })}
             </div>
           </>
         )}

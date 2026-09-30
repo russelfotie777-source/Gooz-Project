@@ -155,7 +155,18 @@
   align-items: stretch;
   justify-content: center;
   z-index: 1;
-  pointer-events: none;
+  /* Swipeable now (camera/blender — see PRODUCT_IMAGES), so this needs to
+     actually receive pointer events; pan-y keeps vertical page scroll
+     working on touch while a horizontal swipe here is read as a gesture. */
+  touch-action: pan-y;
+  cursor: grab;
+  /* Establishes the 3D space .productImage's rotateY renders into — without
+     this a rotateY is flat/undistorted and doesn't read as depth at all. */
+  perspective: 900px;
+}
+
+.imageWrapper:active {
+  cursor: grabbing;
 }
 
 .circleWrapper {
@@ -166,21 +177,245 @@
   height: 65%;
   aspect-ratio: 1 / 1;
   z-index: 0;
+  pointer-events: none;
+  /* Hidden by default — only PRODUCT_IMAGES[0] (the camera) ever turns this
+     on, via the .phaseVisible/Closing/OpeningStart/OpeningEnd classes below
+     (shared with .productExtras — see phaseVisibilityClass in
+     HeroBanner.tsx), which mirror .productImage's own phase states so the
+     fade tracks the camera's own rotation timing exactly. */
+  opacity: 0;
 }
 
 .circleDecoration {
   display: block;
   width: 100%;
   height: 100%;
+  opacity: 0.35;
 }
 
+/* Wrapper for every non-camera image's backdrop (grid + halo) — see
+   PRODUCT_IMAGES/phaseVisibilityClass in HeroBanner.tsx. --product-halo-color
+   is set inline (HeroBanner.tsx) from the image's own sampled edge color;
+   inherits MUST be true, since the value is set here but read by the CHILD
+   elements below — see the identical note on ProductAdBanner's --halo-color,
+   the exact same bug otherwise. */
+@property --product-halo-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 149, 0, 0.35);
+}
+
+.productExtras {
+  position: absolute;
+  inset: 0;
+  /* Explicitly behind .productImage (z-index: 1) rather than just relying
+     on the two sharing z-index: 0 and source order — makes "always behind
+     the product" unambiguous regardless of how this block gets reordered
+     later. */
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  --product-halo-color: rgba(255, 149, 0, 0.35);
+}
+
+/* Faint dot grid, tinted with the same sampled color as the halo below it —
+   one color source for the whole backdrop rather than an unrelated fixed
+   pattern, so it reads as "this product's own scene" instead of generic
+   wallpaper. */
+.productGrid {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 150%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--product-halo-color) 55%, transparent) 1px, transparent 1.6px);
+  background-size: 16px 16px;
+  opacity: 0.68;
+  transition: background-color 0.6s ease;
+  /* height+aspect-ratio (rather than the old rectangular inset) makes the
+     dot field itself a perfect circle regardless of .imageWrapper's own
+     rectangular shape; the mask then feathers its edge so it fades out
+     rather than getting cut off hard. */
+  -webkit-mask-image: radial-gradient(circle, black 55%, transparent 78%);
+  mask-image: radial-gradient(circle, black 55%, transparent 78%);
+}
+
+/* Same ambient-glow technique as ProductAdBanner's .halo — bleeds past the
+   frame and blurs into a soft backdrop light rather than a hard-edged
+   shape. Smaller/tighter than the first pass: less spread (inset) and less
+   blur, so it reads as a glow hugging the product rather than a big cloud
+   around it. */
+.productHalo {
+  position: absolute;
+  inset: -4%;
+  background: var(--product-halo-color);
+  filter: blur(22px);
+  opacity: 0.3;
+  transition: background-color 0.6s ease;
+}
+
+/* Generic show/hide-on-a-schedule classes, shared by .circleWrapper (camera
+   only) and .productExtras (every other image) — same 4 states as
+   .productImage's own phase classes, just driving opacity instead of
+   rotateY, so both fade in perfect lockstep with the image they belong to.
+   Declared AFTER both .circleWrapper and .productExtras on purpose: all
+   three are plain single-class selectors (equal specificity), so with
+   .circleWrapper/.productExtras's own base opacity:0 coming first, these
+   need to come last in the file to reliably win the cascade on either
+   element — defining them any earlier (as before) let .productExtras's own
+   opacity:0 silently win instead, since source order decides ties. */
+.phaseVisible {
+  opacity: 1;
+}
+
+.phaseClosing {
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+
+.phaseOpeningStart {
+  opacity: 0;
+  transition: none;
+}
+
+.phaseOpeningEnd {
+  opacity: 1;
+  transition: opacity 280ms ease;
+}
+
+/* Stacked (not just one <img>), rotating on the Y axis like a product on a
+   turntable rather than crossfading — see the productPhase state machine in
+   HeroBanner.tsx. Absolute + centered so both stacked images occupy the
+   exact same spot and share the same rotation pivot (transform-origin:
+   center, the default). backface-visibility avoids ever showing a
+   mirrored/flipped frame if a transition overshoots past 90deg. */
 .productImage {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 50%;
   height: 100%;
   width: auto;
   object-fit: contain;
   z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  backface-visibility: hidden;
+  transform: translateX(-50%) rotateY(0deg);
   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25));
+}
+
+/* At rest: a slow, continuous turntable oscillation (never a full turn —
+   just enough to feel like a live showroom display, not a spinning toy). */
+.productImageActive {
+  opacity: 1;
+  animation: heroTurntable 6s ease-in-out infinite;
+}
+
+/* Step 1 of the flip: the outgoing image rotates to face-on-edge (90deg),
+   which — combined with .imageWrapper's perspective — foreshortens it down
+   to a sliver rather than just fading, like a door swinging shut. */
+.productImageClosing {
+  opacity: 1;
+  animation: none;
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.7, 1);
+  transform: translateX(-50%) rotateY(90deg);
+}
+
+/* Step 2a: the incoming image, snapped instantly (no transition) to the
+   opposite edge (-90deg) the instant it takes over as "displayed" — this
+   frame has to actually commit/paint before .productImageOpeningEnd below
+   applies, which is what the double requestAnimationFrame in the effect is
+   for; otherwise the browser would coalesce both style changes and skip the
+   transition entirely. */
+.productImageOpeningStart {
+  opacity: 1;
+  animation: none;
+  transition: none;
+  transform: translateX(-50%) rotateY(-90deg);
+}
+
+/* Step 2b: swings the incoming image back to face-on — completes the
+   "door" motion. Phase returns to idle right after this finishes, handing
+   off to .productImageActive's keyframes, which also start at 0deg so
+   there's no visible jump at the handoff. */
+.productImageOpeningEnd {
+  opacity: 1;
+  animation: none;
+  transition: transform 280ms cubic-bezier(0.3, 0, 0.2, 1);
+  transform: translateX(-50%) rotateY(0deg);
+}
+
+@keyframes heroTurntable {
+  0%,
+  100% {
+    transform: translateX(-50%) rotateY(0deg);
+  }
+  25% {
+    transform: translateX(-50%) rotateY(8deg);
+  }
+  75% {
+    transform: translateX(-50%) rotateY(-8deg);
+  }
+}
+
+/* Ground shadow, kept as a single shared element (not one per image) since
+   only ever one image is "on stage" at a time — squishes flat in sync with
+   whichever image is currently edge-on, then relaxes back as the new one
+   settles face-on, like a real object's shadow does as it turns. */
+.productShadow {
+  position: absolute;
+  left: 50%;
+  bottom: 2%;
+  width: 55%;
+  height: 14px;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 72%);
+  pointer-events: none;
+  transform: translateX(-50%) scaleX(1);
+}
+
+.productShadowIdle {
+  animation: heroTurntableShadow 6s ease-in-out infinite;
+}
+
+.productShadowSquish {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.7, 1);
+  transform: translateX(-50%) scaleX(0.16);
+}
+
+.productShadowSquishInstant {
+  transition: none;
+  transform: translateX(-50%) scaleX(0.16);
+}
+
+.productShadowRelax {
+  transition: transform 280ms cubic-bezier(0.3, 0, 0.2, 1);
+  transform: translateX(-50%) scaleX(1);
+}
+
+@keyframes heroTurntableShadow {
+  0%,
+  100% {
+    transform: translateX(-50%) scaleX(1);
+  }
+  25%,
+  75% {
+    transform: translateX(-50%) scaleX(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .productImage,
+  .productShadow,
+  .circleWrapper,
+  .productExtras,
+  .productGrid,
+  .productHalo {
+    transition: none;
+    animation: none;
+  }
 }
 
 .navButton {

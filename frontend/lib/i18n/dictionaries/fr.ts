@@ -101,6 +101,17 @@ const fr = {
     heroCta: "Voir le produit",
     heroCtaExternal: "En savoir plus",
     heroSlide: (n: number) => `Diapositive ${n}`,
+    adFlash: {
+      badgeLive: "En direct de Douala",
+      title: "Le sacrifice de minuit",
+      cta: "Sécuriser mon exemplaire",
+    },
+    adMysteryBox: {
+      title: "La crate mystère Shopitech",
+      price: "5 000 FCFA · jusqu'à 25 000 FCFA de tech",
+      viewers: (n: number) => `${n} Doualais regardent cette box`,
+      cta: "Tenter ma chance",
+    },
     catalogue: {
       title: "Catalogue",
       filters: "Filtres",

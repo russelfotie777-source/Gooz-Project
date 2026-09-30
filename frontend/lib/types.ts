@@ -123,6 +123,14 @@ export interface AppPromoSetting {
   images: AppPromoImage[];
 }
 
+/** Admin-picked products for the two homepage ad-column cards (see
+ *  Admin\HomepageAdSettingController) — either can be null (no pick yet),
+ *  in which case the frontend falls back to an automatic choice. */
+export interface HomepageAdSetting {
+  flash_sacrifice_product: Product | null;
+  mystery_box_product: Product | null;
+}
+
 export interface Banner {
   id: number;
   title: string;
