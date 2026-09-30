@@ -13,6 +13,7 @@ import type {
   City,
   DeliveryEstimate,
   Favorite,
+  HomepageAdSetting,
   HomepageSection,
   Neighborhood,
   Order,
@@ -343,6 +344,18 @@ export async function getAnnouncements(): Promise<Announcement[]> {
 export async function getAppPromo(): Promise<AppPromoSetting> {
   const { data } = await apiFetch<ApiResource<AppPromoSetting>>("/app-promo", CATALOG_CACHE);
   return data;
+}
+
+// Admin-picked products for FlashSacrificeCard/MysteryBoxCard (see
+// Admin\HomepageAdSettingController) — either can come back null, meaning
+// no pick yet (HomePage.tsx falls back to an automatic choice for the
+// flash-sacrifice slot; the mystery box just stays generic).
+export async function getHomepageAdSettings(): Promise<HomepageAdSetting> {
+  const { data } = await apiFetch<ApiResource<HomepageAdSetting>>("/homepage-ads", CATALOG_CACHE);
+  return {
+    flash_sacrifice_product: data.flash_sacrifice_product ? normalizeProduct(data.flash_sacrifice_product) : null,
+    mystery_box_product: data.mystery_box_product ? normalizeProduct(data.mystery_box_product) : null,
+  };
 }
 
 // Admin-configured homepage sections (Admin\HomepageSectionController) —

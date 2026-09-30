@@ -1,27 +1,81 @@
-.frame {
-  display: block;
-  width: 100%;
-  border-radius: var(--radius-md);
+/* Lets --halo-color transition smoothly like a normal color property
+   instead of snapping instantly (custom properties don't animate on their
+   own). Unsupported browsers (pre-2023 Firefox/Safari) just snap — the
+   halo still shows the right color, only the fade is lost.
+   inherits MUST be true: the value is set inline on .wrapper but read by
+   its child .halo — with inherits:false a child never sees a value set on
+   an ancestor and always falls back to initial-value below, which is
+   exactly the bug that made the halo look permanently stuck on one color. */
+@property --halo-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 149, 0, 0.35);
+}
+
+.wrapper {
+  position: relative;
+  --halo-color: rgba(255, 149, 0, 0.35);
+}
+
+/* Deliberately bleeds past the frame's own edges (negative inset) and gets
+   blurred into a soft ambient glow — reads as light escaping the image
+   itself, not a decorative border. Sits behind .viewport (z-index) and
+   ignores pointer events so it never interferes with the drag. */
+.halo {
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  background: var(--halo-color);
+  filter: blur(48px);
+  opacity: 0.6;
+  transition: background-color 0.6s ease;
+  pointer-events: none;
+}
+
+.viewport {
+  position: relative;
+  z-index: 1;
   overflow: hidden;
+  border-radius: var(--radius-md);
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.viewport:active {
+  cursor: grabbing;
+}
+
+.track {
+  display: flex;
+  width: 100%;
+  will-change: transform;
 }
 
 .slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+.slideLink {
+  display: block;
+  width: 100%;
+}
+
+.slideImage {
   display: block;
   width: 100%;
   height: auto;
-  opacity: 1;
-  transition: opacity 0.25s ease;
-}
-
-/* Toggled while the carousel swaps to the next image — fades out, THEN the
-   src changes (while invisible), THEN fades back in, so there's never a
-   hard cut or a flash of the frame's bare background between two slides. */
-.slideFading {
-  opacity: 0;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .slide {
+  .track {
+    transition: none !important;
+  }
+
+  .halo {
     transition: none;
   }
 }

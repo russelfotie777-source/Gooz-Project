@@ -16,14 +16,18 @@
 .adBanner {
   display: none;
   width: 100%;
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  /* No border-radius/overflow here anymore — ProductAdBanner's own halo
+     deliberately bleeds past its frame and needs to stay unclipped; it
+     rounds/clips its own inner viewport instead. The static fallback image
+     below still needs its own rounding since it has no such wrapper. */
 }
 
 .adBannerImage {
   width: 100%;
   height: auto;
   display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 @media (min-width: 1024px) {

@@ -1,0 +1,255 @@
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  /* Plain, very dark violet with a subtle radial lift at the center —
+     replaces the old 3-stop diagonal gradient + scanline texture, which
+     read as a low-effort "retro TV" filter rather than a clean premium
+     background. Nothing here competes with the text/countdown anymore. */
+  background: radial-gradient(circle at 50% 30%, #241338 0%, #150a22 65%, #100819 100%);
+}
+
+.top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff3b4e;
+  box-shadow: 0 0 6px 1px rgba(255, 59, 78, 0.7);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+}
+
+/* The mystery-product teaser: a real product photo (see FlashSacrificeCard
+   props), dimmed until hovered — see the note in the component for why
+   this is dimmed rather than a true cutout silhouette. */
+.silhouette {
+  position: relative;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.silhouetteImage {
+  object-fit: cover;
+  filter: brightness(0.32) saturate(0.5);
+  transition: filter 0.4s ease;
+}
+
+.silhouette:hover .silhouetteImage {
+  filter: brightness(1) saturate(1);
+}
+
+/* A quick "lens flare" burst, once per hover-enter (a CSS animation on a
+   hover-only rule always restarts from the top on each new :hover). */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.95), transparent 62%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.silhouette:hover .flash {
+  animation: flashBurst 0.6s ease-out;
+}
+
+@keyframes flashBurst {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+  color: #ffffff;
+}
+
+.digits {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* The "cyberpunk glitch" tremor — see the brief's "toutes les 30
+     secondes". Both the 0% and 97% keyframes below are identical, so for
+     ~29s of every 30s cycle nothing visibly changes; the glitch itself only
+     plays across the last ~3% of the cycle. Pure CSS, no JS timer needed. */
+  animation: cyberGlitch30s 30s ease-in-out infinite;
+}
+
+@keyframes cyberGlitch30s {
+  0%,
+  97% {
+    transform: translate(0, 0);
+    text-shadow: none;
+  }
+  97.3% {
+    transform: translate(-1.5px, 0.5px);
+    text-shadow: -2px 0 #ff2f6e, 2px 0 #29e3ff;
+  }
+  97.6% {
+    transform: translate(1.5px, -0.5px);
+    text-shadow: 2px 0 #29e3ff, -2px 0 #ff2f6e;
+  }
+  98%,
+  100% {
+    transform: translate(0, 0);
+    text-shadow: none;
+  }
+}
+
+/* Each HH/MM/SS group gets its own small chip (rather than bare digits
+   floating on the background) with tabular-nums so the digits inside never
+   jitter in width tick to tick — together this is what makes it read as a
+   real flash-sale countdown widget instead of loose numbers. */
+.digitBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  padding: 3px 4px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.separator {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.cta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  overflow: hidden;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: #1a1025;
+  background: var(--color-accent);
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  transition: transform 0.15s ease;
+}
+
+.cta:hover {
+  transform: scale(1.05);
+}
+
+/* Periodic light sweep across the button, independent of hover. */
+.cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: skewX(-20deg);
+  animation: ctaShimmer 3s ease-in-out infinite;
+}
+
+@keyframes ctaShimmer {
+  0% {
+    left: -60%;
+  }
+  40%,
+  100% {
+    left: 130%;
+  }
+}
+
+.ctaArrow {
+  display: inline-block;
+}
+
+.cta:hover .ctaArrow {
+  animation: arrowVibrate 0.4s ease-in-out infinite;
+}
+
+@keyframes arrowVibrate {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveDot,
+  .silhouette:hover .flash,
+  .digits,
+  .cta::after,
+  .cta:hover .ctaArrow {
+    animation: none;
+  }
+}

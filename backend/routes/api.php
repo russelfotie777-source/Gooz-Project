@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\DeliveryController as AdminDeliveryController;
+use App\Http\Controllers\Admin\HomepageAdSettingController as AdminHomepageAdSettingController;
 use App\Http\Controllers\Admin\HomepageSectionController as AdminHomepageSectionController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -45,6 +46,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\HomepageAdController;
 use App\Http\Controllers\HomepageSectionController;
 use App\Http\Controllers\Admin\WarehouseController as AdminWarehouseController;
 use App\Http\Controllers\CheckoutController;
@@ -150,6 +152,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/announcements', [AnnouncementController::class, 'index']);
 
     Route::get('/app-promo', [AppPromoController::class, 'show']);
+
+    Route::get('/homepage-ads', [HomepageAdController::class, 'show']);
 
     Route::get('/homepage-sections', [HomepageSectionController::class, 'index']);
 
@@ -326,6 +330,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/admin/app-promo/images', [AdminAppPromoImageController::class, 'store']);
         Route::patch('/admin/app-promo/images/{appPromoImage}', [AdminAppPromoImageController::class, 'update']);
         Route::delete('/admin/app-promo/images/{appPromoImage}', [AdminAppPromoImageController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'can:manage-homepage-ads'])->group(function () {
+        Route::get('/admin/homepage-ads', [AdminHomepageAdSettingController::class, 'show']);
+        Route::put('/admin/homepage-ads', [AdminHomepageAdSettingController::class, 'update']);
     });
 
     Route::middleware(['auth:sanctum', 'can:manage-company-profile'])->group(function () {

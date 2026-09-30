@@ -32,6 +32,7 @@ class RolePermission extends Model
         'manage-company-profile',
         'manage-announcements',
         'manage-app-promo',
+        'manage-homepage-ads',
     ];
 
     /**

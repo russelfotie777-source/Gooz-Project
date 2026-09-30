@@ -96,6 +96,17 @@ const en: Dictionary = {
     heroCta: "View product",
     heroCtaExternal: "Learn more",
     heroSlide: (n: number) => `Slide ${n}`,
+    adFlash: {
+      badgeLive: "Live from Douala",
+      title: "The midnight sacrifice",
+      cta: "Secure my unit",
+    },
+    adMysteryBox: {
+      title: "The Shopitech mystery crate",
+      price: "5,000 FCFA · up to 25,000 FCFA of tech",
+      viewers: (n: number) => `${n} people in Douala are watching`,
+      cta: "Try my luck",
+    },
     catalogue: {
       title: "Catalogue",
       filters: "Filters",

@@ -37,6 +37,7 @@ const PERMISSION_LABELS: Record<string, string> = {
   "manage-company-profile": "Gérer le profil entreprise",
   "manage-announcements": "Gérer les annonces",
   "manage-app-promo": "Gérer le widget de téléchargement app",
+  "manage-homepage-ads": "Gérer les bannières pub de la page d'accueil",
 };
 
 export default function RolesPermissionsPage() {
