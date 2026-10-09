@@ -121,8 +121,6 @@ const fr = {
       brand: "Marque",
       color: "Couleur",
       noResults: "Aucun produit ne correspond à ces filtres.",
-      previousPage: "Page précédente",
-      nextPage: "Page suivante",
       truncatedNotice: "Affichage des premiers résultats du catalogue. Affinez votre recherche pour voir plus de produits.",
       priceRanges: {
         under10000: "Moins de 10 000 FCFA",
@@ -144,8 +142,6 @@ const fr = {
     priceMax: "Prix max",
     applyFilter: "Filtrer",
     noResults: "Aucun produit ne correspond à ces filtres.",
-    previousPage: "Page précédente",
-    nextPage: "Page suivante",
     truncatedNotice: "Affichage des premiers résultats. Affinez votre recherche pour voir plus de produits.",
   },
   product: {
@@ -189,6 +185,9 @@ const fr = {
     readLess: "Voir moins",
     buyNow: "Acheter",
     buyNowMobile: "Acheter maintenant",
+    orderViaWhatsapp: "Commander via WhatsApp",
+    whatsappOrderMessage: (name: string, price: string) =>
+      `Bonjour, je souhaite commander : ${name} (${price}). Est-il disponible ?`,
     addedToCartMessage: "Ajouté au panier !",
     genericError: "Une erreur est survenue.",
     deliveryPrompt: "Où souhaitez-vous être livré",
@@ -693,6 +692,8 @@ const fr = {
   seo: {
     categoryDescription: (name: string): string =>
       `Achetez ${name} au meilleur prix sur Shopitech. Livraison rapide et paiement sécurisé.`,
+    brandDescription: (name: string): string =>
+      `Découvrez tous les produits ${name} sur Shopitech. Livraison rapide et paiement sécurisé.`,
     productDescriptionFallback: (name: string): string =>
       `${name} disponible sur Shopitech, au meilleur prix, avec livraison rapide et paiement sécurisé.`,
   },

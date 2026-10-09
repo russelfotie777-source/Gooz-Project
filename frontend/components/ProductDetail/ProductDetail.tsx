@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { addCartItem, ApiValidationError, getCities, getDeliveryEstimate, getNeighborhoods } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
+import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/WhatsAppButton";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { getDisplayVariant } from "@/lib/pricing";
 import type { City, Neighborhood, Product } from "@/lib/types";
@@ -95,6 +97,16 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const effectiveStock = selectedVariant ? (selectedVariant.stock_quantity ?? 0) : (product.stock_quantity ?? 0);
   const inStock = effectiveStock > 0;
   const effectivePrice = selectedVariant?.price ?? product.price_from;
+
+  // A pre-filled message so the shop owner knows what's being ordered
+  // without the shopper having to type it themselves — wa.me opens the
+  // chat with this already in the input, still editable before sending.
+  const whatsappOrderUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    dict.product.whatsappOrderMessage(
+      product.name,
+      effectivePrice !== null ? formatPrice(effectivePrice) : dict.common.priceUnavailable
+    )
+  )}`;
 
   // Cart routes require auth (API.md §4) — a guest is sent to sign in rather
   // than silently failing. Used by both buttons in .buyRow: the icon-only
@@ -361,6 +373,23 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   <span className={styles.buyButtonLabelMobile}>{dict.product.buyNowMobile}</span>
                 </button>
 
+                {/* At rest: a small circle, just the icon (see .whatsappButton
+                    in the stylesheet — flex-basis pins it to 58px). On hover,
+                    it and .buyButton swap flex-basis (a shared `transition:
+                    flex` on both), so this expands into the full label while
+                    .buyButton shrinks to icon-only — pure CSS, driven by
+                    .buyRow:has(.whatsappButton:hover). */}
+                <a
+                  href={whatsappOrderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.whatsappButton}
+                  aria-label={dict.product.orderViaWhatsapp}
+                >
+                  <WhatsAppIcon className={styles.whatsappIcon} />
+                  <span className={styles.whatsappLabel}>{dict.product.orderViaWhatsapp}</span>
+                </a>
+
                 <button
                   type="button"
                   className={styles.quickAddButton}
@@ -513,7 +542,14 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           {openAccordion === "info" && (
             <div className={styles.accordionBody}>
               <p>
-                {dict.product.brand} {product.brand?.name ?? "—"}
+                {dict.product.brand}{" "}
+                {product.brand ? (
+                  <LocaleLink href={`/marques/${product.brand.slug}`} className={styles.brandLink}>
+                    {product.brand.name}
+                  </LocaleLink>
+                ) : (
+                  "—"
+                )}
               </p>
               <p>{dict.product.returnsPolicy}</p>
             </div>

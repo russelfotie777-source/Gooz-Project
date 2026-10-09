@@ -1,0 +1,84 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.pageNumber,
+.pageArrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* .pageNumber is a real <a> — undo the browser default underline/link-blue
+     it'd otherwise pick up. */
+  text-decoration: none;
+}
+
+.pageNumberActive {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.pageArrow:disabled {
+  opacity: 0.4;
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  user-select: none;
+}
+
+/* Mobile (default): every page number, not a compacted window — scrolling
+   stands in for the "…" the desktop layout needs instead. flex: 0 1 auto +
+   min-width: 0 is what actually lets this shrink to the leftover row width
+   and scroll, rather than pushing .pagination wider than the viewport (the
+   usual flex-item "min-width: auto" trap). */
+.mobileNumbers {
+  display: flex;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.mobileNumbers::-webkit-scrollbar {
+  display: none;
+}
+
+.mobileNumbers .pageNumber {
+  scroll-snap-align: center;
+}
+
+.desktopNumbers {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .mobileNumbers {
+    display: none;
+  }
+
+  .desktopNumbers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}

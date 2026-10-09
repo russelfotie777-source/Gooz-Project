@@ -2,6 +2,7 @@
 
 import type { Brand } from "@/lib/types";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import styles from "./BrandsSection.module.css";
 
 interface BrandsSectionProps {
@@ -41,14 +42,19 @@ function BrandLogos({ brands, ariaHidden }: { brands: Brand[]; ariaHidden?: bool
   return (
     <div className={styles.logoSet} aria-hidden={ariaHidden || undefined}>
       {brands.map((brand, index) => (
-        <div className={styles.item} key={`${brand.id}-${ariaHidden ? "dup" : "orig"}-${index}`}>
+        <LocaleLink
+          href={`/marques/${brand.slug}`}
+          className={styles.item}
+          key={`${brand.id}-${ariaHidden ? "dup" : "orig"}-${index}`}
+          tabIndex={ariaHidden ? -1 : undefined}
+        >
           {brand.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={brand.logo} alt={brand.name} className={styles.logo} />
           ) : (
             <span className={styles.fallbackName}>{brand.name}</span>
           )}
-        </div>
+        </LocaleLink>
       ))}
     </div>
   );

@@ -9,16 +9,6 @@ interface CategoryListProps {
   categories: Category[];
 }
 
-// Real category photos exported from the Figma mobile design (node 372:185) —
-// the mobile header uses photos inside the bubbles, not icons.
-const IMAGES: Record<string, string> = {
-  telephone: "/icon/header-mobile/telephone.png",
-  reseau: "/icon/header-mobile/reseau.png",
-  informatique: "/icon/header-mobile/informatique.png",
-  securite: "/icon/header-mobile/securite.png",
-  electromenager: "/icon/header-mobile/electromenager.png",
-};
-
 export default function CategoryList({ categories }: CategoryListProps) {
   const dict = useDictionary();
 
@@ -29,8 +19,10 @@ export default function CategoryList({ categories }: CategoryListProps) {
           <li key={category.id} className={styles.item}>
             <LocaleLink href={`/categories/${category.slug}`} className={styles.button}>
               <span className={styles.iconCircle}>
-                {IMAGES[category.slug] && (
-                  <img src={IMAGES[category.slug]} alt="" className={styles.iconImage} />
+                {category.image ? (
+                  <img src={category.image} alt="" className={styles.iconImage} />
+                ) : (
+                  <span className={styles.iconInitial}>{category.name.charAt(0).toUpperCase()}</span>
                 )}
               </span>
               <span className={styles.label}>{category.name}</span>

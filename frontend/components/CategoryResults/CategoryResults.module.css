@@ -149,40 +149,6 @@
   padding: 32px 0;
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding-top: 8px;
-}
-
-.pageNumber,
-.pageArrow {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  font-family: var(--font-heading);
-  font-size: 14px;
-  color: var(--color-text);
-  background: var(--color-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* .pageNumber is a real <a> now (see CategoryResults.tsx) — undo the
-     browser default underline/link-blue it'd otherwise pick up. */
-  text-decoration: none;
-}
-
-.pageNumberActive {
-  background: var(--color-primary);
-  color: var(--color-white);
-}
-
-.pageArrow:disabled {
-  opacity: 0.4;
-}
-
 @media (min-width: 1024px) {
   .resultBar {
     flex-direction: row;
