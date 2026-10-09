@@ -31,7 +31,7 @@ export default async function SearchPage({ query, page }: SearchPageProps) {
 
       <main className={styles.main}>
         <CategoryResults
-          categoryName={trimmed}
+          resultsTitle={trimmed}
           initialProducts={firstPage.products}
           initialLastPage={firstPage.lastPage}
           initialTotal={firstPage.total}

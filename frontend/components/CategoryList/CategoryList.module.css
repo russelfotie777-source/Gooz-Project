@@ -50,6 +50,17 @@
   border-radius: 50%;
 }
 
+/* Shown instead of iconImage when the category has no admin-uploaded
+   image yet — same fallback convention as DynamicHomepageSection's own
+   category/brand badges (an initial letter rather than a broken/empty
+   circle). */
+.iconInitial {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-text-muted);
+}
+
 .label {
   font-family: var(--font-body);
   font-weight: 700;

@@ -6,6 +6,7 @@ import type { Brand, Category, Product } from "@/lib/types";
 import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import Pagination from "@/components/Pagination/Pagination";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CatalogueSection.module.css";
 
@@ -289,48 +290,7 @@ export default function CatalogueSection({
         )}
       </div>
 
-      {lastPage > 1 && (
-        <div className={styles.pagination}>
-          <button
-            type="button"
-            className={styles.pageArrow}
-            onClick={() => goToPage(Math.max(1, page - 1))}
-            disabled={page === 1 || loading}
-            aria-label={dict.home.catalogue.previousPage}
-          >
-            ‹
-          </button>
-          {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
-            // A real <a href> (not a plain button) — this is what actually
-            // lets a crawler discover page 2+ at all, by following a real
-            // link instead of needing to run an onClick handler. Clicking it
-            // still gets the fast client-side refetch via goToPage, same as
-            // before; e.preventDefault() just stops Next's own Link
-            // navigation from doing it a second time.
-            <LocaleLink
-              key={n}
-              href={pageHref(n)}
-              className={`${styles.pageNumber} ${n === page ? styles.pageNumberActive : ""}`}
-              onClick={(e) => {
-                e.preventDefault();
-                goToPage(n);
-              }}
-              aria-current={n === page ? "page" : undefined}
-            >
-              {n}
-            </LocaleLink>
-          ))}
-          <button
-            type="button"
-            className={styles.pageArrow}
-            onClick={() => goToPage(Math.min(lastPage, page + 1))}
-            disabled={page === lastPage || loading}
-            aria-label={dict.home.catalogue.nextPage}
-          >
-            ›
-          </button>
-        </div>
-      )}
+      <Pagination page={page} lastPage={lastPage} loading={loading} pageHref={pageHref} onNavigate={goToPage} />
     </section>
   );
 }

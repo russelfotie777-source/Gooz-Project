@@ -92,7 +92,7 @@ export default function DynamicHomepageSection({ section }: DynamicHomepageSecti
 
           {section.content_type === "brands" &&
             section.brands.map((brand) => (
-              <div className={styles.cardItem} key={brand.id}>
+              <LocaleLink href={`/marques/${brand.slug}`} className={styles.cardItem} key={brand.id}>
                 <span className={styles.cardBadge}>
                   {brand.logo ? (
                     <Image src={brand.logo} alt="" fill sizes="72px" className={styles.cardImage} />
@@ -101,7 +101,7 @@ export default function DynamicHomepageSection({ section }: DynamicHomepageSecti
                   )}
                 </span>
                 <span className={styles.cardName}>{brand.name}</span>
-              </div>
+              </LocaleLink>
             ))}
         </div>
 

@@ -56,7 +56,7 @@ export default async function CategoryPage({ categorySlug, page }: CategoryPageP
         <ProductSection titleKey="bestSellersTitle" products={bestSellers} cardLayout="row" />
 
         <CategoryResults
-          categoryName={category.name}
+          resultsTitle={category.name}
           initialProducts={categoryFirstPage.products}
           initialLastPage={categoryFirstPage.lastPage}
           initialTotal={categoryFirstPage.total}

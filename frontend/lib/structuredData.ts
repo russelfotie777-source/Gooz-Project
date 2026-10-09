@@ -1,4 +1,4 @@
-import type { Category, Product } from "./types";
+import type { Brand, Category, Product } from "./types";
 import { SITE_URL } from "./siteUrl";
 
 // Displayed on a white/neutral background by whatever reads this (Google's
@@ -80,6 +80,13 @@ export function categoryBreadcrumb(lang: string, category: Category) {
   return breadcrumbSchema([
     { name: "Shopitech", url: `${SITE_URL}/${lang}` },
     { name: category.name, url: `${SITE_URL}/${lang}/categories/${category.slug}` },
+  ]);
+}
+
+export function brandBreadcrumb(lang: string, brand: Brand) {
+  return breadcrumbSchema([
+    { name: "Shopitech", url: `${SITE_URL}/${lang}` },
+    { name: brand.name, url: `${SITE_URL}/${lang}/marques/${brand.slug}` },
   ]);
 }
 

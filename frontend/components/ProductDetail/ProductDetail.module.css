@@ -519,6 +519,35 @@
   height: 26px;
 }
 
+/* Mobile: a plain outline circle next to quickAddButton, same size —
+   there's no hover on touch, so the fill-on-hover/expand behavior (see the
+   901px override below) only exists on desktop; tapping this just opens
+   WhatsApp directly, no different from any other icon button here. */
+.whatsappButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-elevated);
+  border: 1.5px solid #25d366;
+  color: #25d366;
+  box-shadow: var(--shadow-card);
+}
+
+.whatsappIcon {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+}
+
+.whatsappLabel {
+  display: none;
+}
+
 .buyButton:disabled,
 .quickAddButton:disabled {
   opacity: 0.6;
@@ -626,6 +655,16 @@
 
 .accordionBody p {
   margin: 0;
+}
+
+.brandLink {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.brandLink:hover {
+  text-decoration: underline;
 }
 
 /* Reviews — both mobile and desktop */
@@ -872,6 +911,17 @@
     border-radius: var(--radius-md);
     font-size: 18px;
     padding: 18px;
+    /* flex-shrink (from the 1 1 auto shorthand) does the shrinking here —
+       no need to reach for .buyRow:has(.whatsappButton:hover): once
+       .whatsappButton's own flex-basis grows on hover (see below), the row
+       has less free space and this — the only other flexible sibling —
+       is what naturally gives that space up, down to min-width. One rule
+       driving both buttons beats two rules trying to stay in sync. */
+    flex: 1 1 auto;
+    min-width: 58px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: flex-basis 0.35s ease;
   }
 
   .buyButtonLabelDesktop {
@@ -884,10 +934,68 @@
 
   .buyIcon {
     display: block;
+    /* Stays full-size while .buyButtonLabelDesktop is what actually gets
+       clipped as the button narrows (via .buyButton's own overflow:
+       hidden above) — without this the icon would shrink too and the
+       button would end up showing a half-squashed icon instead of a
+       clean icon-only state. */
+    flex-shrink: 0;
   }
 
   .quickAddButton {
     display: none;
+  }
+
+  /* Pinned to a small 58px circle at rest (flex-basis: 58px, flex-grow: 0
+     so it never claims more on its own) — .buyButton above absorbs any
+     leftover row width instead. On hover, only the :hover rule below
+     changes (flex-basis jumps to 260px); .buyButton reacting is a side
+     effect of ordinary flex-shrink, not something coordinated here.
+     border-radius: 50% here (a true circle on this 58x58 square) has to
+     become a smaller fixed radius on hover, not stay 50% — 50% of a
+     260x58 box still fully rounds the two short (58px-tall) edges into a
+     stadium/oval, not the moderate rounded-rectangle corners wanted. */
+  .whatsappButton {
+    width: auto;
+    height: 58px;
+    padding: 0 18px;
+    border-radius: 50%;
+    flex: 0 0 58px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: flex-basis 0.35s ease, border-radius 0.35s ease, background-color 0.25s ease, border-color 0.25s ease,
+      color 0.25s ease;
+  }
+
+  .whatsappButton:hover {
+    flex-basis: 260px;
+    border-radius: var(--radius-lg);
+    background: #25d366;
+    border-color: #25d366;
+    color: var(--color-white);
+  }
+
+  .whatsappIcon {
+    flex: 0 0 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .whatsappLabel {
+    display: inline-block;
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: opacity 0.25s ease, max-width 0.35s ease;
+  }
+
+  .whatsappButton:hover .whatsappLabel {
+    opacity: 1;
+    max-width: 220px;
   }
 
   .features {

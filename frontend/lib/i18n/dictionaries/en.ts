@@ -116,8 +116,6 @@ const en: Dictionary = {
       brand: "Brand",
       color: "Color",
       noResults: "No product matches these filters.",
-      previousPage: "Previous page",
-      nextPage: "Next page",
       truncatedNotice: "Showing the first results of the catalogue. Narrow your search to see more products.",
       priceRanges: {
         under10000: "Under 10,000 FCFA",
@@ -139,8 +137,6 @@ const en: Dictionary = {
     priceMax: "Max price",
     applyFilter: "Filter",
     noResults: "No product matches these filters.",
-    previousPage: "Previous page",
-    nextPage: "Next page",
     truncatedNotice: "Showing the first results. Narrow your search to see more products.",
   },
   product: {
@@ -184,6 +180,9 @@ const en: Dictionary = {
     readLess: "Read less",
     buyNow: "Buy",
     buyNowMobile: "Buy now",
+    orderViaWhatsapp: "Order via WhatsApp",
+    whatsappOrderMessage: (name: string, price: string) =>
+      `Hello, I'd like to order: ${name} (${price}). Is it available?`,
     addedToCartMessage: "Added to cart!",
     genericError: "Something went wrong.",
     deliveryPrompt: "Where would you like to be delivered",
@@ -680,6 +679,8 @@ const en: Dictionary = {
   seo: {
     categoryDescription: (name: string): string =>
       `Shop ${name} at the best price on Shopitech. Fast delivery and secure payment.`,
+    brandDescription: (name: string): string =>
+      `Discover all ${name} products on Shopitech. Fast delivery and secure payment.`,
     productDescriptionFallback: (name: string): string =>
       `${name} available on Shopitech, at the best price, with fast delivery and secure payment.`,
   },

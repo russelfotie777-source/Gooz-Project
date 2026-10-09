@@ -318,7 +318,11 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
       {/* Mobile header — Figma node 372:185 (PWA mobile view) */}
       <div className={styles.mobileHeader}>
         {variant === "detail" ? (
-          /* Product detail — Figma node 223:189: back + title + search icon only, no promo strip/search bar */
+          /* Product detail — Figma node 223:189: back + title, no promo
+             strip/search bar. The search icon this row used to have (next
+             to the title, opening /recherche) was removed — it served no
+             purpose here (search is already reachable from the main
+             header). */
           <div className={`${styles.mobileDetailSticky} ${scrolled ? styles.mobileDetailStickyScrolled : ""}`}>
             <div className={styles.mobileDetailRow}>
               <button
@@ -332,14 +336,10 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
               <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
 
-              <button
-                type="button"
-                className={styles.mobileDetailSearchButton}
-                aria-label={dict.header.search}
-                onClick={() => router.push("/recherche")}
-              >
-                <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchIcon} />
-              </button>
+              {/* Balances .mobileBackButton's width so the centered title
+                  text lands at the row's true center instead of drifting
+                  right now that there's nothing on this side. */}
+              <span className={styles.mobileDetailSpacer} aria-hidden="true" />
             </div>
           </div>
         ) : variant === "cart" ? (
@@ -383,15 +383,6 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 */}
 
                 <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
-
-                <button
-                  type="button"
-                  className={styles.mobileSearchButton}
-                  aria-label={dict.header.search}
-                  onClick={() => mobileSearchRef.current?.focus()}
-                >
-                  <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchIcon} />
-                </button>
               </div>
 
               <form className={styles.mobileSearchForm} role="search" onSubmit={handleSearchSubmit}>

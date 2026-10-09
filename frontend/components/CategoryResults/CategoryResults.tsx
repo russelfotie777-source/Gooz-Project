@@ -6,13 +6,16 @@ import type { Product } from "@/lib/types";
 import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import Pagination from "@/components/Pagination/Pagination";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CategoryResults.module.css";
 
 interface CategoryResultsProps {
-  /** The category's display name — or, in "search" mode, the raw query
-   * string, which is wrapped in the translated "Results for ..." heading. */
-  categoryName: string;
+  /** The display name shown as the page heading — the category's name, the
+   * brand's name, or (in "search" mode) the raw query string, which is
+   * wrapped in the translated "Results for ..." heading instead of shown
+   * as-is. */
+  resultsTitle: string;
   /** First page, fetched server-side so there's no loading flash on mount. */
   initialProducts: Product[];
   initialLastPage: number;
@@ -23,10 +26,12 @@ interface CategoryResultsProps {
   initialPage: number;
   /** "search" swaps the empty-state wording and the heading format ("no
    * product matches your search" / "Results for ..." instead of the plain
-   * category name) — same filter/sort/pagination UI either way. */
-  mode?: "category" | "search";
+   * title) — same filter/sort/pagination UI in all three modes. */
+  mode?: "category" | "brand" | "search";
   /** Required in "category" mode — re-fetches stay scoped to this category. */
   categoryId?: number;
+  /** Required in "brand" mode — re-fetches stay scoped to this brand. */
+  brandId?: number;
   /** Required in "search" mode — re-fetches stay scoped to this term. */
   searchQuery?: string;
 }
@@ -42,13 +47,14 @@ const SORT_TO_PARAMS: Record<Exclude<SortOption, "">, Pick<GetProductsParams, "s
 };
 
 export default function CategoryResults({
-  categoryName,
+  resultsTitle,
   initialProducts,
   initialLastPage,
   initialTotal,
   initialPage,
   mode = "category",
   categoryId,
+  brandId,
   searchQuery,
 }: CategoryResultsProps) {
   const dict = useDictionary();
@@ -62,7 +68,7 @@ export default function CategoryResults({
       ? dict.search.noResults
       : dict.category.noResults;
   const heading =
-    mode === "search" ? (isEmptySearch ? dict.header.search : dict.search.resultsFor(categoryName)) : categoryName;
+    mode === "search" ? (isEmptySearch ? dict.header.search : dict.search.resultsFor(resultsTitle)) : resultsTitle;
   const SORT_LABELS: Record<Exclude<SortOption, "">, string> = {
     "price-asc": dict.category.sortPriceAsc,
     "price-desc": dict.category.sortPriceDesc,
@@ -103,6 +109,7 @@ export default function CategoryResults({
       page,
       per_page: PAGE_SIZE,
       category_id: mode === "category" ? categoryId : undefined,
+      brand_id: mode === "brand" ? brandId : undefined,
       q: mode === "search" ? searchQuery : undefined,
       min_price: appliedRange.min ?? undefined,
       max_price: appliedRange.max ?? undefined,
@@ -127,7 +134,7 @@ export default function CategoryResults({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, sort, appliedRange, categoryId, searchQuery, mode]);
+  }, [page, sort, appliedRange, categoryId, brandId, searchQuery, mode]);
 
   // Keeps ?page= in the address bar in sync with the current page — a
   // crawler (or a shared link) landing on this URL with ?page=2 gets that
@@ -232,48 +239,7 @@ export default function CategoryResults({
         )}
       </div>
 
-      {lastPage > 1 && (
-        <div className={styles.pagination}>
-          <button
-            type="button"
-            className={styles.pageArrow}
-            onClick={() => goToPage(Math.max(1, page - 1))}
-            disabled={page === 1 || loading}
-            aria-label={dict.category.previousPage}
-          >
-            ‹
-          </button>
-          {Array.from({ length: lastPage }, (_, i) => i + 1).map((n) => (
-            // A real <a href> (not a plain button) — this is what actually
-            // lets a crawler discover page 2+ at all, by following a real
-            // link instead of needing to run an onClick handler. Clicking it
-            // still gets the fast client-side refetch via goToPage, same as
-            // before; e.preventDefault() just stops Next's own Link
-            // navigation from doing it a second time.
-            <LocaleLink
-              key={n}
-              href={pageHref(n)}
-              className={`${styles.pageNumber} ${n === page ? styles.pageNumberActive : ""}`}
-              onClick={(e) => {
-                e.preventDefault();
-                goToPage(n);
-              }}
-              aria-current={n === page ? "page" : undefined}
-            >
-              {n}
-            </LocaleLink>
-          ))}
-          <button
-            type="button"
-            className={styles.pageArrow}
-            onClick={() => goToPage(Math.min(lastPage, page + 1))}
-            disabled={page === lastPage || loading}
-            aria-label={dict.category.nextPage}
-          >
-            ›
-          </button>
-        </div>
-      )}
+      <Pagination page={page} lastPage={lastPage} loading={loading} pageHref={pageHref} onNavigate={goToPage} />
     </section>
   );
 }
