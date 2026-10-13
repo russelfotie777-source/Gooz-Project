@@ -21,6 +21,7 @@ import type {
   Product,
   ProductImage,
   ProductVariant,
+  Review,
   Ticket,
   TicketPriority,
   User,
@@ -320,6 +321,34 @@ export async function getProduct(id: number): Promise<Product> {
   return normalizeProduct(data);
 }
 
+// "Souvent acheté aussi" on the product page — see ProductController::
+// related(): co-purchased products first (ranked by frequency), filled out
+// with same-category ones when there isn't enough order history yet.
+export async function getRelatedProducts(productId: number): Promise<Product[]> {
+  const { data } = await apiFetch<ApiCollection<Product>>(`/products/${productId}/related`, CATALOG_CACHE);
+  return data.map(normalizeProduct);
+}
+
+// "Les clients ont aussi consulté" — same idea as getRelatedProducts, off
+// anonymous view sessions instead of orders. See ProductController::
+// alsoViewed() / trackProductView() below.
+export async function getAlsoViewedProducts(productId: number): Promise<Product[]> {
+  const { data } = await apiFetch<ApiCollection<Product>>(`/products/${productId}/also-viewed`, CATALOG_CACHE);
+  return data.map(normalizeProduct);
+}
+
+// Fire-and-forget: records that this browsing session viewed this product,
+// feeding getAlsoViewedProducts() for everyone else. Never meant to block
+// or fail the page — see ProductDetail's effect that calls this, which
+// swallows any error.
+export async function trackProductView(productId: number, sessionToken: string): Promise<void> {
+  await fetch(`${API_BASE_URL}/products/${productId}/view`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_token: sessionToken }),
+  });
+}
+
 export async function getCategories(): Promise<Category[]> {
   const { data } = await apiFetch<ApiCollection<Category>>("/categories", CATALOG_CACHE);
   return data;
@@ -343,6 +372,12 @@ export async function getAnnouncements(): Promise<Announcement[]> {
 
 export async function getAppPromo(): Promise<AppPromoSetting> {
   const { data } = await apiFetch<ApiResource<AppPromoSetting>>("/app-promo", CATALOG_CACHE);
+  return data;
+}
+
+// Public — only ever returns admin-approved reviews (see ReviewController::index).
+export async function getProductReviews(productId: number): Promise<Review[]> {
+  const { data } = await apiFetch<PaginatedApiCollection<Review>>(`/products/${productId}/reviews`, CATALOG_CACHE);
   return data;
 }
 
@@ -494,6 +529,49 @@ export async function updateCartItem(token: string, cartItemId: number, quantity
   return normalizeCart(data);
 }
 
+// Reviews work without an account — on purpose, so a first-time visitor
+// isn't turned away by a login wall just to leave a comment. The route is
+// public, but a signed-in shopper is still attributed to their own account
+// when a token is available (see ReviewController::store), hence the
+// Authorization header only going out when one was actually passed in.
+async function optionalAuthFetch<T>(path: string, token: string | null, init: RequestInit = {}): Promise<T> {
+  const res = await fetchOrThrow(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...init.headers,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiValidationError(body?.message ?? `API ${path} -> ${res.status}`, body?.errors ?? {}, res.status);
+  }
+
+  return res.json();
+}
+
+// One review per signed-in shopper per product (ReviewController::store
+// 422s on a second attempt from the same account) — not enforced for
+// guests, who have no stable identity to check against. Starts unapproved
+// (is_approved defaults false) either way, so it won't show up in
+// getProductReviews() until an admin moderates it. guestName is required by
+// the backend only when token is null.
+export async function submitReview(
+  productId: number,
+  payload: { rating: number; comment?: string; guestName?: string },
+  token: string | null = null
+): Promise<Review> {
+  const { data } = await optionalAuthFetch<ApiResource<Review>>(`/products/${productId}/reviews`, token, {
+    method: "POST",
+    body: JSON.stringify({ rating: payload.rating, comment: payload.comment, guest_name: payload.guestName }),
+  });
+  return data;
+}
+
 export async function removeCartItem(token: string, cartItemId: number): Promise<void> {
   await authedFetch<void>(`/cart/items/${cartItemId}`, token, { method: "DELETE" });
 }
@@ -589,11 +667,20 @@ export async function getOrderByReference(token: string, reference: string): Pro
 // Re-checks a mobile-money order's payment status with Enkap (or retries
 // creating the Enkap order if that step failed during checkout). Called
 // from the payment-return page the customer lands back on after Enkap.
-export async function refreshOrderPayment(token: string, orderReference: string): Promise<Order> {
+// force=true means "the shopper explicitly clicked pay now/retry" rather
+// than an automatic status re-check (PaymentReturnPage's polling): it tells
+// the backend to always mint a fresh Enkap checkout session instead of
+// trusting the stored one, which can go stale on Enkap's hosted payment UI
+// well before the transaction itself is marked "échoué" there.
+export async function refreshOrderPayment(
+  token: string,
+  orderReference: string,
+  force = false
+): Promise<Order> {
   const { data } = await authedFetch<ApiResource<Order>>(
     `/orders/${orderReference}/payment/refresh`,
     token,
-    { method: "POST" }
+    { method: "POST", body: JSON.stringify({ force }) }
   );
   return normalizeOrder(data);
 }

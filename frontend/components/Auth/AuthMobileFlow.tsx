@@ -60,10 +60,26 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
   const loginErrorRef = useFocusOnError<HTMLParagraphElement>(loginError);
   const signupErrorRef = useFocusOnError<HTMLParagraphElement>(signupError);
 
+  // Auto-advance from the welcome slide to the form after a beat — long
+  // enough to see the "glissez vers le haut" bounce animation play (one
+  // full cycle, see .swipeChevron's 1.6s bounceUp) before the page glides
+  // down on its own, so a shopper landing on /connexion or /inscription
+  // isn't stuck staring at the welcome slide until they tap/swipe manually.
   useEffect(() => {
-    if (initialMode !== "signup") return;
-    viewportRef.current?.scrollTo({ top: viewportRef.current.clientHeight });
-    formsTrackRef.current?.scrollTo({ left: formsTrackRef.current.clientWidth });
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const timer = window.setTimeout(() => {
+      // Don't fight a swipe/tap already in progress — only auto-advance if
+      // the shopper hasn't started moving away from the welcome slide yet.
+      if (viewport.scrollTop > 0) return;
+      if (initialMode === "signup") {
+        formsTrackRef.current?.scrollTo({ left: formsTrackRef.current.clientWidth });
+      }
+      viewport.scrollTo({ top: viewport.clientHeight, behavior: "smooth" });
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
   }, [initialMode]);
 
   function openSheet() {

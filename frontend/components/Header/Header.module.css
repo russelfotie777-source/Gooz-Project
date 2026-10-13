@@ -64,17 +64,22 @@
   object-fit: contain;
 }
 
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
 .searchForm {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  flex: 1;
-  max-width: 640px;
+  width: 100%;
   height: 45px;
   background: #ffffff;
   border-radius: 9999px;
   overflow: hidden;
-  margin: 0 auto;
   box-shadow: var(--shadow-card);
 }
 
@@ -419,6 +424,11 @@
   flex: 1;
 }
 
+.mobileSearchWrapper {
+  position: relative;
+  margin: 0 16px 12px;
+}
+
 .mobileSearchForm {
   display: flex;
   align-items: center;
@@ -426,7 +436,6 @@
   background: var(--color-placeholder);
   border-radius: 9999px;
   height: 40px;
-  margin: 0 16px 12px;
   padding: 0 16px;
 }
 

@@ -621,6 +621,15 @@
   overflow: hidden;
 }
 
+/* Unlike .accordions above, visible at every width — see the JSX comment
+   next to it. No horizontal margin of its own: .main (ProductPage.module.css)
+   already pads the whole page, same as .accordions relies on. */
+.specsSection {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
 .accordionHeader {
   width: 100%;
   display: flex;
@@ -655,6 +664,36 @@
 
 .accordionBody p {
   margin: 0;
+}
+
+.specList {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.specRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.specRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.specRow dt {
+  color: var(--color-text-muted);
+}
+
+.specRow dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: right;
 }
 
 .brandLink {
@@ -790,6 +829,17 @@
   resize: vertical;
 }
 
+.nameInput {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
 .reviewActions {
   display: flex;
   justify-content: flex-end;
@@ -822,6 +872,90 @@
   color:var(--color-accent);
   border: 1.3px solid var(--color-accent);
   animation: ease 0.3s;
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+}
+
+.reviewFeedbackSuccess,
+.reviewFeedbackError {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.reviewFeedbackSuccess {
+  color: var(--color-success, #1a8a4a);
+}
+
+.reviewFeedbackError {
+  color: var(--color-danger, #d93025);
+}
+
+.noReviews {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reviewItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.reviewItem:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.reviewItemHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reviewAuthor {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.reviewDate {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.reviewMoodLabel {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--color-accent-strong);
+}
+
+.reviewComment {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.5;
 }
 
 /* 901px, not the site's usual 1024px: Header.module.css switches to its

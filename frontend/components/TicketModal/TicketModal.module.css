@@ -185,7 +185,12 @@
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'><path d='M5 8l5 5 5-5' stroke='%23999' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat: no-repeat;
   background-position: right 12px center;
-  padding-right: 32px;
+  /* Without an explicit size, the SVG's intrinsic (viewBox-derived) size can
+     render larger than intended and creep into the text — happened with
+     the default long option ("Sélectionnez une catégorie"). */
+  background-size: 12px 12px;
+  padding-right: 36px;
+  text-overflow: ellipsis;
 }
 
 .textarea {

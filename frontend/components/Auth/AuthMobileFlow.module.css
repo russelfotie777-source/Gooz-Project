@@ -38,7 +38,13 @@
 
 .welcomeImage {
   position: absolute;
-  z-index: 0;
+  /* No z-index: that used to make this its own stacking context, which
+     some engines render as an isolated blend group for mix-blend-mode —
+     one with no real backdrop of its own, so it fell back to black exactly
+     where the mask below fades the image to transparent, instead of
+     letting .viewport's orange (painted further up the tree) show through.
+     Leaving this at the default z-index:auto keeps it in .viewport's own
+     stacking context, so the blend has the real orange to work with. */
   left: 50%;
   top: 30dvh;
   height: 92dvh;
@@ -113,7 +119,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: max(56px, env(safe-area-inset-top)) 24px 28px;
+  padding: max(32px, env(safe-area-inset-top)) 24px 20px;
 }
 
 .formsHello {
@@ -133,7 +139,15 @@
 }
 
 .sheet {
-  flex: 0 0 56%;
+  /* Was 56% — too short for the actual form content (title + tabs + 2
+     fields + submit button + divider + social icons + switch line), which
+     forced scrolling inside the sheet to reach the bottom just to see
+     everything. That hidden scroll zone read as empty/broken space rather
+     than "scroll for more" since nothing hints a second scroll exists here
+     (the page already scrolls once, welcome -> forms). 74% fits the login
+     form without any inner scroll; signup (one extra field) needs only a
+     little. */
+  flex: 0 0 78%;
   min-height: 0;
   background: var(--color-bg);
   border-radius: 40px 40px 0 0;
@@ -171,8 +185,8 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px 24px 28px;
+  gap: 14px;
+  padding: 16px 24px 18px;
   overflow-y: auto;
 }
 
@@ -323,6 +337,13 @@
 .submitButton {
   position: relative;
   overflow: hidden;
+  /* .formSlide is a column flex container that's shorter than its content
+     on small phones — its own overflow-y:auto is supposed to handle that
+     via scrolling, but a flex item's automatic minimum size collapses to 0
+     when it has overflow other than visible (this is that item), so
+     flex-shrink was crushing this button down to a sliver before the
+     browser ever got to scrolling. flex-shrink:0 keeps the real 54px. */
+  flex-shrink: 0;
   height: 54px;
   margin-top: 4px;
   border-radius: 5px;
@@ -439,7 +460,12 @@
 }
 
 .switchLine {
-  margin: 4px 0 0;
+  /* auto eats whatever slack is left in the sheet (varies by device/screen
+     height against the fixed .sheet share below) by pushing this last line
+     down to the bottom edge, instead of leaving it as a dead gap under the
+     social icons on a taller phone. Collapses to 0 and does nothing when
+     the form already fills or overflows the sheet (e.g. signup). */
+  margin: auto 0 0;
   text-align: center;
   font-family: var(--font-body);
   font-size: 14px;

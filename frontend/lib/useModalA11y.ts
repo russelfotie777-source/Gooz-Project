@@ -17,6 +17,17 @@ export function useModalA11y(
   containerRef: React.RefObject<HTMLElement | null>
 ): void {
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  // Callers pass an inline handleClose, a fresh function identity on every
+  // render of the modal — typing into any field inside it (TicketModal's
+  // subject/message, etc.) re-renders the modal on every keystroke. Reading
+  // onClose through a ref instead of the effect's own dependency array
+  // keeps the effect itself from re-running on every one of those renders:
+  // previously it was re-running its setup/cleanup after every character,
+  // which re-grabbed focus onto the modal's first focusable element (and,
+  // on cleanup, back onto whatever triggered the modal) — yanking focus out
+  // of the input the shopper was actively typing in.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -28,7 +39,7 @@ export function useModalA11y(
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
 
@@ -53,5 +64,6 @@ export function useModalA11y(
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused.current?.focus();
     };
-  }, [open, onClose, containerRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, containerRef]);
 }

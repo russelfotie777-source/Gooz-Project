@@ -104,8 +104,19 @@ export async function generateMetadata({
 // Brand orange (matches the app icon's background — see
 // public/manifest.json) so the Android address-bar/task-switcher chrome and
 // the install splash screen aren't a jarring mismatch with the icon.
+//
+// viewportFit: "cover" is the other half of this: without it, iOS Safari
+// never lets the page draw into the safe areas at all (notch/Dynamic Island
+// up top, home-indicator strip at the bottom) — it reserves that space and
+// fills it itself, which renders as a flat black bar the page has no
+// control over (that's what showed up at the bottom of the auth screen).
+// Every screen that needs to avoid those areas already does so correctly
+// via env(safe-area-inset-*) (see AuthMobileFlow's .swipeHint/.formsHeader)
+// — cover is what lets that padding do anything in the first place, instead
+// of padding against a safe area the page was never allowed to enter.
 export const viewport: Viewport = {
   themeColor: "#f39200",
+  viewportFit: "cover",
 };
 
 export function generateStaticParams() {

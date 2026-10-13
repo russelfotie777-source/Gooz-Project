@@ -2,7 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductPage from "@/components/ProductPage/ProductPage";
 import StructuredData from "@/components/StructuredData/StructuredData";
-import { getBanners, getProduct, getProducts, resolveMediaUrl } from "@/lib/api";
+import {
+  getAlsoViewedProducts,
+  getBanners,
+  getProduct,
+  getProductReviews,
+  getProducts,
+  getRelatedProducts,
+  resolveMediaUrl,
+} from "@/lib/api";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/getDictionary";
 import { productPath } from "@/lib/productUrl";
@@ -58,11 +66,26 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
   if (!product) notFound();
 
   // The main product above already has to succeed (404s otherwise) — a
-  // failure on this secondary call is not worth taking down a page that
-  // otherwise loaded fine; just show it with no recommendations.
-  const otherProducts = await getProducts({ per_page: 8 }).catch(() => []);
-  const recommendedProducts = otherProducts.filter((p) => p.id !== product.id).slice(0, 4);
+  // failure on any of these secondary calls isn't worth taking down a page
+  // that otherwise loaded fine; each just shows its section as empty.
+  const relatedProducts = await getRelatedProducts(product.id).catch(() => []);
+  const alsoViewedProducts = await getAlsoViewedProducts(product.id).catch(() => []);
+  // Same brand, minus the product itself and whatever already showed up in
+  // the two sections above — no point suggesting the same item three times.
+  const brandProducts = product.brand
+    ? await getProducts({ brand_id: product.brand.id, per_page: 12 })
+        .then((products) => {
+          const shown = new Set([
+            product.id,
+            ...relatedProducts.map((p) => p.id),
+            ...alsoViewedProducts.map((p) => p.id),
+          ]);
+          return products.filter((p) => !shown.has(p.id)).slice(0, 8);
+        })
+        .catch(() => [])
+    : [];
   const adBanners = await getBanners("product").catch(() => []);
+  const reviews = await getProductReviews(product.id).catch(() => []);
 
   const absoluteUrl = `${SITE_URL}${localizedPath(resolvedLang, productPath(product).replace(/^\//, ""))}`;
   const primaryImage = product.images.find((img) => img.is_primary) ?? product.images[0];
@@ -73,7 +96,14 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
         data={productSchema(product, absoluteUrl, primaryImage ? resolveMediaUrl(primaryImage.image_url) : undefined)}
       />
       <StructuredData data={productBreadcrumb(resolvedLang, product, absoluteUrl)} />
-      <ProductPage product={product} recommendedProducts={recommendedProducts} adBanners={adBanners} />
+      <ProductPage
+        product={product}
+        relatedProducts={relatedProducts}
+        alsoViewedProducts={alsoViewedProducts}
+        brandProducts={brandProducts}
+        adBanners={adBanners}
+        reviews={reviews}
+      />
     </>
   );
 }

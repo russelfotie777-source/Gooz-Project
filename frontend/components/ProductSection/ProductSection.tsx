@@ -7,7 +7,16 @@ import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./ProductSection.module.css";
 
 interface ProductSectionProps {
-  titleKey: "saleTitle" | "popularTitle" | "bestSellersTitle" | "dealsTitle" | "recommendedTitle";
+  titleKey:
+    | "saleTitle"
+    | "popularTitle"
+    | "bestSellersTitle"
+    | "dealsTitle"
+    | "recommendedTitle"
+    | "frequentlyBoughtTitle"
+    | "alsoViewedTitle"
+    | "moreFromBrandTitle"
+    | "recentlyViewedTitle";
   products: Product[];
   cardLayout?: "row" | "column";
 }

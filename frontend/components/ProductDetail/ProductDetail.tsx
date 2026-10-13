@@ -2,7 +2,15 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { addCartItem, ApiValidationError, getCities, getDeliveryEstimate, getNeighborhoods } from "@/lib/api";
+import {
+  addCartItem,
+  ApiValidationError,
+  getCities,
+  getDeliveryEstimate,
+  getNeighborhoods,
+  submitReview,
+  trackProductView,
+} from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
 import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/WhatsAppButton";
@@ -10,7 +18,8 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { getDisplayVariant } from "@/lib/pricing";
-import type { City, Neighborhood, Product } from "@/lib/types";
+import { getViewSessionToken, recordRecentlyViewed } from "@/lib/productView";
+import type { City, Neighborhood, Product, Review } from "@/lib/types";
 import styles from "./ProductDetail.module.css";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder-product.svg";
@@ -22,12 +31,13 @@ const FEATURE_ICONS = [
   "/icon/product-detail/feature-prime.svg",
 ];
 
+// rating maps each mood onto the backend's 1-5 scale (StoreReviewRequest).
 const MOOD_DEFS = [
-  { id: "very-dissatisfied", icon: "/icon/product-detail/mood-very-dissatisfied.svg", key: "veryDissatisfied" },
-  { id: "worried", icon: "/icon/product-detail/mood-worried.svg", key: "worried" },
-  { id: "content", icon: "/icon/product-detail/mood-content.svg", key: "content" },
-  { id: "calm", icon: "/icon/product-detail/mood-calm.svg", key: "calm" },
-  { id: "happy", icon: "/icon/product-detail/mood-happy.svg", key: "happy" },
+  { id: "very-dissatisfied", icon: "/icon/product-detail/mood-very-dissatisfied.svg", key: "veryDissatisfied", rating: 1 },
+  { id: "worried", icon: "/icon/product-detail/mood-worried.svg", key: "worried", rating: 2 },
+  { id: "content", icon: "/icon/product-detail/mood-content.svg", key: "content", rating: 3 },
+  { id: "calm", icon: "/icon/product-detail/mood-calm.svg", key: "calm", rating: 4 },
+  { id: "happy", icon: "/icon/product-detail/mood-happy.svg", key: "happy", rating: 5 },
 ] as const;
 
 function formatPrice(value: number): string {
@@ -36,13 +46,15 @@ function formatPrice(value: number): string {
 
 interface ProductDetailProps {
   product: Product;
+  /** Already-approved reviews only (see ReviewController::index). */
+  reviews: Review[];
 }
 
 // Figma: desktop node 975:5613, mobile node 223:189. The delivery box,
 // feature badges and the two accordions only exist in the desktop design —
 // mobile stops at description + buy button + reviews (see .module.css).
 
-export default function ProductDetail({ product }: ProductDetailProps) {
+export default function ProductDetail({ product, reviews }: ProductDetailProps) {
   const dict = useDictionary();
   const router = useLocaleRouter();
   const FEATURES = dict.product.features.map((f, i) => ({ ...f, icon: FEATURE_ICONS[i] }));
@@ -81,11 +93,30 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [deliveryFee, setDeliveryFee] = useState<number | null>(null);
   const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "loading" | "error">("idle");
   const [pickup, setPickup] = useState(false);
-  const [openAccordion, setOpenAccordion] = useState<"details" | "info" | null>(null);
+  const [openAccordion, setOpenAccordion] = useState<"details" | "specs" | "info" | null>(null);
   const [mood, setMood] = useState<(typeof MOODS)[number]["id"] | null>(null);
   const [comment, setComment] = useState("");
   const [addStatus, setAddStatus] = useState<"idle" | "adding" | "added" | "error">("idle");
   const [addMessage, setAddMessage] = useState<string | null>(null);
+  const [reviewStatus, setReviewStatus] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null);
+  const [guestName, setGuestName] = useState("");
+  // Starts false (matches server render — getSession() reads localStorage,
+  // which doesn't exist during SSR) and is corrected right after mount, same
+  // fix as CheckoutContext's orderNumber: seeding this from getSession()
+  // directly in useState would make the very first client render disagree
+  // with the server-rendered HTML.
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => setLoggedIn(Boolean(getSession())), []);
+
+  // Feeds "Récemment consultés" (this shopper's own history, localStorage)
+  // and "Les clients ont aussi consulté" (cross-shopper correlation, see
+  // ProductController::alsoViewed()) — fire-and-forget, never blocks
+  // rendering and a failure here isn't worth surfacing to the shopper.
+  useEffect(() => {
+    recordRecentlyViewed(product.id);
+    trackProductView(product.id, getViewSessionToken()).catch(() => {});
+  }, [product.id]);
   // A long description used to push the buy button far down the page —
   // clamped to a few lines by default, expandable on demand, so the layout
   // stays predictable regardless of how much the admin writes.
@@ -142,6 +173,49 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     }
   }
 
+  // Reviews work without an account on purpose — requiring a login here
+  // would just turn a visitor away instead of getting their feedback. The
+  // submit button was previously wired to nothing at all — this is what
+  // actually posts to ReviewController::store.
+  async function handleSubmitReview() {
+    if (!mood) {
+      setReviewStatus("error");
+      setReviewMessage(dict.product.ratingRequired);
+      return;
+    }
+
+    const session = getSession();
+    if (!session && !guestName.trim()) {
+      setReviewStatus("error");
+      setReviewMessage(dict.product.guestNameRequired);
+      return;
+    }
+
+    const rating = MOODS.find((m) => m.id === mood)?.rating ?? 3;
+
+    setReviewStatus("submitting");
+    setReviewMessage(null);
+    try {
+      await submitReview(
+        product.id,
+        { rating, comment: comment.trim() || undefined, guestName: session ? undefined : guestName.trim() },
+        session?.token ?? null
+      );
+      setReviewStatus("submitted");
+      setReviewMessage(dict.product.reviewSubmitted);
+      setMood(null);
+      setComment("");
+      setGuestName("");
+    } catch (err) {
+      setReviewStatus("error");
+      setReviewMessage(
+        err instanceof ApiValidationError
+          ? (Object.values(err.errors)[0]?.[0] ?? err.message)
+          : dict.product.genericError
+      );
+    }
+  }
+
   // Fetched once, up front: the neighborhoods list stays tiny (a handful per
   // city), so filtering client-side on city change avoids an extra network
   // round-trip every time the user picks a city.
@@ -190,8 +264,28 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       });
   }, [neighborhoodId]);
 
-  function toggleAccordion(name: "details" | "info") {
+  function toggleAccordion(name: "details" | "specs" | "info") {
     setOpenAccordion((current) => (current === name ? null : name));
+  }
+
+  // "Spécifications" — assembled from fields that already exist (no new
+  // admin-managed content type yet), one row per piece of data that's
+  // actually present. Rows collapse away entirely rather than showing "—"
+  // for a product/category that doesn't have that attribute.
+  const specRows: { label: string; value: string }[] = [];
+  if (product.reference) specRows.push({ label: dict.product.specReference, value: product.reference });
+  if (product.category?.name) specRows.push({ label: dict.product.specCategory, value: product.category.name });
+  if (product.brand?.name) specRows.push({ label: dict.product.specBrand, value: product.brand.name });
+  if (product.brand?.country_origin) {
+    specRows.push({ label: dict.product.specOrigin, value: product.brand.country_origin });
+  }
+  for (const [label, field] of [
+    [dict.product.specColors, "color"],
+    [dict.product.specSizes, "size"],
+    [dict.product.specMaterial, "material"],
+  ] as const) {
+    const values = [...new Set(product.variants.map((v) => v[field]).filter((v): v is string => Boolean(v)))];
+    if (values.length > 0) specRows.push({ label, value: values.join(", ") });
   }
 
   function handleTrackScroll() {
@@ -498,6 +592,42 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         ))}
       </div>
 
+      {/* .accordions (below) is desktop-only by design — mobile's Figma
+          source never included "Détails du produit"/"Plus d'information"
+          (see the component's top comment). Specs are new and genuinely
+          wanted on mobile too, so this one lives outside that wrapper with
+          its own always-visible styling instead of inheriting that
+          desktop-only rule. */}
+      {specRows.length > 0 && (
+        <div className={styles.specsSection}>
+          <button
+            type="button"
+            className={styles.accordionHeader}
+            onClick={() => toggleAccordion("specs")}
+            aria-expanded={openAccordion === "specs"}
+          >
+            <span>{dict.product.specifications}</span>
+            <img
+              src="/icon/product-detail/chevron-down.svg"
+              alt=""
+              className={`${styles.accordionChevron} ${openAccordion === "specs" ? styles.accordionChevronOpen : ""}`}
+            />
+          </button>
+          {openAccordion === "specs" && (
+            <div className={styles.accordionBody}>
+              <dl className={styles.specList}>
+                {specRows.map((row) => (
+                  <div className={styles.specRow} key={row.label}>
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className={styles.accordions}>
         <div className={styles.accordion}>
           <button
@@ -565,7 +695,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               key={m.id}
               type="button"
               className={`${styles.moodButton} ${mood === m.id ? styles.moodButtonActive : ""}`}
-              onClick={() => setMood(m.id)}
+              onClick={() => {
+                setMood(m.id);
+                if (reviewStatus === "error") {
+                  setReviewStatus("idle");
+                  setReviewMessage(null);
+                }
+              }}
               aria-pressed={mood === m.id}
             >
               <img src={m.icon} alt="" className={styles.moodIcon} />
@@ -584,14 +720,75 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           className={styles.commentInput}
         />
 
+        {!loggedIn && (
+          <>
+            <h2 className={styles.reviewsTitle}>{dict.product.yourName}</h2>
+            <input
+              type="text"
+              value={guestName}
+              onChange={(e) => {
+                setGuestName(e.target.value);
+                if (reviewStatus === "error") {
+                  setReviewStatus("idle");
+                  setReviewMessage(null);
+                }
+              }}
+              placeholder={dict.product.yourNamePlaceholder}
+              className={styles.nameInput}
+            />
+          </>
+        )}
+
         <div className={styles.reviewActions}>
-          <button type="button" className={styles.cancelButton} onClick={() => { setMood(null); setComment(""); }}>
+          <button
+            type="button"
+            className={styles.cancelButton}
+            onClick={() => {
+              setMood(null);
+              setComment("");
+              setReviewStatus("idle");
+              setReviewMessage(null);
+            }}
+          >
             {dict.product.cancel}
           </button>
-          <button type="button" className={styles.submitButton}>
-            {dict.product.submit}
+          <button
+            type="button"
+            className={styles.submitButton}
+            disabled={reviewStatus === "submitting"}
+            onClick={handleSubmitReview}
+          >
+            {reviewStatus === "submitting" ? dict.product.submittingReview : dict.product.submit}
           </button>
         </div>
+
+        {reviewMessage && (
+          <p className={reviewStatus === "error" ? styles.reviewFeedbackError : styles.reviewFeedbackSuccess}>
+            {reviewMessage}
+          </p>
+        )}
+
+        <h2 className={styles.reviewsTitle}>{dict.product.reviewsListTitle(reviews.length)}</h2>
+        {reviews.length === 0 ? (
+          <p className={styles.noReviews}>{dict.product.noReviews}</p>
+        ) : (
+          <ul className={styles.reviewList}>
+            {reviews.map((review) => (
+              <li key={review.id} className={styles.reviewItem}>
+                <div className={styles.reviewItemHeader}>
+                  <span className={styles.reviewAuthor}>
+                    {review.user?.name ?? review.guest_name ?? dict.product.anonymousReviewer}
+                  </span>
+                  <span className={styles.reviewDate}>{new Date(review.created_at).toLocaleDateString("fr-FR")}</span>
+                </div>
+                <span className={styles.reviewMoodLabel}>
+                  {MOODS.find((m) => m.rating === review.rating)?.label ?? `${review.rating}/5`}
+                </span>
+                {review.comment && <p className={styles.reviewComment}>{review.comment}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

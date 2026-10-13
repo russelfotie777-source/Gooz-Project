@@ -22,6 +22,15 @@ class PaymentController extends Controller
      * transaction can't be rechecked back to life, so that case also gets a
      * fresh Enkap order (and a fresh checkout_url) rather than a status
      * re-check.
+     *
+     * `force` (from a "Payer maintenant"/retry click, not the automatic
+     * return-page polling) always mints a fresh Enkap order too, even while
+     * still "en_attente": Enkap's hosted payment UI session (identified by
+     * its own stxid, separate from our transaction_reference) can expire or
+     * get abandoned well before the transaction itself is marked "échoué" —
+     * revisiting a dead session 401s on Enkap's own page instead of ours.
+     * The automatic poll never passes force, so an actually in-progress
+     * payment isn't interrupted by a new transaction every few seconds.
      */
     public function refresh(Request $request, string $reference): OrderResource
     {
@@ -39,8 +48,10 @@ class PaymentController extends Controller
             ]);
         }
 
+        $force = $request->boolean('force') && $payment->payment_status !== 'payé';
+
         try {
-            if (! $payment->transaction_reference || $payment->payment_status === 'échoué') {
+            if (! $payment->transaction_reference || $payment->payment_status === 'échoué' || $force) {
                 $this->enkapPayments->createOrder($order, $payment);
             } else {
                 $this->enkapPayments->refreshStatus($payment);

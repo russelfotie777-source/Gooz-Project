@@ -3,8 +3,19 @@
   width: 100%;
 }
 
+/* Hidden on mobile now — mobile shows .mobileHero (HeroCardCarousel)
+   instead, noon.com-style. HeroBanner itself is untouched; only its
+   visibility is toggled from out here. */
 .heroWrapper {
+  display: none;
+}
+
+.mobileHero {
   width: 100%;
+  /* .main's own top padding (HomePage.module.css) leaves more room above
+     the hero than noon.com has above theirs, which sits right under the
+     search bar. */
+  margin-top: -8px;
 }
 
 /* Hidden on mobile — the Figma mobile design (node 372:185) has no category
@@ -25,8 +36,13 @@
   }
 
   .heroWrapper {
+    display: block;
     flex: 1;
     min-width: 0;
+  }
+
+  .mobileHero {
+    display: none;
   }
 
   .categoryCard {

@@ -127,11 +127,17 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
   // Prefilled from whatever the customer already applied on the cart page
   // (see lib/coupon.ts) — without this, a coupon validated in the cart
   // would silently vanish by the time checkout loads.
-  const [coupon, setCouponState] = useState(readPersistedCouponCode);
+  // Both start empty/null rather than reading sessionStorage synchronously:
+  // this component is server-rendered too, where sessionStorage doesn't
+  // exist, so seeding the initial state from it here would make the very
+  // first client render disagree with the server-rendered HTML (hydration
+  // mismatch). Rehydrated from storage in the mount effect below instead,
+  // once we're definitely client-side.
+  const [coupon, setCouponState] = useState("");
   const [couponStatus, setCouponStatus] = useState<"idle" | "checking" | "applied" | "invalid">("idle");
   const [couponError, setCouponError] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [orderNumber, setOrderNumber] = useState<string | null>(readPersistedOrderNumber);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   function loadCart() {
@@ -165,6 +171,13 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(loadCart, []);
+
+  useEffect(() => {
+    const persistedOrder = readPersistedOrderNumber();
+    if (persistedOrder) setOrderNumber(persistedOrder);
+    const persistedCoupon = readPersistedCouponCode();
+    if (persistedCoupon) setCouponState(persistedCoupon);
+  }, []);
 
   function setForm(patch: Partial<CheckoutFormData>) {
     setFormState((current) => ({ ...current, ...patch }));

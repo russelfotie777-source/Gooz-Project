@@ -56,7 +56,7 @@ class EnkapPaymentService
             'description' => "Commande {$order->order_reference}",
             'totalAmount' => (float) $payment->amount,
             'currency' => 'XAF',
-            'phoneNumber' => $order->shipping_phone,
+            'phoneNumber' => $this->localPhoneNumber($order->shipping_phone),
             'langKey' => 'fr',
         ], [
             'x-dev-smobilpal-merchant' => config('services.enkap.merchant_username'),
@@ -89,6 +89,24 @@ class EnkapPaymentService
         ]);
 
         return $data['redirectUrl'];
+    }
+
+    /**
+     * Enkap's hosted payment page prefills its "mobile money number" field
+     * with whatever we send and already has the country fixed (its own flag
+     * selector) — a number that still carries a "+237"/"237" country code or
+     * a local leading "0" (however the shopper happened to type it; our own
+     * shipping_phone validation just requires 8-15 digits, not one specific
+     * shape) fails Enkap's own "valid mobile money number" check there.
+     * Cameroon mobile numbers are always 9 digits in local form, so the last
+     * 9 digits of whatever we were given is that local number regardless of
+     * which prefix (if any) it arrived with.
+     */
+    private function localPhoneNumber(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone);
+
+        return strlen($digits) > 9 ? substr($digits, -9) : $digits;
     }
 
     /**

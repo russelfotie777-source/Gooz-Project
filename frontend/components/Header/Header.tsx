@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { getAnnouncements, getCart, getCategories, logout as apiLogout } from "@/lib/api";
 import { clearSession, getSession } from "@/lib/auth";
 import { notifyCartUpdated, onCartUpdated } from "@/lib/cartEvents";
@@ -14,6 +14,7 @@ import { onSessionExpired } from "@/lib/sessionEvents";
 import { showToast } from "@/lib/toast";
 import type { Announcement, Category, User } from "@/lib/types";
 import AnnouncementBar from "@/components/AnnouncementBar/AnnouncementBar";
+import SearchSuggestions from "@/components/SearchSuggestions/SearchSuggestions";
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
 import styles from "./Header.module.css";
 
@@ -40,12 +41,14 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   const dict = useDictionary();
   const lang = useLang();
   const pathname = usePathname();
-  const rawRouter = useRouter();
   const router = useLocaleRouter();
 
   const [query, setQuery] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+  const mobileSearchWrapperRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const langWrapperRef = useRef<HTMLDivElement>(null);
@@ -118,6 +121,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     e.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) return;
+    setSearchFocused(false);
     router.push(`/recherche?q=${encodeURIComponent(trimmed)}`);
   }
 
@@ -129,12 +133,21 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   // Swaps only the leading /fr or /en segment of the current URL and
   // remembers the choice in a cookie so the proxy (proxy.ts) redirects here
   // next time too, instead of falling back to the browser's Accept-Language.
+  //
+  // A real full-page navigation (not the router's client-side push) on
+  // purpose: [lang] is the ROOT layout's own dynamic segment (it renders
+  // <html>/<body> and the anti-flash theme script — see app/[lang]/
+  // layout.tsx), so a soft navigation has to re-render that root layout in
+  // place rather than loading a fresh document. The theme-init script is a
+  // beforeInteractive one-shot — it only ever runs on a genuine page load —
+  // so on a soft nav it never reapplies [data-theme], and the page was
+  // silently falling back to the light theme on every language switch.
   function switchLanguage(newLang: Locale) {
     setLangOpen(false);
     if (newLang === lang) return;
     document.cookie = `shopitech-locale=${newLang}; path=/; max-age=31536000`;
     const rest = pathname.startsWith(`/${lang}`) ? pathname.slice(`/${lang}`.length) : pathname;
-    rawRouter.push(`/${newLang}${rest || ""}`);
+    window.location.href = `/${newLang}${rest || ""}`;
   }
 
   useEffect(() => {
@@ -149,6 +162,20 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [langOpen]);
+
+  useEffect(() => {
+    if (!searchFocused) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (searchWrapperRef.current?.contains(target)) return;
+      if (mobileSearchWrapperRef.current?.contains(target)) return;
+      setSearchFocused(false);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [searchFocused]);
 
   useEffect(() => {
     if (variant !== "detail") return;
@@ -192,18 +219,22 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               />
             </LocaleLink>
 
-            <form className={styles.searchForm} role="search" onSubmit={handleSearchSubmit}>
-              <input
-                type="search"
-                placeholder={dict.header.searchPlaceholder}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className={styles.searchInput}
-              />
-              <button type="submit" className={styles.searchButton}>
-                {dict.header.searchButton}
-              </button>
-            </form>
+            <div className={styles.searchWrapper} ref={searchWrapperRef}>
+              <form className={styles.searchForm} role="search" onSubmit={handleSearchSubmit}>
+                <input
+                  type="search"
+                  placeholder={dict.header.searchPlaceholder}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  className={styles.searchInput}
+                />
+                <button type="submit" className={styles.searchButton}>
+                  {dict.header.searchButton}
+                </button>
+              </form>
+              {searchFocused && <SearchSuggestions query={query} onSelect={() => setSearchFocused(false)} />}
+            </div>
 
             <div className={styles.actions}>
               <ThemeToggle className={styles.themeToggleDesktop} />
@@ -385,17 +416,21 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
               </div>
 
-              <form className={styles.mobileSearchForm} role="search" onSubmit={handleSearchSubmit}>
-                <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchFormIcon} />
-                <input
-                  ref={mobileSearchRef}
-                  type="search"
-                  placeholder={dict.header.searchPlaceholderMobile}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className={styles.mobileSearchInput}
-                />
-              </form>
+              <div className={styles.mobileSearchWrapper} ref={mobileSearchWrapperRef}>
+                <form className={styles.mobileSearchForm} role="search" onSubmit={handleSearchSubmit}>
+                  <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchFormIcon} />
+                  <input
+                    ref={mobileSearchRef}
+                    type="search"
+                    placeholder={dict.header.searchPlaceholderMobile}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
+                    className={styles.mobileSearchInput}
+                  />
+                </form>
+                {searchFocused && <SearchSuggestions query={query} onSelect={() => setSearchFocused(false)} />}
+              </div>
             </div>
           </>
         )}

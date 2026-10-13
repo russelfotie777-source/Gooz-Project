@@ -1,0 +1,50 @@
+/* Mobile only — see the max-width rule below. Desktop keeps HeroBanner,
+   hidden via HeroSection.module.css rather than anything in here. */
+.track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Small fixed inset, not a centering one — on noon.com the first card
+     sits close to the left edge (a small margin, not centered with a big
+     gap before it), and each swipe reveals most of the next card already
+     sitting right at the edge of the viewport. scroll-padding-inline below
+     keeps every later snap at this same small margin, which is what makes
+     the previous card still show a sliver on the way past. */
+  padding-inline: 16px;
+  scroll-padding-inline: 16px;
+  padding-block: 2px 4px;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fixed size on purpose — matches noon.com's own mobile hero cards exactly
+   (measured from their live site), not a proportion of the viewport. */
+.card {
+  flex: 0 0 220px;
+  width: 220px;
+  height: 324px;
+  scroll-snap-align: start;
+  border-radius: 16px;
+  overflow: hidden;
+  display: block;
+  background: var(--color-elevated);
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .track {
+    display: none;
+  }
+}

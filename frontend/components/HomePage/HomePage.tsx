@@ -73,14 +73,18 @@ export default async function HomePage({ page }: HomePageProps) {
       <Header />
 
       <main className={styles.main}>
-        <CategoryList categories={categories} />
-
+        {/* CategoryList is mobile-only (hidden on desktop, which has its own
+            category bar inside HeroSection) — placed after the hero on
+            purpose now, noon.com-style: categories sit below the hero
+            carousel, not above it. */}
         <HeroSection
           categories={categories}
           banners={banners}
           adSlotOneContent={flashProduct ? <FlashSacrificeCard product={flashProduct} /> : undefined}
           adSlotTwoContent={<MysteryBoxCard product={mysteryBoxProduct} />}
         />
+
+        <CategoryList categories={categories} />
 
         <ProductSection titleKey="saleTitle" products={saleProducts} cardLayout="row" />
 

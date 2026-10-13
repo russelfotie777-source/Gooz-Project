@@ -5,6 +5,7 @@ import type { Banner, Category } from "@/lib/types";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import HeroBanner from "@/components/HeroBanner/HeroBanner";
+import HeroCardCarousel from "@/components/HeroCardCarousel/HeroCardCarousel";
 import AdBannerCarousel from "@/components/AdBannerCarousel/AdBannerCarousel";
 import styles from "./HeroSection.module.css";
 
@@ -51,8 +52,15 @@ export default function HeroSection({
         </ul>
       </aside>
 
+      {/* Desktop: untouched HeroBanner (hidden below 1024px, see .heroWrapper).
+          Mobile: the noon.com-style peeking card carousel (hidden at/above
+          1024px by its own CSS) — two separate elements so neither
+          component has to know about the other or branch on viewport. */}
       <div className={styles.heroWrapper}>
         <HeroBanner banners={banners} />
+      </div>
+      <div className={styles.mobileHero}>
+        <HeroCardCarousel banners={banners} />
       </div>
 
       {/* No aria-hidden here (unlike before): AdBannerCarousel's plain <img>

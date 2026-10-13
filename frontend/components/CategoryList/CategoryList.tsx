@@ -18,11 +18,11 @@ export default function CategoryList({ categories }: CategoryListProps) {
         {categories.map((category) => (
           <li key={category.id} className={styles.item}>
             <LocaleLink href={`/categories/${category.slug}`} className={styles.button}>
-              <span className={styles.iconCircle}>
+              <span className={styles.cardBadge}>
                 {category.image ? (
-                  <img src={category.image} alt="" className={styles.iconImage} />
+                  <img src={category.image} alt="" className={styles.cardImage} />
                 ) : (
-                  <span className={styles.iconInitial}>{category.name.charAt(0).toUpperCase()}</span>
+                  <span className={styles.cardInitial}>{category.name.charAt(0).toUpperCase()}</span>
                 )}
               </span>
               <span className={styles.label}>{category.name}</span>

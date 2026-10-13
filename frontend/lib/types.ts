@@ -111,6 +111,18 @@ export interface Product {
   updated_at: string;
 }
 
+export interface Review {
+  id: number;
+  user: Pick<User, "id" | "name"> | null;
+  /** Set only when `user` is null — a review left without an account. */
+  guest_name: string | null;
+  product_id: number;
+  rating: number;
+  comment: string | null;
+  is_approved: boolean;
+  created_at: string;
+}
+
 export interface AppPromoImage {
   id: number;
   image: string;

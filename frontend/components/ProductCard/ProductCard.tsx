@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addCartItem } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
@@ -68,11 +68,22 @@ export default function ProductCard({
   }, [product.id]);
   const primaryImage =
     product.images.find((img) => img.is_primary) ?? product.images[0];
-  // Grid-sized cards only ever need the small variant — thumbnail_url is
-  // absent on images uploaded before this existed, hence the fallback.
-  const [imageSrc, setImageSrc] = useState(
-    primaryImage?.thumbnail_url ?? primaryImage?.image_url ?? PLACEHOLDER_IMAGE
-  );
+  // Primary image first (matches the old single-image behavior), the rest
+  // of the gallery after it — swiping through them (noon.com-style, see
+  // .imageLink below) starts on the same photo the card always showed.
+  const images = primaryImage
+    ? [primaryImage, ...product.images.filter((img) => img.id !== primaryImage.id)]
+    : [];
+  const [failedImageIds, setFailedImageIds] = useState<Set<number>>(new Set());
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const imageTrackRef = useRef<HTMLAnchorElement>(null);
+
+  function handleImageScroll() {
+    const el = imageTrackRef.current;
+    if (!el || el.clientWidth === 0) return;
+    setActiveImageIndex(Math.round(el.scrollLeft / el.clientWidth));
+  }
+
   const displayVariant = getDisplayVariant(product);
   const discount = discountPercent(displayVariant);
 
@@ -130,16 +141,39 @@ export default function ProductCard({
   return (
     <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
-        <LocaleLink href={productPath(product)} className={styles.imageLink}>
-          <Image
-            src={imageSrc}
-            alt={primaryImage?.alt_text || product.name}
-            className={styles.image}
-            fill
-            sizes={layout === "row" ? "96px" : "(min-width: 1024px) 280px, 45vw"}
-            onError={() => setImageSrc(PLACEHOLDER_IMAGE)}
-          />
+        {/* Swipeable like noon.com's catalogue cards — native horizontal
+            scroll-snap inside the same <a>, not a separate gesture handler:
+            a touch drag scrolls (no click fires), a plain tap still
+            navigates, so this needs no logic to tell the two apart. */}
+        <LocaleLink
+          href={productPath(product)}
+          className={styles.imageLink}
+          ref={imageTrackRef}
+          onScroll={images.length > 1 ? handleImageScroll : undefined}
+        >
+          {(images.length > 0 ? images : [null]).map((img) => (
+            <div className={styles.imageSlide} key={img?.id ?? "placeholder"}>
+              <Image
+                src={img && !failedImageIds.has(img.id) ? (img.thumbnail_url ?? img.image_url) : PLACEHOLDER_IMAGE}
+                alt={(img?.alt_text || product.name) ?? ""}
+                className={styles.image}
+                fill
+                sizes={layout === "row" ? "96px" : "(min-width: 1024px) 280px, 45vw"}
+                onError={() => img && setFailedImageIds((prev) => new Set(prev).add(img.id))}
+              />
+            </div>
+          ))}
         </LocaleLink>
+        {images.length > 1 && (
+          <div className={styles.dots} aria-hidden="true">
+            {images.map((img, i) => (
+              <span
+                key={img.id}
+                className={`${styles.dot} ${i === activeImageIndex ? styles.dotActive : ""}`}
+              />
+            ))}
+          </div>
+        )}
         {discount && <span className={styles.discountTag}>-{discount}%</span>}
         <button
           type="button"

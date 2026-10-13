@@ -1,12 +1,19 @@
-/* Mobile-only: this bubble strip belongs to the mobile header (Figma node 372:185).
-   The desktop header has its own category bar built in — see Header.module.css. */
+/* Mobile-only (Figma node 372:185 originally; restyled noon.com-style —
+   rounded-square photo cards over 2 rows instead of a single row of
+   circles, placed below the hero carousel, see HomePage.tsx). The desktop
+   header has its own category bar built in — see Header.module.css. */
 .wrapper {
   width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 4px 16px;
-  margin-top: -12px;
-  margin-bottom: -22px;
+  padding: 0 16px 8px;
+  /* .main (HomePage.module.css) puts a flat 32px gap between every section
+     — fine between e.g. "En Solde" and "Populaire", but noon.com sits this
+     row right under the hero with barely any breathing room. Pulling it up
+     to compensate is the same trick this file used before the restyle
+     (it had margin-top:-12px for the same reason, previously sitting right
+     under the header instead). */
+  margin-top: -20px;
 }
 
 .wrapper::-webkit-scrollbar {
@@ -14,13 +21,28 @@
 }
 
 .list {
-  display: flex;
-  gap: 20px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, auto);
+  /* The real bug: with no explicit column size, implicit auto-columns were
+     sizing themselves off the longest unwrapped label text (~154px) rather
+     than the 92px badge/button — so every column carried ~62px of dead
+     space beyond the card itself, on top of the gap below. Pinning the
+     column track to the badge's own width fixes that at the source. */
+  grid-auto-columns: 92px;
+  align-items: start;
+  justify-content: start;
+  /* Same 14px as CatalogueSection's own product grid (.grid in
+     CatalogueSection.module.css) — matching it exactly instead of picking
+     another value by eye. */
+  gap: 14px;
   padding: 4px 2px;
 }
 
 .item {
   flex-shrink: 0;
+  width: 92px;
+  overflow: hidden;
 }
 
 .button {
@@ -28,13 +50,13 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: 68px;
+  width: 92px;
 }
 
-.iconCircle {
-  width: 47px;
-  height: 47px;
-  border-radius: 50%;
+.cardBadge {
+  width: 92px;
+  height: 92px;
+  border-radius: 16px;
   background: var(--color-elevated);
   box-shadow: var(--shadow-card);
   display: flex;
@@ -43,31 +65,37 @@
   overflow: hidden;
 }
 
-.iconImage {
+.cardImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: 16px;
 }
 
-/* Shown instead of iconImage when the category has no admin-uploaded
+/* Shown instead of cardImage when the category has no admin-uploaded
    image yet — same fallback convention as DynamicHomepageSection's own
    category/brand badges (an initial letter rather than a broken/empty
-   circle). */
-.iconInitial {
+   card). */
+.cardInitial {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 18px;
+  font-size: 28px;
   color: var(--color-text-muted);
 }
 
 .label {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 12px;
+  line-height: 1.25;
   text-align: center;
   color: var(--color-text);
+  width: 100%;
+  /* "Vidéosurveillance" alone is wider than the 92px card — without this it
+     was overflowing both sides and getting clipped by .item's overflow:
+     hidden. Lets a too-long single word break mid-character instead of
+     spilling out. */
+  overflow-wrap: break-word;
 }
 
 @media (min-width: 901px) {

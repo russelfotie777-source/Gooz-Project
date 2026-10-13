@@ -39,7 +39,7 @@ export function usePaymentRetry() {
     setRetryErrorId(null);
     setRetryingId(order.id);
     try {
-      const result = await refreshOrderPayment(session.token, order.order_reference);
+      const result = await refreshOrderPayment(session.token, order.order_reference, true);
       if (result.payment.checkout_url) {
         window.location.href = result.payment.checkout_url;
         return;

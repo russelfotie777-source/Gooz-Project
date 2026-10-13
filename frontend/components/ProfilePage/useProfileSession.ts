@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { getMe, isUnauthorized, logout as apiLogout } from "@/lib/api";
 import { clearSession, getSession, saveSession } from "@/lib/auth";
 import type { Locale } from "@/lib/i18n/config";
@@ -21,7 +21,6 @@ export function useProfileSession() {
   const dict = useDictionary();
   const lang = useLang();
   const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
     const session = getSession();
@@ -71,11 +70,18 @@ export function useProfileSession() {
   // Only two locales exist, so the language row toggles straight to the
   // other one instead of opening a picker — same cookie + URL-prefix swap
   // as the Header's language switcher (proxy.ts reads that cookie next visit).
+  //
+  // A real full-page navigation, not router.push's client-side one: [lang]
+  // is the ROOT layout's own dynamic segment (see app/[lang]/layout.tsx),
+  // so a soft navigation re-renders that layout in place instead of loading
+  // a fresh document — and its anti-flash theme script only ever runs once
+  // per real page load, so [data-theme] on <html> never got reapplied,
+  // silently reverting the page to the light theme on every language switch.
   function toggleLanguage() {
     const newLang: Locale = lang === "fr" ? "en" : "fr";
     document.cookie = `shopitech-locale=${newLang}; path=/; max-age=31536000`;
     const rest = pathname.startsWith(`/${lang}`) ? pathname.slice(`/${lang}`.length) : pathname;
-    router.push(`/${newLang}${rest || ""}`);
+    window.location.href = `/${newLang}${rest || ""}`;
   }
 
   return { user, handleLogout, toggleLanguage, updateUser };

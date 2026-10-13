@@ -23,14 +23,21 @@ class ReviewController extends Controller
 
     public function store(StoreReviewRequest $request, Product $product): ReviewResource
     {
-        if ($product->reviews()->where('user_id', $request->user()->id)->exists()) {
+        // This route is public (reviews don't require an account), so unlike
+        // every other authenticated endpoint there's no auth:sanctum
+        // middleware to resolve $request->user() for us — done explicitly,
+        // and may come back null for a genuine guest.
+        $user = $request->user('sanctum');
+
+        if ($user && $product->reviews()->where('user_id', $user->id)->exists()) {
             throw ValidationException::withMessages([
                 'product_id' => ['Vous avez déjà laissé un avis sur ce produit.'],
             ]);
         }
 
         $review = $product->reviews()->create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user?->id,
+            'guest_name' => $user ? null : $request->validated('guest_name'),
             'rating' => $request->validated('rating'),
             'comment' => $request->validated('comment'),
         ]);

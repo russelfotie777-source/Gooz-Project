@@ -111,8 +111,6 @@ Route::prefix('v1')->group(function () {
         // showing a "your order is confirmed" screen for it.
         Route::get('/orders/reference/{reference}', [OrderController::class, 'showByReference']);
 
-        Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
-
         Route::get('/favorites', [FavoriteController::class, 'index']);
         Route::post('/favorites/{product}', [FavoriteController::class, 'store']);
         Route::delete('/favorites/{product}', [FavoriteController::class, 'destroy']);
@@ -142,7 +140,23 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/{product}', [ProductController::class, 'show']);
+    // "Souvent acheté aussi" on the product page — see
+    // ProductController::related() for the co-purchase + same-category
+    // fallback logic.
+    Route::get('/products/{product}/related', [ProductController::class, 'related']);
+    // "Les clients ont aussi consulté" — see ProductController::alsoViewed().
+    Route::get('/products/{product}/also-viewed', [ProductController::class, 'alsoViewed']);
+    // Fire-and-forget ping from the product page (see lib/productView.ts) —
+    // public, anonymous, feeds alsoViewed() above.
+    Route::post('/products/{product}/view', [ProductController::class, 'trackView']);
     Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
+    // Public on purpose — reviews work without an account (don't discourage
+    // a shopper who's never signed up), but the controller still attributes
+    // it to a real account when a valid Sanctum token is sent (see
+    // ReviewController::store()'s `$request->user('sanctum')`), since this
+    // sits outside the auth:sanctum group and so can't rely on the
+    // middleware to resolve it.
+    Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
 
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
