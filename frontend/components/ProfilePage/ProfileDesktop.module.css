@@ -543,3 +543,19 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* These profile icons are flat #1C1B1F PNG/SVG exports with no light-on-dark
+   variant — see BottomNav.module.css's .icon for the established
+   invert-in-place pattern. Only <img> icons need this: OverviewIcon/
+   LogoutIcon/DeleteIcon are inline SVGs using stroke="currentColor" and
+   already adapt on their own (inverting them too would flip them back to
+   dark), so .sidebarNavIcon is scoped to `img` to skip OverviewIcon. */
+:global(html[data-theme="dark"]) img.sidebarNavIcon,
+:global(html[data-theme="dark"]) .editIcon,
+:global(html[data-theme="dark"]) .tileIcon,
+:global(html[data-theme="dark"]) .tileChevron,
+:global(html[data-theme="dark"]) .rowIcon,
+:global(html[data-theme="dark"]) .chevron,
+:global(html[data-theme="dark"]) .benefitIcon {
+  filter: invert(1) brightness(1.15);
+}

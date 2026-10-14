@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Rules\ImageUploadRule;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -38,11 +39,15 @@ class ImageResizer
     // Laravel's built-in `image` validation rule hardcodes its own allowed
     // list (jpg, jpeg, png, gif, bmp, webp — see ValidatesAttributes::
     // validateImage()) and has no option to extend it, so every upload
-    // request that needs to accept .avif has to use this explicit `mimes`
-    // rule instead of the `image` shorthand. Centralized here (rather than
-    // duplicating the string in every StoreXRequest) so the list only
-    // needs updating in one place.
-    public const UPLOAD_MIMES_RULE = 'mimes:jpg,jpeg,png,gif,bmp,webp,avif';
+    // request that needs to accept .avif uses this instead of the `image`
+    // shorthand. See ImageUploadRule for why it's a full rule class (content
+    // sniff with a filename-extension fallback) rather than a plain
+    // `mimes:` string — centralized here, rather than duplicating it in
+    // every StoreXRequest, so there's only one place to get this right.
+    public static function uploadRule(): ImageUploadRule
+    {
+        return new ImageUploadRule();
+    }
 
     public const LOSSY_MEDIA_TYPES = [
         'image/jpeg', 'image/jpg', 'image/pjpeg', 'image/x-jpeg',

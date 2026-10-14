@@ -19,7 +19,7 @@ class StoreBannerRequest extends FormRequest
             'title' => ['required', 'string', 'min:3', 'max:100'],
             'description' => ['nullable', 'string'],
             'show_overlay' => ['boolean'],
-            'image' => ['required', ImageResizer::UPLOAD_MIMES_RULE, 'max:2048'],
+            'image' => ['required', ImageResizer::uploadRule(), 'max:2048'],
             'link_type' => ['required', Rule::in(['external', 'product'])],
             'link_url' => [Rule::requiredIf($this->link_type === 'external'), 'nullable', 'url', 'max:2048'],
             'product_id' => [Rule::requiredIf($this->link_type === 'product'), 'nullable', 'integer', 'exists:products,id'],

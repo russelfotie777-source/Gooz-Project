@@ -15,7 +15,7 @@ class StoreProductImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => ['required', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
+            'image' => ['required', ImageResizer::uploadRule(), 'max:4096'],
             'product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
             'is_primary' => ['boolean'],
             'alt_text' => ['nullable', 'string', 'max:255'],

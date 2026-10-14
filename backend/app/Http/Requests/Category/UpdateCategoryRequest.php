@@ -21,7 +21,7 @@ class UpdateCategoryRequest extends FormRequest
                 'sometimes', 'required', 'string', 'max:255',
                 Rule::unique('categories', 'slug')->ignore($this->route('category')),
             ],
-            'image' => ['nullable', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
+            'image' => ['nullable', ImageResizer::uploadRule(), 'max:4096'],
             'is_active' => ['boolean'],
         ];
     }

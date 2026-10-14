@@ -24,7 +24,7 @@ class UpdateBrandRequest extends FormRequest
                 'sometimes', 'required', 'string', 'max:255',
                 Rule::unique('brands', 'slug')->ignore($this->route('brand')),
             ],
-            'logo' => ['nullable', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
+            'logo' => ['nullable', ImageResizer::uploadRule(), 'max:4096'],
             'description' => ['nullable', 'string'],
             'country_origin' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],

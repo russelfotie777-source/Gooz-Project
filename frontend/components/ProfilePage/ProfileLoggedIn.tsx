@@ -166,7 +166,11 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage, onPr
           className={`${styles.row} ${styles.rowButton} ${styles.rowNoBorder}`}
           onClick={() => setDeleteModalOpen(true)}
         >
-          <img src="/icon/cart/delete-red.svg" alt="" className={styles.rowIcon} />
+          <img
+            src="/icon/cart/delete-red.svg"
+            alt=""
+            className={`${styles.rowIcon} ${styles.rowIconDanger}`}
+          />
           <div className={styles.rowText}>
             <p className={`${styles.rowTitleOnly} ${styles.rowTitleDanger}`}>{dict.profile.deleteAccount}</p>
           </div>

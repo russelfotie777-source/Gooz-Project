@@ -52,7 +52,11 @@ export default function ProfileLoggedOut({ onToggleLanguage }: ProfileLoggedOutP
       <LocaleLink href="/connexion" className={styles.loginCard}>
         <img src="/icon/profile/login-icon.svg" alt="" className={styles.loginIcon} />
         <span className={styles.loginLabel}>{dict.profile.loginSignup}</span>
-        <img src="/icon/profile/arrow-forward-ios-orange.svg" alt="" className={styles.chevron} />
+        <img
+          src="/icon/profile/arrow-forward-ios-orange.svg"
+          alt=""
+          className={`${styles.chevron} ${styles.chevronOrange}`}
+        />
       </LocaleLink>
     </>
   );

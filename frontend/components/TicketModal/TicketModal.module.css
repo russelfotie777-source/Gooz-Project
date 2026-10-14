@@ -193,6 +193,13 @@
   text-overflow: ellipsis;
 }
 
+/* The opened dropdown list is a separate browser-rendered popup that
+   doesn't inherit the closed box's theme-aware background. */
+.select option {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
 .textarea {
   resize: vertical;
   font-family: var(--font-body);

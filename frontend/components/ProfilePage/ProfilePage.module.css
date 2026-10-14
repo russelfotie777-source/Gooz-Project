@@ -233,3 +233,17 @@
     display: none;
   }
 }
+
+/* These profile icons are flat #1C1B1F/black exports with no light-on-dark
+   variant — see BottomNav.module.css's .icon for the established
+   invert-in-place pattern (and ProfilePage.tsx's .themeIcon, which already
+   does this inline for the one icon that was wired up). .rowIconDanger
+   (the red delete-account icon) and .chevronOrange/.loginIcon (already
+   orange/#FF9500) are excluded — they're colored on purpose and already
+   read fine on a dark background. */
+:global(html[data-theme="dark"]) .editIcon,
+:global(html[data-theme="dark"]) .avatarPlaceholderIcon,
+:global(html[data-theme="dark"]) .rowIcon:not(.rowIconDanger),
+:global(html[data-theme="dark"]) .chevron:not(.chevronOrange) {
+  filter: invert(1) brightness(1.15);
+}

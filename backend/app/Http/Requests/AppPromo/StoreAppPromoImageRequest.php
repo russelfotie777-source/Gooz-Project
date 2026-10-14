@@ -15,7 +15,7 @@ class StoreAppPromoImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => ['required', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
+            'image' => ['required', ImageResizer::uploadRule(), 'max:4096'],
             'is_active' => ['boolean'],
         ];
     }

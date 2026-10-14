@@ -25,7 +25,7 @@ class StoreCategoryRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:categories,slug'],
-            'image' => ['nullable', ImageResizer::UPLOAD_MIMES_RULE, 'max:4096'],
+            'image' => ['nullable', ImageResizer::uploadRule(), 'max:4096'],
             'is_active' => ['boolean'],
         ];
     }

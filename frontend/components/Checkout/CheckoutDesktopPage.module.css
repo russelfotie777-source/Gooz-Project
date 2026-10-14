@@ -270,6 +270,17 @@
   background: transparent;
 }
 
+/* The closed box above picks up the theme fine (background:transparent
+   shows the dark page through it), but the opened dropdown list is its own
+   browser-rendered popup — it doesn't inherit that, and defaults to a
+   plain white list with black text regardless of the page's theme unless
+   told otherwise. background-color/color on <option> is the one part of a
+   native select's popup every major browser actually lets you restyle. */
+.select option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .subheading {
   font-family: var(--font-heading);
   font-weight: 600;

@@ -79,6 +79,14 @@
   padding-right: 20px;
 }
 
+/* See CheckoutDesktopPage.module.css's .select option for why this is
+   needed: the opened dropdown list is a separate browser-rendered popup
+   that doesn't inherit the box's own (transparent) background. */
+.select option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .selectChevron {
   position: absolute;
   right: 14px;
