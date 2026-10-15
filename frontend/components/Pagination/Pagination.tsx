@@ -57,12 +57,19 @@ export default function Pagination({ page, lastPage, loading = false, pageHref, 
 
   // Keeps the active page centered in the scrollable mobile strip whenever
   // it changes — including via the arrow buttons, not just a direct tap on
-  // a number.
+  // a number. Deliberately track.scrollTo(), not activeEl.scrollIntoView():
+  // scrollIntoView walks every scrollable ancestor, not just this strip —
+  // on first mount, with the pagination control below the fold, it was
+  // also dragging the whole page down to bring it into view, which is what
+  // made the homepage open already scrolled past the hero. Scrolling this
+  // one element directly can never touch anything above it.
   useEffect(() => {
     const track = mobileTrackRef.current;
     if (!track) return;
     const activeEl = track.querySelector<HTMLElement>(`[data-page="${page}"]`);
-    activeEl?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    if (!activeEl) return;
+    const target = activeEl.offsetLeft - track.clientWidth / 2 + activeEl.clientWidth / 2;
+    track.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
   }, [page]);
 
   if (lastPage <= 1) return null;
