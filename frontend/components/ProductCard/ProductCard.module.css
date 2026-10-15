@@ -47,6 +47,13 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  /* Without this, a touch drag that's mostly vertical (scrolling the
+     catalogue) can still get captured by this horizontal scroller while the
+     browser figures out the gesture's direction, making page scroll feel
+     stuck whenever it starts on a card's image. pan-x tells the browser
+     up front that only horizontal drags belong to this element, so a
+     vertical drag is handed straight to the page's own scroll instead. */
+  touch-action: pan-x;
 }
 
 .imageLink::-webkit-scrollbar {
