@@ -15,6 +15,13 @@
 .trackWrapper {
   overflow: hidden;
   width: 100%;
+  /* Not a native scroll container — the strip's position is a hand-rolled
+     `transform: translateX()`, both auto-advanced and draggable (see
+     BrandsSection.tsx). pan-y means only vertical panning is ever native on
+     this element, so a touch drag that turns out to be scrolling the page
+     is never claimed by it in the first place — see that file's comment for
+     why this doesn't just use native overflow-x scrolling instead. */
+  touch-action: pan-y;
   /* Soft fade at both edges instead of a hard clip — logos entering/leaving
      don't pop in and out abruptly. */
   -webkit-mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
@@ -24,32 +31,11 @@
 .track {
   display: flex;
   width: max-content;
-  animation: brandsMarquee var(--marquee-duration, 25s) linear infinite;
+  cursor: grab;
 }
 
-/* Pausing on hover/focus lets someone actually read a logo instead of it
-   sliding past — small thing, but a continuously-moving strip with no way
-   to stop it reads as an oversight, not a feature. */
-.trackWrapper:hover .track,
-.trackWrapper:focus-within .track {
-  animation-play-state: paused;
-}
-
-@keyframes brandsMarquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    /* Exactly one .logoSet's width (there are two, back-to-back) — the loop
-       point is seamless because copy #2 is pixel-identical to copy #1. */
-    transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .track {
-    animation: none;
-  }
+.trackWrapper:active .track {
+  cursor: grabbing;
 }
 
 .logoSet {
