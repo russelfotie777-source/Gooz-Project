@@ -76,12 +76,106 @@ export default function ProductCard({
     : [];
   const [failedImageIds, setFailedImageIds] = useState<Set<number>>(new Set());
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const imageTrackRef = useRef<HTMLAnchorElement>(null);
+  const [dragOffsetPercent, setDragOffsetPercent] = useState<number | null>(null);
+  // Mutable drag bookkeeping — deliberately refs, not state: pointermove
+  // fires far too often to route every sample through a re-render (that's
+  // also why the live drag offset above is only committed to state when it
+  // actually changes the rendered position, not on every pixel).
+  const dragState = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    committed: "horizontal" | "vertical" | null;
+    containerWidth: number;
+  } | null>(null);
+  const suppressNextClick = useRef(false);
 
-  function handleImageScroll() {
-    const el = imageTrackRef.current;
-    if (!el || el.clientWidth === 0) return;
-    setActiveImageIndex(Math.round(el.scrollLeft / el.clientWidth));
+  // Swiping the gallery used to be plain native horizontal scroll-snap
+  // (overflow-x: auto) — simplest possible implementation, since a browser
+  // never fires `click` after a touch-drag-scroll, so tap-vs-swipe needed no
+  // logic of its own. In practice, on real phones, a scroll-snap container
+  // nested inside a vertically-scrolling page can still grab a mostly-
+  // vertical drag that starts on it (a known cross-engine quirk — CSS
+  // touch-action alone didn't reliably fix it here either). This instead
+  // drives the slide position from JS via pointer events, matching the
+  // pattern HeroBanner/ProductAdBanner already use successfully: touch-action
+  // is pan-y (only vertical panning is ever native on this element), and
+  // horizontal movement is read and applied by hand — so the browser is
+  // never in a position to "decide" to claim a vertical drag in the first
+  // place. preventDefault() is only called once a drag is confirmed
+  // horizontal, so a real vertical drag is left completely untouched and
+  // scrolls the page exactly as if this card weren't there.
+  const HORIZONTAL_COMMIT_PX = 6;
+  const SWIPE_THRESHOLD_PX = 40;
+
+  function handlePointerDown(e: React.PointerEvent<HTMLAnchorElement>) {
+    if (images.length <= 1 || e.pointerType === "mouse") return;
+    dragState.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      committed: null,
+      containerWidth: e.currentTarget.clientWidth,
+    };
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLAnchorElement>) {
+    const drag = dragState.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+
+    const deltaX = e.clientX - drag.startX;
+    const deltaY = e.clientY - drag.startY;
+
+    if (drag.committed === null) {
+      if (Math.abs(deltaX) < HORIZONTAL_COMMIT_PX && Math.abs(deltaY) < HORIZONTAL_COMMIT_PX) return;
+      if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+        // A real vertical drag — hand off to the page's own scroll and stop
+        // tracking this gesture entirely; nothing here was ever prevented,
+        // so the browser's native scroll has been running unobstructed.
+        dragState.current = null;
+        return;
+      }
+      drag.committed = "horizontal";
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+
+    e.preventDefault();
+    const deltaPercent = (deltaX / drag.containerWidth) * 100;
+    const maxOffset = -(images.length - 1) * 100;
+    const offset = Math.min(0, Math.max(maxOffset, -(activeImageIndex * 100) + deltaPercent));
+    setDragOffsetPercent(offset);
+  }
+
+  function handlePointerUp(e: React.PointerEvent<HTMLAnchorElement>) {
+    const drag = dragState.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    dragState.current = null;
+
+    if (drag.committed !== "horizontal") return;
+
+    const deltaX = e.clientX - drag.startX;
+    if (Math.abs(deltaX) >= SWIPE_THRESHOLD_PX) {
+      const next = activeImageIndex + (deltaX < 0 ? 1 : -1);
+      setActiveImageIndex(Math.min(images.length - 1, Math.max(0, next)));
+    }
+    setDragOffsetPercent(null);
+    // The click that normally follows a pointerup on an <a> would otherwise
+    // still navigate even though the user just swiped — only a real tap
+    // (committed stayed null) should do that.
+    suppressNextClick.current = true;
+  }
+
+  function handlePointerCancel(e: React.PointerEvent<HTMLAnchorElement>) {
+    if (dragState.current?.pointerId !== e.pointerId) return;
+    dragState.current = null;
+    setDragOffsetPercent(null);
+  }
+
+  function handleImageLinkClick(e: React.MouseEvent) {
+    if (suppressNextClick.current) {
+      suppressNextClick.current = false;
+      e.preventDefault();
+    }
   }
 
   const displayVariant = getDisplayVariant(product);
@@ -141,28 +235,39 @@ export default function ProductCard({
   return (
     <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
-        {/* Swipeable like noon.com's catalogue cards — native horizontal
-            scroll-snap inside the same <a>, not a separate gesture handler:
-            a touch drag scrolls (no click fires), a plain tap still
-            navigates, so this needs no logic to tell the two apart. */}
+        {/* Swipeable like noon.com's catalogue cards — see the pointer
+            handlers above for why this is hand-rolled from pointer events
+            rather than native horizontal scroll. */}
         <LocaleLink
           href={productPath(product)}
           className={styles.imageLink}
-          ref={imageTrackRef}
-          onScroll={images.length > 1 ? handleImageScroll : undefined}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+          onClick={handleImageLinkClick}
         >
-          {(images.length > 0 ? images : [null]).map((img) => (
-            <div className={styles.imageSlide} key={img?.id ?? "placeholder"}>
-              <Image
-                src={img && !failedImageIds.has(img.id) ? (img.thumbnail_url ?? img.image_url) : PLACEHOLDER_IMAGE}
-                alt={(img?.alt_text || product.name) ?? ""}
-                className={styles.image}
-                fill
-                sizes={layout === "row" ? "96px" : "(min-width: 1024px) 280px, 45vw"}
-                onError={() => img && setFailedImageIds((prev) => new Set(prev).add(img.id))}
-              />
-            </div>
-          ))}
+          <div
+            className={styles.imageTrack}
+            style={{
+              transform: `translateX(${dragOffsetPercent ?? -activeImageIndex * 100}%)`,
+              transition: dragOffsetPercent === null ? undefined : "none",
+            }}
+          >
+            {(images.length > 0 ? images : [null]).map((img) => (
+              <div className={styles.imageSlide} key={img?.id ?? "placeholder"}>
+                <Image
+                  src={img && !failedImageIds.has(img.id) ? (img.thumbnail_url ?? img.image_url) : PLACEHOLDER_IMAGE}
+                  alt={(img?.alt_text || product.name) ?? ""}
+                  className={styles.image}
+                  fill
+                  sizes={layout === "row" ? "96px" : "(min-width: 1024px) 280px, 45vw"}
+                  draggable={false}
+                  onError={() => img && setFailedImageIds((prev) => new Set(prev).add(img.id))}
+                />
+              </div>
+            ))}
+          </div>
         </LocaleLink>
         {images.length > 1 && (
           <div className={styles.dots} aria-hidden="true">

@@ -40,31 +40,35 @@
 }
 
 .imageLink {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* Native horizontal scroll-snap used to drive this (simplest possible:
+     browsers never fire `click` after a touch-drag-scroll, so tap-vs-swipe
+     needed no logic of its own) — but on real phones a scroll-snap
+     container nested in a vertically-scrolling page could still grab a
+     mostly-vertical drag that started on it; touch-action alone didn't
+     reliably fix that. pan-y only lets this element's *native* panning be
+     vertical, matching HeroBanner/ProductAdBanner's already-proven pattern —
+     the pointer handlers on this link read and apply horizontal movement by
+     hand (see ProductCard.tsx), so the browser is never in a position to
+     claim a vertical drag for itself in the first place. */
+  touch-action: pan-y;
+}
+
+.imageTrack {
   display: flex;
   width: 100%;
   height: 100%;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  /* Without this, a touch drag that's mostly vertical (scrolling the
-     catalogue) can still get captured by this horizontal scroller while the
-     browser figures out the gesture's direction, making page scroll feel
-     stuck whenever it starts on a card's image. pan-x tells the browser
-     up front that only horizontal drags belong to this element, so a
-     vertical drag is handed straight to the page's own scroll instead. */
-  touch-action: pan-x;
-}
-
-.imageLink::-webkit-scrollbar {
-  display: none;
+  transition: transform 0.25s ease;
 }
 
 .imageSlide {
   position: relative;
   flex: 0 0 100%;
   height: 100%;
-  scroll-snap-align: start;
 }
 
 .dots {
