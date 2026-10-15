@@ -86,6 +86,7 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
   // each image's own (real, backend) id.
   const [failedImageIds, setFailedImageIds] = useState<Set<number>>(new Set());
   const trackRef = useRef<HTMLDivElement>(null);
+  const buyRowRef = useRef<HTMLDivElement>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [allNeighborhoods, setAllNeighborhoods] = useState<Neighborhood[]>([]);
   const [locationListsStatus, setLocationListsStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -117,6 +118,29 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
   useEffect(() => {
     recordRecentlyViewed(product.id);
     trackProductView(product.id, getViewSessionToken()).catch(() => {});
+  }, [product.id]);
+
+  // Desktop opens straight into the ad banner + gallery, with the buy
+  // button a full page further down (name, meta, price, variants,
+  // description...) — a shopper had to scroll themselves just to see it.
+  // Jumping there automatically on load removes that extra step. Desktop
+  // only (901px — this component's own breakpoint, see .module.css) per
+  // what was asked for: mobile's layout and quick-add button already put
+  // purchasing within easy reach without this.
+  //
+  // behavior: "instant", not "smooth" — tested both against the real page
+  // (not just this element in isolation): a smooth scroll takes a few
+  // hundred ms to animate, and anything that shifts layout during that
+  // window (images below settling into their final size, other sections
+  // further down hydrating) reliably cancelled it partway, leaving the
+  // button no closer to view than before. An instant jump completes in one
+  // frame, before anything else has a chance to interrupt it.
+  useEffect(() => {
+    if (!window.matchMedia("(min-width: 901px)").matches) return;
+    const timer = window.setTimeout(() => {
+      buyRowRef.current?.scrollIntoView({ behavior: "instant", block: "center" });
+    }, 250);
+    return () => window.clearTimeout(timer);
   }, [product.id]);
   // A long description used to push the buy button far down the page —
   // clamped to a few lines by default, expandable on demand, so the layout
@@ -473,7 +497,7 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
                 )}
               </div>
 
-              <div className={styles.buyRow}>
+              <div className={styles.buyRow} ref={buyRowRef}>
                 <button
                   type="button"
                   className={styles.buyButton}
