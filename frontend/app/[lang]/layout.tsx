@@ -94,8 +94,11 @@ export async function generateMetadata({
       ],
     },
     manifest: "/manifest.json",
+    // No explicit `icons` here on purpose: app/favicon.ico already makes
+    // Next.js auto-emit the <link rel="icon"> tag by file convention (see
+    // app-icons.md) — repeating the same path here used to add a second,
+    // redundant <link rel="icon"> pointing at the exact same file.
     icons: {
-      icon: "/favicon.ico",
       apple: "/icons/apple-touch-icon.png",
     },
   };
