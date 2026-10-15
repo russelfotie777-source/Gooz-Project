@@ -12,7 +12,7 @@ class FavoriteController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $favorites = $request->user()->favorites()
-            ->with(['product.brand', 'product.category', 'product.images', 'product.variants'])
+            ->with(['product.brand', 'product.categories', 'product.images', 'product.variants'])
             ->whereHas('product', fn ($q) => $q->where('is_active', true))
             ->paginate(20);
 

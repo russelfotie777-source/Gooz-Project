@@ -21,7 +21,7 @@ type Product = {
   name: string;
   reference: string | null;
   is_active: boolean;
-  category: { id: number; name: string } | null;
+  categories: { id: number; name: string }[];
 };
 
 export default function ProduitsPage() {
@@ -246,7 +246,9 @@ export default function ProduitsPage() {
                   <p className="font-medium text-white">{product.name}</p>
                   {product.reference && <p className="text-xs text-white/40">{product.reference}</p>}
                 </td>
-                <td className="px-5 py-3 text-white/60">{product.category?.name ?? "—"}</td>
+                <td className="px-5 py-3 text-white/60">
+                  {product.categories.length > 0 ? product.categories.map((c) => c.name).join(", ") : "—"}
+                </td>
                 <td className="px-5 py-3">
                   <button
                     onClick={() => toggleActive(product)}

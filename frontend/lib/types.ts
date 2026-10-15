@@ -103,7 +103,7 @@ export interface Product {
   reference: string;
   is_active: boolean;
   brand?: Brand;
-  category?: Category;
+  categories?: Category[];
   images: ProductImage[];
   variants: ProductVariant[];
   stock_quantity?: number;

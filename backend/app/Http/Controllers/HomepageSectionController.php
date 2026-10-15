@@ -37,7 +37,7 @@ class HomepageSectionController extends Controller
             ->where(fn (Builder $q) => $q->whereNull('ends_at')->orWhere('ends_at', '>=', $now))
             ->when(! $isLoggedIn, fn (Builder $q) => $q->where('visibility', '!=', 'logged_in'))
             ->when($isLoggedIn, fn (Builder $q) => $q->where('visibility', '!=', 'guests'))
-            ->with(['items.product.brand', 'items.product.category', 'items.product.images', 'items.product.variants'])
+            ->with(['items.product.brand', 'items.product.categories', 'items.product.images', 'items.product.variants'])
             ->orderBy('position')
             ->get();
 
@@ -90,9 +90,12 @@ class HomepageSectionController extends Controller
             $poolSize = (int) $group->sum(fn (HomepageSection $s) => $s->item_limit ?: 8);
 
             $pool = Product::query()
-                ->with(['brand', 'category', 'images', 'variants'])
+                ->with(['brand', 'categories', 'images', 'variants'])
                 ->where('is_active', true)
-                ->when(! $needsAllCategories, fn (Builder $q) => $q->whereIn('category_id', $categoryIds))
+                ->when(
+                    ! $needsAllCategories,
+                    fn (Builder $q) => $q->whereHas('categories', fn (Builder $q2) => $q2->whereIn('categories.id', $categoryIds))
+                )
                 ->orderBy('created_at', $direction)
                 ->limit($poolSize)
                 ->get();
@@ -105,7 +108,9 @@ class HomepageSectionController extends Controller
                     $section->id,
                     empty($ids)
                         ? $pool->take($limit)
-                        : $pool->whereIn('category_id', $ids)->take($limit)->values()
+                        : $pool->filter(fn (Product $p) => $p->categories->pluck('id')->intersect($ids)->isNotEmpty())
+                            ->take($limit)
+                            ->values()
                 );
             }
         }
@@ -197,7 +202,7 @@ class HomepageSectionController extends Controller
     private function queryAutomaticProducts(HomepageSection $section, int $limit): Collection
     {
         $query = Product::query()
-            ->with(['brand', 'category', 'images', 'variants'])
+            ->with(['brand', 'categories', 'images', 'variants'])
             ->where('is_active', true);
 
         $this->applyAutomaticFilters($query, $section);
@@ -235,7 +240,8 @@ class HomepageSectionController extends Controller
     private function applyAutomaticFilters(Builder $query, HomepageSection $section): void
     {
         if (! empty($section->category_ids)) {
-            $query->whereIn('category_id', $section->category_ids);
+            $ids = $section->category_ids;
+            $query->whereHas('categories', fn (Builder $q) => $q->whereIn('categories.id', $ids));
         }
 
         if (! empty($section->brand_ids)) {

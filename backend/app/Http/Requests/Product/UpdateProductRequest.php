@@ -23,7 +23,8 @@ class UpdateProductRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'meta_description' => ['nullable', 'string', 'max:300'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
-            'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
+            'category_ids' => ['sometimes', 'required', 'array', 'min:1'],
+            'category_ids.*' => ['integer', 'exists:categories,id'],
             'reference' => [
                 'nullable', 'string', 'max:255',
                 Rule::unique('products', 'reference')->ignore($this->route('product')),

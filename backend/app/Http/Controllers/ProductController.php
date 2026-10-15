@@ -27,11 +27,11 @@ class ProductController extends Controller
         // Pricing lives on variants now, so filters/sorts that used to touch
         // products.base_price go through the variants relation instead.
         $query = Product::query()
-            ->with(['brand', 'category', 'images', 'variants'])
+            ->with(['brand', 'categories', 'images', 'variants'])
             ->where('is_active', true);
 
         if ($categoryId = $request->query('category_id')) {
-            $query->where('category_id', $categoryId);
+            $query->whereHas('categories', fn ($q) => $q->whereIn('categories.id', (array) $categoryId));
         }
 
         if ($brandId = $request->query('brand_id')) {
@@ -195,9 +195,14 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request): ProductResource
     {
-        $product = Product::create($request->validated());
+        $data = $request->validated();
+        $categoryIds = $data['category_ids'];
+        unset($data['category_ids']);
 
-        return new ProductResource($product->fresh(['brand', 'category']));
+        $product = Product::create($data);
+        $product->categories()->sync($categoryIds);
+
+        return new ProductResource($product->fresh(['brand', 'categories']));
     }
 
     /**
@@ -209,7 +214,7 @@ class ProductController extends Controller
             throw new NotFoundHttpException;
         }
 
-        $product->load(['brand', 'category', 'images', 'variants.images', 'variants.stocks', 'stocks']);
+        $product->load(['brand', 'categories', 'images', 'variants.images', 'variants.stocks', 'stocks']);
 
         return new ProductResource($product);
     }
@@ -302,18 +307,19 @@ class ProductController extends Controller
     {
         $products = Product::whereIn('id', $rankedIds)
             ->where('is_active', true)
-            ->with(['brand', 'category', 'images', 'variants'])
+            ->with(['brand', 'categories', 'images', 'variants'])
             ->get()
             ->sortBy(fn ($p) => $rankedIds->search($p->id))
             ->values();
 
         if ($products->count() < $limit) {
             $excludeIds = $products->pluck('id')->push($product->id);
+            $categoryIds = $product->categories()->pluck('categories.id');
 
             $fallback = Product::where('is_active', true)
-                ->where('category_id', $product->category_id)
+                ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
                 ->whereNotIn('id', $excludeIds)
-                ->with(['brand', 'category', 'images', 'variants'])
+                ->with(['brand', 'categories', 'images', 'variants'])
                 ->latest()
                 ->limit($limit - $products->count())
                 ->get();
@@ -329,9 +335,16 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product): ProductResource
     {
-        $product->update($request->validated());
+        $data = $request->validated();
 
-        return new ProductResource($product->fresh(['brand', 'category']));
+        if (array_key_exists('category_ids', $data)) {
+            $product->categories()->sync($data['category_ids']);
+            unset($data['category_ids']);
+        }
+
+        $product->update($data);
+
+        return new ProductResource($product->fresh(['brand', 'categories']));
     }
 
     /**

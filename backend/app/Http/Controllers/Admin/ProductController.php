@@ -15,12 +15,15 @@ class ProductController extends Controller
         $perPage = min((int) $request->query('per_page', 25), 100) ?: 25;
 
         $products = Product::query()
-            ->with(['brand', 'category'])
+            ->with(['brand', 'categories'])
             ->when($request->query('q'), fn ($q, $search) => $q->where(function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('reference', 'like', "%{$search}%");
             }))
-            ->when($request->query('category_id'), fn ($q, $categoryId) => $q->where('category_id', $categoryId))
+            ->when(
+                $request->query('category_id'),
+                fn ($q, $categoryId) => $q->whereHas('categories', fn ($q2) => $q2->where('categories.id', $categoryId))
+            )
             ->latest()
             ->paginate($perPage);
 
@@ -29,6 +32,6 @@ class ProductController extends Controller
 
     public function show(Product $product): ProductResource
     {
-        return new ProductResource($product->load(['brand', 'category']));
+        return new ProductResource($product->load(['brand', 'categories']));
     }
 }

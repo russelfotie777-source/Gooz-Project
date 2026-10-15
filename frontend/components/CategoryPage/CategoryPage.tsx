@@ -43,7 +43,7 @@ export default async function CategoryPage({ categorySlug, page }: CategoryPageP
 
   const bestSellers = bestSellerProducts;
   const recommendedProducts = otherProducts
-    .filter((p) => p.category?.id !== category.id)
+    .filter((p) => !p.categories?.some((c) => c.id === category.id))
     .slice(0, 4);
 
   return (

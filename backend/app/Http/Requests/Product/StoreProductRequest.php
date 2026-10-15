@@ -27,7 +27,8 @@ class StoreProductRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'meta_description' => ['nullable', 'string', 'max:300'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'category_ids' => ['required', 'array', 'min:1'],
+            'category_ids.*' => ['integer', 'exists:categories,id'],
             'reference' => ['nullable', 'string', 'max:255', 'unique:products,reference'],
             'is_active' => ['boolean'],
         ];

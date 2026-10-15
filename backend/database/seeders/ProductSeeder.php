@@ -32,7 +32,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Sneakers Classic',
                 'reference' => 'SNK-001',
-                'category_id' => $chaussures->id,
+                'category_ids' => [$chaussures->id],
                 'brand_id' => $gooz->id,
                 'description' => 'Baskets confortables pour un usage quotidien.',
                 'variants' => [
@@ -45,7 +45,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Sac à dos Urbain',
                 'reference' => 'SAC-001',
-                'category_id' => $sacs->id,
+                'category_ids' => [$sacs->id],
                 'brand_id' => $doualaStyle->id,
                 'description' => 'Sac à dos résistant, idéal pour la ville.',
                 'variants' => [
@@ -56,7 +56,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Écouteurs Bluetooth',
                 'reference' => 'ELEC-001',
-                'category_id' => $electronique->id,
+                'category_ids' => [$electronique->id],
                 'brand_id' => $kmerFashion->id,
                 'description' => 'Écouteurs sans fil, autonomie 8h.',
                 'variants' => [
@@ -67,7 +67,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Théière Inox',
                 'reference' => 'MAI-001',
-                'category_id' => $maison->id,
+                'category_ids' => [$maison->id],
                 'brand_id' => $doualaStyle->id,
                 'description' => 'Théière en acier inoxydable, 1.5L.',
                 'variants' => [
@@ -78,7 +78,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Chemise Wax',
                 'reference' => 'VET-001',
-                'category_id' => $vetements->id,
+                'category_ids' => [$vetements->id],
                 'brand_id' => $kmerFashion->id,
                 'description' => 'Chemise en tissu wax, coupe moderne.',
                 'variants' => [
@@ -90,7 +90,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Montre Connectée',
                 'reference' => 'ELEC-002',
-                'category_id' => $electronique->id,
+                'category_ids' => [$electronique->id],
                 'brand_id' => $gooz->id,
                 'description' => 'Montre connectée avec suivi santé.',
                 'variants' => [
@@ -103,9 +103,11 @@ class ProductSeeder extends Seeder
         foreach ($products as $data) {
             $variants = $data['variants'];
             $stockQty = $data['stock'];
-            unset($data['variants'], $data['stock']);
+            $categoryIds = $data['category_ids'];
+            unset($data['variants'], $data['stock'], $data['category_ids']);
 
             $product = Product::firstOrCreate(['reference' => $data['reference']], $data);
+            $product->categories()->syncWithoutDetaching($categoryIds);
 
             foreach ($variants as $variantData) {
                 $variant = $product->variants()->firstOrCreate($variantData);

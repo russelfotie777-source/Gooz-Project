@@ -56,7 +56,7 @@ export function productSchema(product: Product, absoluteUrl: string, imageUrl: s
     sku: product.reference,
     image: imageUrl ? [imageUrl] : undefined,
     brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined,
-    category: product.category?.name,
+    category: product.categories?.[0]?.name,
     url: absoluteUrl,
     offers:
       product.price_from != null
@@ -93,10 +93,11 @@ export function brandBreadcrumb(lang: string, brand: Brand) {
 export function productBreadcrumb(lang: string, product: Product, absoluteUrl: string) {
   const items: BreadcrumbItem[] = [{ name: "Shopitech", url: `${SITE_URL}/${lang}` }];
 
-  if (product.category) {
+  const primaryCategory = product.categories?.[0];
+  if (primaryCategory) {
     items.push({
-      name: product.category.name,
-      url: `${SITE_URL}/${lang}/categories/${product.category.slug}`,
+      name: primaryCategory.name,
+      url: `${SITE_URL}/${lang}/categories/${primaryCategory.slug}`,
     });
   }
 

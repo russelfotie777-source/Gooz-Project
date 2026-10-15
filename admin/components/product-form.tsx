@@ -6,7 +6,7 @@ export type ProductOption = { id: number; name: string };
 
 export type ProductFormValues = {
   name: string;
-  category_id: string;
+  category_ids: string[];
   brand_id: string;
   reference: string;
   is_active: boolean;
@@ -57,17 +57,21 @@ export function ProductForm({
   onSubmit: (payload: Record<string, unknown>, addAnother: boolean) => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [categoryId, setCategoryId] = useState(initial?.category_id ?? "");
+  const [categoryIds, setCategoryIds] = useState<string[]>(initial?.category_ids ?? []);
   const [brandId, setBrandId] = useState(initial?.brand_id ?? "");
   const [reference, setReference] = useState(initial?.reference ?? "");
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [description, setDescription] = useState(initial?.description ?? "");
   const [metaDescription, setMetaDescription] = useState(initial?.meta_description ?? "");
 
+  function toggleCategory(id: string) {
+    setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+  }
+
   function buildPayload(): Record<string, unknown> {
     return {
       name,
-      category_id: Number(categoryId),
+      category_ids: categoryIds.map(Number),
       brand_id: brandId ? Number(brandId) : null,
       reference: reference || null,
       is_active: isActive,
@@ -78,6 +82,7 @@ export function ProductForm({
 
   function handleSubmit(e: React.FormEvent, addAnother: boolean) {
     e.preventDefault();
+    if (categoryIds.length === 0) return;
     onSubmit(buildPayload(), addAnother);
   }
 
@@ -102,18 +107,29 @@ export function ProductForm({
 
           <div>
             <label className="mb-1.5 block text-sm text-white/70">
-              Catégorie<span className="text-red-400">*</span>
+              Catégories<span className="text-red-400">*</span>
             </label>
-            <select required value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputClass}>
-              <option value="" className="bg-[#12141c]">
-                Sélectionnez une option
-              </option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id} className="bg-[#12141c]">
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-lg border border-white/10 bg-white/5 p-2.5">
+              {categories.length === 0 && <p className="px-1 py-1 text-sm text-white/30">Aucune catégorie.</p>}
+              {categories.map((c) => {
+                const id = String(c.id);
+                const checked = categoryIds.includes(id);
+                return (
+                  <label key={c.id} className="flex items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-white/5">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleCategory(id)}
+                      className="h-4 w-4 rounded border-white/20 bg-white/5"
+                    />
+                    <span className="text-white/80">{c.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {categoryIds.length === 0 && (
+              <p className="mt-1 text-xs text-red-400">Sélectionnez au moins une catégorie.</p>
+            )}
           </div>
 
           <div>
@@ -181,7 +197,7 @@ export function ProductForm({
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || categoryIds.length === 0}
           className="rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 disabled:opacity-50"
         >
           {submitting ? "..." : submitLabel}
@@ -189,7 +205,7 @@ export function ProductForm({
         {showAddAnother && (
           <button
             type="button"
-            disabled={submitting}
+            disabled={submitting || categoryIds.length === 0}
             onClick={(e) => handleSubmit(e, true)}
             className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-white/80 hover:bg-white/5 disabled:opacity-50"
           >

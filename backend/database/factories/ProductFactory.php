@@ -33,7 +33,6 @@ class ProductFactory extends Factory
             // ran against. Only falls back to Factory() when the table is
             // genuinely empty (a fresh test database's very first call).
             'brand_id' => Brand::inRandomOrder()->value('id') ?? Brand::factory(),
-            'category_id' => Category::inRandomOrder()->value('id') ?? Category::factory(),
             'reference' => strtoupper(fake()->unique()->bothify('REF-####??')),
             'is_active' => true,
         ];
@@ -42,5 +41,17 @@ class ProductFactory extends Factory
     public function inactive(): static
     {
         return $this->state(fn () => ['is_active' => false]);
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Product $product) {
+            if ($product->categories()->exists()) {
+                return;
+            }
+
+            $categoryId = Category::inRandomOrder()->value('id') ?? Category::factory()->create()->id;
+            $product->categories()->attach($categoryId);
+        });
     }
 }

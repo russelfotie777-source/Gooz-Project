@@ -274,7 +274,12 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
   // for a product/category that doesn't have that attribute.
   const specRows: { label: string; value: string }[] = [];
   if (product.reference) specRows.push({ label: dict.product.specReference, value: product.reference });
-  if (product.category?.name) specRows.push({ label: dict.product.specCategory, value: product.category.name });
+  if (product.categories && product.categories.length > 0) {
+    specRows.push({
+      label: dict.product.specCategory,
+      value: product.categories.map((c) => c.name).join(", "),
+    });
+  }
   if (product.brand?.name) specRows.push({ label: dict.product.specBrand, value: product.brand.name });
   if (product.brand?.country_origin) {
     specRows.push({ label: dict.product.specOrigin, value: product.brand.country_origin });
@@ -389,7 +394,11 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
 
               <div className={styles.metaLine}>
                 <span className={styles.metaLabel}>{dict.product.category}</span>
-                <span className={styles.metaValue}>{product.category?.name ?? "—"}</span>
+                <span className={styles.metaValue}>
+                  {product.categories && product.categories.length > 0
+                    ? product.categories.map((c) => c.name).join(", ")
+                    : "—"}
+                </span>
               </div>
               <div className={styles.metaLine}>
                 <span className={styles.metaLabel}>{dict.product.origin}</span>

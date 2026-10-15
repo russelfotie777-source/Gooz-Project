@@ -14,7 +14,7 @@ type Product = {
   meta_description: string | null;
   reference: string | null;
   is_active: boolean;
-  category: { id: number } | null;
+  categories: { id: number }[];
   brand: { id: number } | null;
 };
 
@@ -72,7 +72,7 @@ export default function EditProductPage() {
           brands={brands}
           initial={{
             name: product.name,
-            category_id: product.category ? String(product.category.id) : "",
+            category_ids: product.categories.map((c) => String(c.id)),
             brand_id: product.brand ? String(product.brand.id) : "",
             reference: product.reference ?? "",
             is_active: product.is_active,
