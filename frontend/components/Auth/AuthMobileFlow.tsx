@@ -14,6 +14,7 @@ import {
 } from "@/lib/firebase/auth";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { resolvePostLoginRedirect } from "@/lib/postLoginRedirect";
 import { useFocusOnError } from "@/lib/useFocusOnError";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import styles from "./AuthMobileFlow.module.css";
@@ -125,14 +126,14 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
         const { user, token } = await socialLogin(idToken, "Shopitech PWA (mobile)");
         saveSession({ user, token });
         notifyLogin();
-        router.push("/compte");
+        router.push(await resolvePostLoginRedirect(token));
         return;
       }
 
       const { user, token } = await login(loginPhone, loginPassword, "Shopitech PWA (mobile)");
       saveSession({ user, token });
       notifyLogin();
-      router.push("/compte");
+      router.push(await resolvePostLoginRedirect(token));
     } catch (err) {
       const message =
         err instanceof EmailAuthError
@@ -161,14 +162,14 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
         const { user, token } = await socialLogin(idToken, "Shopitech PWA (mobile)");
         saveSession({ user, token });
         notifyLogin();
-        router.push("/compte");
+        router.push(await resolvePostLoginRedirect(token));
         return;
       }
 
       const { user, token } = await register(signupName, signupPhone, signupPassword, signupConfirmPassword);
       saveSession({ user, token });
       notifyLogin();
-      router.push("/compte");
+      router.push(await resolvePostLoginRedirect(token));
     } catch (err) {
       const message =
         err instanceof EmailAuthError
@@ -189,7 +190,7 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
       const { user, token } = await socialLogin(idToken, "Shopitech PWA (mobile)");
       saveSession({ user, token });
       notifyLogin();
-      router.push("/compte");
+      router.push(await resolvePostLoginRedirect(token));
     } catch (err) {
       if (err instanceof SocialSignInCancelledError) return;
       const message =

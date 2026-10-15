@@ -14,6 +14,7 @@ import {
 } from "@/lib/firebase/auth";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { resolvePostLoginRedirect } from "@/lib/postLoginRedirect";
 import { currentTheme } from "@/lib/theme";
 import { useFocusOnError } from "@/lib/useFocusOnError";
 import ForgotPasswordModal from "./ForgotPasswordModal";
@@ -102,7 +103,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
         const { user, token } = await socialLogin(idToken, "Shopitech PWA (desktop)");
         saveSession({ user, token });
         notifyLogin();
-        router.push("/compte");
+        router.push(await resolvePostLoginRedirect(token));
         return;
       }
 
@@ -112,7 +113,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
           : await register(name, phone, password, confirmPassword);
       saveSession({ user, token });
       notifyLogin();
-      router.push("/compte");
+      router.push(await resolvePostLoginRedirect(token));
     } catch (err) {
       const message =
         err instanceof EmailAuthError
@@ -133,7 +134,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
       const { user, token } = await socialLogin(idToken, "Shopitech PWA (desktop)");
       saveSession({ user, token });
       notifyLogin();
-      router.push("/compte");
+      router.push(await resolvePostLoginRedirect(token));
     } catch (err) {
       if (err instanceof SocialSignInCancelledError) return;
       const message =

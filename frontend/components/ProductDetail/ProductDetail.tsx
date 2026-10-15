@@ -17,6 +17,7 @@ import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/Whats
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { savePendingCartIntent } from "@/lib/pendingCartIntent";
 import { getDisplayVariant } from "@/lib/pricing";
 import { getViewSessionToken, recordRecentlyViewed } from "@/lib/productView";
 import type { City, Neighborhood, Product, Review } from "@/lib/types";
@@ -146,6 +147,14 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
   async function handleAddToCart(goToCart: boolean) {
     const session = getSession();
     if (!session) {
+      savePendingCartIntent({
+        type: "add-to-cart",
+        productId: product.id,
+        variantId: selectedVariant?.id,
+        quantity: 1,
+        goToCart,
+        returnPath: window.location.pathname,
+      });
       router.push("/connexion");
       return;
     }

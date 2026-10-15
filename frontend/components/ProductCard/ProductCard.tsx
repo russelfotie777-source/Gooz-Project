@@ -7,6 +7,7 @@ import { loadFavoriteIds, onFavoritesUpdated, toggleFavorite } from "@/lib/favor
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { savePendingCartIntent } from "@/lib/pendingCartIntent";
 import { getDisplayVariant } from "@/lib/pricing";
 import { productPath } from "@/lib/productUrl";
 import type { Product, ProductVariant } from "@/lib/types";
@@ -193,6 +194,13 @@ export default function ProductCard({
 
     const session = getSession();
     if (!session) {
+      savePendingCartIntent({
+        type: "add-to-cart",
+        productId: product.id,
+        variantId: displayVariant?.id,
+        quantity: 1,
+        returnPath: window.location.pathname,
+      });
       router.push("/connexion");
       return;
     }
@@ -216,6 +224,11 @@ export default function ProductCard({
 
     const session = getSession();
     if (!session) {
+      savePendingCartIntent({
+        type: "toggle-wishlist",
+        productId: product.id,
+        returnPath: window.location.pathname,
+      });
       router.push("/connexion");
       return;
     }
