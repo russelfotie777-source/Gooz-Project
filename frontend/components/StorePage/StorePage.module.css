@@ -46,6 +46,22 @@
   margin-bottom: 12px;
 }
 
+/* Overrides ProductCard's own rounding/shadow for this page only — a plain
+   class-selector override (.cardWrap article) beats ProductCard's own
+   single-class .card rule on specificity alone (one class + one tag beats
+   one class), so this doesn't need !important or touching ProductCard
+   itself. Square-ish corners and a much lighter shadow match the reference
+   image: the current site-wide card reads as floating above the page: this
+   one should sit closer to flush/embedded with it. */
+.cardWrap :global(article) {
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+:global(html[data-theme="dark"]) .cardWrap :global(article) {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 @media (min-width: 640px) {
   .grid {
     columns: 3;
