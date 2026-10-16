@@ -1,9 +1,19 @@
 "use client";
 
+import { useEffect, useRef, useState, ViewTransition } from "react";
 import { usePathname } from "next/navigation";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import styles from "./BottomNav.module.css";
+
+// Ignores sub-10px jitter (momentum scrolling fires a lot of tiny-delta
+// events) so the bar doesn't flicker — only a real scroll-up/scroll-down
+// gesture flips it.
+const SCROLL_DIRECTION_THRESHOLD = 10;
+// Always shown this close to the top — hiding it the instant the page
+// starts scrolling, before the shopper has gone anywhere, reads as broken
+// rather than intentional.
+const ALWAYS_VISIBLE_BELOW_Y = 24;
 
 type ActiveSlot = "home" | "store" | "cart" | "bell" | "profile";
 
@@ -35,6 +45,45 @@ export default function BottomNav({ active }: BottomNavProps) {
   const dict = useDictionary();
   const pathname = usePathname();
   const resolvedActive = active ?? deriveActiveFromPathname(pathname);
+
+  // Scrolling down hides the bar (more room to read), scrolling back up
+  // brings it straight back — the direction is relative to the last point
+  // a show/hide decision was made (lastDecisionY), not frame-to-frame, so a
+  // slow continuous scroll in one direction doesn't need to "build up" any
+  // momentum before the bar reacts.
+  const [hidden, setHidden] = useState(false);
+  const lastDecisionY = useRef(0);
+
+  useEffect(() => {
+    lastDecisionY.current = window.scrollY;
+    let rafId = 0;
+
+    function onScroll() {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        const y = window.scrollY;
+
+        if (y < ALWAYS_VISIBLE_BELOW_Y) {
+          setHidden(false);
+          lastDecisionY.current = y;
+          return;
+        }
+
+        const delta = y - lastDecisionY.current;
+        if (Math.abs(delta) < SCROLL_DIRECTION_THRESHOLD) return;
+
+        setHidden(delta > 0);
+        lastDecisionY.current = y;
+      });
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   const SLOTS = [
     {
@@ -85,37 +134,61 @@ export default function BottomNav({ active }: BottomNavProps) {
   const circlePosition = `${((activeIndex + 0.5) / SLOTS.length) * 100}%`;
 
   return (
-    <nav className={styles.nav} aria-label="Navigation principale">
+    <nav className={`${styles.nav} ${hidden ? styles.navHidden : ""}`} aria-label="Navigation principale">
       <div className={styles.barWrapper}>
         <div className={styles.bar}>
-          <img
-            src="/icon/bottom-nav/nav-shadow.svg"
-            alt=""
-            className={styles.homeShadow}
-            style={{ left: circlePosition }}
-            aria-hidden
-          />
+          {/* Every tab is its own page (Home/Boutique/Panier/Notifications/
+              Compte each render their own BottomNav), so switching tabs is
+              always a real navigation — the old bar's DOM is gone before
+              the new one exists, which is exactly why a plain CSS
+              transition never had anything to animate between. Giving the
+              circle/shadow/each flat icon a stable name here, matched by
+              the identical name on every other page's BottomNav, is what
+              lets the browser's View Transitions API (see next.config.ts)
+              morph the old page's element into the new page's one even
+              though they're two different DOM nodes across a navigation. */}
+          <ViewTransition name="bottom-nav-shadow">
+            <img
+              src="/icon/bottom-nav/nav-shadow.svg"
+              alt=""
+              className={styles.homeShadow}
+              style={{ left: circlePosition }}
+              aria-hidden
+            />
+          </ViewTransition>
 
-          {SLOTS.map((slot, index) =>
-            index === activeIndex ? (
-              <div key={slot.key} className={styles.homeSlot} aria-hidden />
-            ) : (
-              <LocaleLink key={slot.key} href={slot.href} className={styles.item} aria-label={slot.label}>
+          {/* Every slot keeps a real (if currently invisible) icon sitting
+              flat in the bar, including the active one — previously that
+              slot rendered an empty placeholder instead. The outgoing tab's
+              flat icon fades back in as the circle leaves it (reads as
+              "coming back down"), and the incoming tab's fades out as the
+              circle arrives (reads as "going up into the circle") — see
+              .itemActive's opacity transition. */}
+          {SLOTS.map((slot, index) => (
+            <ViewTransition key={slot.key} name={`bottom-nav-item-${slot.key}`}>
+              <LocaleLink
+                href={slot.href}
+                className={`${styles.item} ${index === activeIndex ? styles.itemActive : ""}`}
+                aria-label={slot.label}
+                aria-current={index === activeIndex ? "page" : undefined}
+              >
                 <img src={slot.icon} alt="" className={styles.icon} />
               </LocaleLink>
-            )
-          )}
+            </ViewTransition>
+          ))}
         </div>
 
-        <LocaleLink
-          href={activeSlot.href}
-          className={styles.homeCircle}
-          style={{ left: circlePosition }}
-          aria-label={activeSlot.label}
-          aria-current="page"
-        >
-          <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
-        </LocaleLink>
+        <ViewTransition name="bottom-nav-circle">
+          <LocaleLink
+            href={activeSlot.href}
+            className={styles.homeCircle}
+            style={{ left: circlePosition }}
+            aria-label={activeSlot.label}
+            aria-current="page"
+          >
+            <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
+          </LocaleLink>
+        </ViewTransition>
       </div>
     </nav>
   );

@@ -5,8 +5,29 @@
   bottom: 0;
   display: flex;
   justify-content: center;
-  padding: 0 12px calc(env(safe-area-inset-bottom) + 12px);
+  /* Used to add 12px on top of the safe-area inset, leaving a visible gap
+     of plain page background between the floating bar and the actual
+     bottom edge of the screen (nothing on devices with no safe area at
+     all). Just the inset now, so the bar sits flush against the bottom —
+     still clear of the home-indicator/gesture-bar area on devices that
+     have one, never more than that. */
+  padding: 0 12px env(safe-area-inset-bottom);
   z-index: 30;
+  pointer-events: none;
+  transition: transform 0.3s ease;
+}
+
+/* Scrolling down slides the whole bar (pill + the raised circle poking
+   above it) down out of view; scrolling back up reverses the same
+   transition. 100% alone would only clear .nav's own flow height (the
+   pill) — the extra 40px covers the circle, which sits absolutely
+   positioned above that box (see .homeCircle's negative top), so it's
+   fully gone too, not left peeking over the screen edge. */
+.navHidden {
+  transform: translateY(calc(100% + 40px));
+}
+
+.navHidden .barWrapper {
   pointer-events: none;
 }
 
@@ -37,6 +58,15 @@
   flex: 1;
   height: 100%;
   color: var(--color-text);
+  transition: opacity 0.2s ease;
+}
+
+/* Hidden, not removed — the raised circle (.homeCircle) sits directly over
+   this slot while it's active, see BottomNav.tsx's comment on the SLOTS
+   map for why a real (opacity-0) icon stays here instead of nothing. */
+.itemActive {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .icon {
@@ -53,11 +83,6 @@
   filter: invert(1) brightness(1.15);
 }
 
-.homeSlot {
-  flex: 1;
-  height: 100%;
-}
-
 .homeShadow {
   position: absolute;
   top: 0;
@@ -65,6 +90,7 @@
   width: 98px;
   height: 50px;
   pointer-events: none;
+  transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .homeCircle {
@@ -80,6 +106,12 @@
   justify-content: center;
   box-shadow: 0 6px 14px rgba(255, 149, 0, 0.35);
   z-index: 1;
+  /* The same slight-overshoot easing as .homeShadow (kept as two separate
+     declarations, not a shared class, since the two elements animate
+     different CSS properties otherwise) — the circle eases past its target
+     and settles back, reading as it "popping up" into the new slot rather
+     than gliding flatly across. */
+  transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .homeIcon {

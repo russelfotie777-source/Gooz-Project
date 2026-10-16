@@ -38,6 +38,18 @@ const nextConfig: NextConfig = {
   // Smaller, self-contained output for a containerized deploy — no effect
   // on `next dev`/`next start`.
   output: "standalone",
+  experimental: {
+    // Lets BottomNav's <ViewTransition name="bottom-nav-..."> wrappers
+    // actually animate — every tab is its own page (Home/Boutique/Panier/
+    // Notifications/Compte each render their own BottomNav instance), so a
+    // plain CSS transition never has an old and a new element to animate
+    // between; the browser's View Transitions API is what lets React
+    // morph the old page's raised circle into the new page's one even
+    // though they're two different DOM nodes across a real navigation.
+    // Without browser support (or if this ever needs disabling), pages
+    // just transition instantly, same as before this was enabled.
+    viewTransition: true,
+  },
 };
 
 export default nextConfig;
