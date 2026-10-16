@@ -207,15 +207,28 @@
 
 .variantRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 8px;
   margin: 4px 0 12px;
+  padding-bottom: 2px;
+  /* A product with a lot of variants used to wrap onto several rows —
+     a single scrollable line reads better regardless of how many there
+     are. touch-action keeps a vertical drag that starts on a variant
+     free to scroll the page instead of this row trying to claim it. */
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+
+.variantRow::-webkit-scrollbar {
+  display: none;
 }
 
 .variantButton {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 0 0 auto;
   height: 36px;
   padding: 0 14px;
   border: 1.5px solid var(--color-border);
