@@ -1,0 +1,73 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px calc(var(--bottom-nav-height) + 32px);
+  width: 100%;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.empty {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 24px 0;
+  text-align: center;
+}
+
+/* CSS multi-column, not a grid — a grid would force every row to the same
+   height, which is exactly the uniform look the reference image doesn't
+   have. Columns instead flow each card into whichever column is shortest
+   so far, so the natural height differences between cards (a 2-line name
+   vs. one, a discount tag or not, a rating row or not) stagger the bottom
+   edges without anything needing to fake an offset — while still reading
+   top-to-bottom within each column, not shuffled across them. */
+.grid {
+  columns: 2;
+  column-gap: 12px;
+}
+
+.cardWrap {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    columns: 3;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main {
+    gap: 24px;
+    padding: 32px 5% 64px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .grid {
+    columns: 5;
+    column-gap: 20px;
+  }
+
+  .cardWrap {
+    margin-bottom: 20px;
+  }
+}

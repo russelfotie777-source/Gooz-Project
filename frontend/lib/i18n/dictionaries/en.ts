@@ -37,6 +37,7 @@ const en: Dictionary = {
   },
   bottomNav: {
     home: "Home",
+    store: "Store",
     cart: "Cart",
     notifications: "Notifications",
     account: "Account",
@@ -647,6 +648,10 @@ const en: Dictionary = {
     resultsFor: (q: string) => `Results for "${q}"`,
     noResults: "No product matches your search.",
     emptyPrompt: "Enter a search term to see results.",
+  },
+  store: {
+    title: "The whole store",
+    noResults: "No products available right now.",
   },
   session: {
     expired: "Your session has expired. Please sign in again.",

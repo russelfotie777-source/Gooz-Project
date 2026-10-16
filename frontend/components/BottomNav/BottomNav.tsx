@@ -5,7 +5,7 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import styles from "./BottomNav.module.css";
 
-type ActiveSlot = "home" | "cart" | "bell" | "profile";
+type ActiveSlot = "home" | "store" | "cart" | "bell" | "profile";
 
 interface BottomNavProps {
   /** Which slot is raised as the active orange circle. Defaults to a value
@@ -16,6 +16,7 @@ interface BottomNavProps {
 }
 
 function deriveActiveFromPathname(pathname: string): ActiveSlot {
+  if (/\/boutique(\/|$)/.test(pathname)) return "store";
   if (/\/cart(\/|$)/.test(pathname)) return "cart";
   if (/\/notifications(\/|$)/.test(pathname)) return "bell";
   if (/\/(compte|adresses|commandes)(\/|$)/.test(pathname)) return "profile";
@@ -44,6 +45,16 @@ export default function BottomNav({ active }: BottomNavProps) {
       label: dict.bottomNav.home,
     },
     {
+      key: "store",
+      href: "/boutique",
+      // No separate white "active" export for this one — same situation as
+      // "bell" below (a dark icon sitting in the orange circle reads fine
+      // either way, see that slot's own icon/activeIcon).
+      icon: "/icon/checkout/storefront.svg",
+      activeIcon: "/icon/checkout/storefront.svg",
+      label: dict.bottomNav.store,
+    },
+    {
       key: "cart",
       href: "/cart",
       icon: "/icon/bottom-nav/nav-cart.svg",
@@ -68,7 +79,10 @@ export default function BottomNav({ active }: BottomNavProps) {
 
   const activeIndex = SLOTS.findIndex((slot) => slot.key === resolvedActive);
   const activeSlot = SLOTS[activeIndex];
-  const circlePosition = `${(activeIndex * 2 + 1) * 12.5}%`;
+  // Center of whichever slot is active, as a percentage of the bar's width
+  // — generalized from a hardcoded "4 even slots" (each 25% wide) so adding
+  // the "store" slot didn't need its own magic numbers.
+  const circlePosition = `${((activeIndex + 0.5) / SLOTS.length) * 100}%`;
 
   return (
     <nav className={styles.nav} aria-label="Navigation principale">

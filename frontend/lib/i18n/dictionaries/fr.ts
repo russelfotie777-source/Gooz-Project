@@ -42,6 +42,7 @@ const fr = {
   },
   bottomNav: {
     home: "Accueil",
+    store: "Boutique",
     cart: "Panier",
     notifications: "Notifications",
     account: "Compte",
@@ -656,6 +657,10 @@ const fr = {
     resultsFor: (q: string) => `Résultats pour « ${q} »`,
     noResults: "Aucun produit ne correspond à votre recherche.",
     emptyPrompt: "Entrez un terme de recherche pour voir des résultats.",
+  },
+  store: {
+    title: "Toute la boutique",
+    noResults: "Aucun produit disponible pour le moment.",
   },
   session: {
     expired: "Votre session a expiré. Veuillez vous reconnecter.",
