@@ -19,6 +19,10 @@ function isHiddenOnPathname(pathname: string | null): boolean {
   return pathname != null && /\/(connexion|inscription)$/.test(pathname);
 }
 
+function isProductDetailPath(pathname: string | null): boolean {
+  return pathname != null && /\/products\/[^/]+\/?$/.test(pathname);
+}
+
 export default function WhatsAppButton() {
   const dict = useDictionary();
   const pathname = usePathname();
@@ -30,7 +34,7 @@ export default function WhatsAppButton() {
       href={`https://wa.me/${WHATSAPP_NUMBER}`}
       target="_blank"
       rel="noopener noreferrer"
-      className={styles.button}
+      className={`${styles.button} ${isProductDetailPath(pathname) ? styles.hideOnMobile : ""}`}
       aria-label={dict.whatsapp.label}
     >
       <WhatsAppIcon className={styles.icon} />

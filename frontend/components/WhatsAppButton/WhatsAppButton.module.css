@@ -15,6 +15,12 @@
   animation: waShake 6s ease-in-out infinite;
 }
 
+@media (max-width: 900px) {
+  .hideOnMobile {
+    display: none;
+  }
+}
+
 .button:hover {
   filter: brightness(1.06);
   box-shadow: 0 10px 24px rgba(37, 211, 102, 0.5);
