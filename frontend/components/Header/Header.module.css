@@ -496,13 +496,115 @@
 /* Catalogue variant's sticky title+search block — a solid orange "card"
    instead of the plain page background. Kept as its own class (not a
    recolor of .mobileSticky) because the cart variant reuses .mobileSticky
-   for its own back/title/info row, which stays neutral. */
+   for its own back/title/info row, which stays neutral.
+
+   The gradient-plus-stars look (reference: noon.com's mobile header) is
+   built entirely from CSS backgrounds/pseudo-elements, no canvas or WebGL —
+   the dots are a stack of tiny radial-gradients on the element's own
+   background (static, free), and the two "shooting stars" are ::before/
+   ::after layers whose background-position is animated across the box, kept
+   at z-index:-1 so they paint behind the real title/search content without
+   needing overflow:hidden on this element (which would otherwise clip the
+   search-suggestions dropdown below it). */
 .mobileCatalogueSticky {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: linear-gradient(180deg, #ff9500, #ff8a00);
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 20%, rgba(255, 255, 255, 0.85), transparent 60%),
+    radial-gradient(1.2px 1.2px at 27% 55%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1.8px 1.8px at 45% 14%, rgba(255, 255, 255, 0.75), transparent 60%),
+    radial-gradient(1.2px 1.2px at 61% 46%, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(1.5px 1.5px at 77% 18%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1.2px 1.2px at 89% 52%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1.6px 1.6px at 18% 76%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(1.3px 1.3px at 55% 80%, rgba(255, 255, 255, 0.65), transparent 60%),
+    radial-gradient(1.4px 1.4px at 93% 83%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1.3px 1.3px at 36% 36%, rgba(255, 255, 255, 0.55), transparent 60%),
+    linear-gradient(180deg, #e8590c 0%, #ff8a00 38%, #ffb347 72%, #ffdcb0 100%);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.mobileCatalogueSticky::before,
+.mobileCatalogueSticky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.05) 46%,
+    rgba(255, 255, 255, 0.95) 49.3%,
+    rgba(255, 255, 255, 0.95) 50.7%,
+    rgba(255, 255, 255, 0.05) 54%,
+    transparent 60%,
+    transparent 100%
+  );
+  opacity: 0;
+}
+
+.mobileCatalogueSticky::before {
+  background-size: 55% 55%;
+  animation: shootingStarA 9s linear infinite;
+  animation-delay: 1.2s;
+}
+
+.mobileCatalogueSticky::after {
+  background-size: 38% 38%;
+  animation: shootingStarB 13s linear infinite;
+  animation-delay: 5.5s;
+}
+
+@keyframes shootingStarA {
+  0%,
+  80% {
+    background-position: -40% 140%;
+    opacity: 0;
+  }
+  83% {
+    opacity: 1;
+  }
+  91% {
+    background-position: 140% -40%;
+    opacity: 0.95;
+  }
+  94%,
+  100% {
+    background-position: 160% -60%;
+    opacity: 0;
+  }
+}
+
+@keyframes shootingStarB {
+  0%,
+  85% {
+    background-position: 130% 120%;
+    opacity: 0;
+  }
+  87% {
+    opacity: 1;
+  }
+  95% {
+    background-position: -40% -20%;
+    opacity: 0.9;
+  }
+  98%,
+  100% {
+    background-position: -60% -40%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobileCatalogueSticky::before,
+  .mobileCatalogueSticky::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 .mobileSearchWrapper {
