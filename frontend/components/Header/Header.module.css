@@ -72,6 +72,7 @@
 }
 
 .searchForm {
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -84,6 +85,8 @@
 }
 
 .searchInput {
+  position: relative;
+  z-index: 1;
   border: none;
   background: transparent;
   outline: none;
@@ -98,6 +101,51 @@
 
 .searchInput::placeholder {
   color: rgba(0, 0, 0, 0.44);
+}
+
+.searchPrompt {
+  position: absolute;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: rgba(0, 0, 0, 0.62);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.desktopSearchPrompt {
+  top: 50%;
+  right: 116px;
+  left: 16px;
+  transform: translateY(-50%);
+}
+
+.searchTermWindow {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 9em;
+  height: 1.2em;
+  vertical-align: bottom;
+}
+
+.searchTerm {
+  display: inline-block;
+  animation: searchTermEnter 0.35s ease-out both;
+}
+
+@keyframes searchTermEnter {
+  from {
+    opacity: 0;
+    transform: translateY(80%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .searchButton {
@@ -424,19 +472,60 @@
   flex: 1;
 }
 
+/* Catalogue header only (see .mobileCatalogueSticky) — a bold wordmark on
+   the fixed-orange block, overriding .mobileTitle's themed/centered defaults.
+   Fixed black, not var(--color-text): this sits on solid orange in both
+   themes, same reasoning as .searchInput's fixed color on desktop's always-
+   white search field. */
+.mobileTitleBrand {
+  font-weight: 800;
+  font-size: 20px;
+  color: #000000;
+  text-align: left;
+  letter-spacing: -0.3px;
+}
+
+/* Scrolls away with the page, sitting right above .mobileCatalogueSticky —
+   same solid orange so the two read as one block at rest; only exists to
+   give AnnouncementBar's pill (left untouched) an orange backdrop instead of
+   the plain page background. */
+.mobilePromoZone {
+  background: linear-gradient(180deg, #ff9500, #ff8a00);
+}
+
+/* Catalogue variant's sticky title+search block — a solid orange "card"
+   instead of the plain page background, rounded on its trailing edge since
+   it's the last thing visible once .mobilePromoZone has scrolled away.
+   Kept as its own class (not a recolor of .mobileSticky) because the cart
+   variant reuses .mobileSticky for its own back/title/info row, which stays
+   neutral. */
+.mobileCatalogueSticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: linear-gradient(180deg, #ff9500, #ff8a00);
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
 .mobileSearchWrapper {
   position: relative;
   margin: 0 16px 12px;
 }
 
 .mobileSearchForm {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--color-placeholder);
+  /* Fixed white, not var(--color-placeholder) — this sits on the fixed
+     orange block (.mobileCatalogueSticky) in both themes now, same as
+     desktop's always-white .searchForm. */
+  background: #ffffff;
   border-radius: 9999px;
   height: 40px;
   padding: 0 16px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
 }
 
 .mobileSearchFormIcon {
@@ -446,18 +535,42 @@
 }
 
 .mobileSearchInput {
+  position: relative;
+  z-index: 1;
   border: none;
   background: transparent;
   outline: none;
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  color: var(--color-text-muted);
+  /* Fixed, not var(--color-text-muted) — see .mobileSearchForm. */
+  color: rgba(0, 0, 0, 0.44);
   font-family: var(--font-body);
 }
 
 .mobileSearchInput::placeholder {
-  color: var(--color-text-muted);
+  color: rgba(0, 0, 0, 0.44);
+}
+
+/* No color override here anymore (was var(--color-text-muted), themed for
+   the old gray pill) — falls back to .searchPrompt's own fixed dark color,
+   which already matches this field's fixed-white background. */
+.mobileSearchPrompt {
+  top: 50%;
+  right: 16px;
+  left: 44px;
+  transform: translateY(-50%);
+  font-size: 13px;
+}
+
+.mobileSearchPrompt .searchTermWindow {
+  max-width: 6em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .searchTerm {
+    animation: none;
+  }
 }
 
 .mobileDetailSticky {

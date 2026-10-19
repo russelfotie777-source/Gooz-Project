@@ -44,6 +44,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   const router = useLocaleRouter();
 
   const [query, setQuery] = useState("");
+  const [searchExampleIndex, setSearchExampleIndex] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -53,6 +54,18 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   const [langOpen, setLangOpen] = useState(false);
   const langWrapperRef = useRef<HTMLDivElement>(null);
   const activeLanguage = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
+  const searchExamples = dict.header.searchExamples;
+
+  useEffect(() => {
+    if (searchFocused || query || searchExamples.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      setSearchExampleIndex((current) => (current + 1) % searchExamples.length);
+    }, 2400);
+
+    return () => window.clearInterval(interval);
+  }, [query, searchExamples.length, searchFocused]);
 
   // Pages render this with a prop seeded from mock/server data (see e.g.
   // CartPage's comments). Once a real session exists, the actual cart count
@@ -221,9 +234,16 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
             <div className={styles.searchWrapper} ref={searchWrapperRef}>
               <form className={styles.searchForm} role="search" onSubmit={handleSearchSubmit}>
+                {!searchFocused && !query && (
+                  <SearchPrompt
+                    phrase={dict.header.searchPlaceholder}
+                    example={searchExamples[searchExampleIndex]}
+                    className={styles.desktopSearchPrompt}
+                  />
+                )}
                 <input
                   type="search"
-                  placeholder={dict.header.searchPlaceholder}
+                  aria-label={dict.header.searchPlaceholder}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
@@ -397,15 +417,19 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
           <>
             {/* Figma node 373:488 was an empty placeholder slot — now filled by
                 the admin-managed announcement bar. Scrolls away with the page;
-                only the sticky wrapper below stays fixed. */}
-            <AnnouncementBar
-              announcements={announcements}
-              dismissed={announcementsDismissed}
-              variant="mobile"
-              onDismiss={dismissAnnouncements}
-            />
+                only the sticky wrapper below stays fixed. Wrapped in its own
+                orange zone (AnnouncementBar itself is untouched) so the pill
+                sits on the same solid color as the sticky block beneath it. */}
+            <div className={styles.mobilePromoZone}>
+              <AnnouncementBar
+                announcements={announcements}
+                dismissed={announcementsDismissed}
+                variant="mobile"
+                onDismiss={dismissAnnouncements}
+              />
+            </div>
 
-            <div className={styles.mobileSticky}>
+            <div className={styles.mobileCatalogueSticky}>
               <div className={styles.mobileTopRow}>
                 {/* Not needed for now — see the desktop menu button above too.
                 <button type="button" className={styles.mobileMenuButton} aria-label={dict.header.menu}>
@@ -413,16 +437,23 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 </button>
                 */}
 
-                <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
+                <p className={`${styles.mobileTitle} ${styles.mobileTitleBrand}`}>{dict.header.catalogueTitle}</p>
               </div>
 
               <div className={styles.mobileSearchWrapper} ref={mobileSearchWrapperRef}>
                 <form className={styles.mobileSearchForm} role="search" onSubmit={handleSearchSubmit}>
                   <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchFormIcon} />
+                  {!searchFocused && !query && (
+                    <SearchPrompt
+                      phrase={dict.header.searchPlaceholder}
+                      example={searchExamples[searchExampleIndex]}
+                      className={styles.mobileSearchPrompt}
+                    />
+                  )}
                   <input
                     ref={mobileSearchRef}
                     type="search"
-                    placeholder={dict.header.searchPlaceholderMobile}
+                    aria-label={dict.header.searchPlaceholder}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => setSearchFocused(true)}
@@ -436,6 +467,28 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
         )}
       </div>
     </header>
+  );
+}
+
+function SearchPrompt({
+  phrase,
+  example,
+  className,
+}: {
+  phrase: string;
+  example: string;
+  className: string;
+}) {
+  return (
+    <span className={`${styles.searchPrompt} ${className}`} aria-hidden="true">
+      <span>{phrase} “</span>
+      <span className={styles.searchTermWindow}>
+        <span key={example} className={styles.searchTerm}>
+          {example}
+        </span>
+      </span>
+      <span>”</span>
+    </span>
   );
 }
 
