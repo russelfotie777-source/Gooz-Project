@@ -29,21 +29,31 @@
   text-align: center;
 }
 
-/* CSS multi-column, not a grid — a grid would force every row to the same
-   height, which is exactly the uniform look the reference image doesn't
-   have. Columns instead flow each card into whichever column is shortest
-   so far, so the natural height differences between cards (a 2-line name
-   vs. one, a discount tag or not, a rating row or not) stagger the bottom
-   edges without anything needing to fake an offset — while still reading
-   top-to-bottom within each column, not shuffled across them. */
+/* Explicit flex columns, not CSS `columns: N` — multi-column CSS fills one
+   column completely (in an auto-height container it doesn't balance as
+   you'd expect) before spilling into the next, so the first many products
+   all landed in column 1 with no stagger at all; the interleaved look only
+   showed up once column 2 finally started, deep down the page. Products
+   are split into N arrays by hand instead (see distributeColumns in
+   StorePage.tsx) so every product takes its turn across columns starting
+   with the very first row — the natural height differences between cards
+   (a 2-line name vs. one, a discount tag or not) still stagger the bottom
+   edges on their own, nothing fakes an offset. */
 .grid {
-  columns: 2;
-  column-gap: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .cardWrap {
-  break-inside: avoid;
-  margin-bottom: 12px;
+  width: 100%;
 }
 
 /* Overrides ProductCard's own rounding/shadow for this page only — a plain
@@ -62,12 +72,6 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-@media (min-width: 640px) {
-  .grid {
-    columns: 3;
-  }
-}
-
 @media (min-width: 1024px) {
   .main {
     gap: 24px;
@@ -78,12 +82,8 @@
     font-size: 26px;
   }
 
-  .grid {
-    columns: 5;
-    column-gap: 20px;
-  }
-
-  .cardWrap {
-    margin-bottom: 20px;
+  .grid,
+  .column {
+    gap: 20px;
   }
 }

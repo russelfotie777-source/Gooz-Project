@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "@/components/Header/Header";
 import BottomNav from "@/components/BottomNav/BottomNav";
 import Footer from "@/components/Footer/Footer";
@@ -11,6 +11,44 @@ import styles from "./StorePage.module.css";
 
 interface StorePageProps {
   products: Product[];
+}
+
+// How many cards render up front (server AND first client paint) — the
+// catalogue this page pulls from can run into the hundreds, and rendering
+// every one of them (each a full ProductCard: swipeable image gallery,
+// wishlist state, add-to-cart button...) in one pass is what was making the
+// page slow to open. Revealing more as the shopper actually scrolls down to
+// them keeps the first paint cheap regardless of how big the catalogue is.
+const INITIAL_BATCH = 16;
+const BATCH_SIZE = 16;
+
+// Matches this component's own CSS breakpoints (see .module.css) — kept in
+// sync by hand since the column *count* has to be known in JS (for
+// distributeColumns below), not just expressed in CSS.
+const COLUMN_BREAKPOINTS: [minWidth: number, columns: number][] = [
+  [1024, 5],
+  [640, 3],
+  [0, 2],
+];
+
+function columnCountForWidth(width: number): number {
+  for (const [minWidth, columns] of COLUMN_BREAKPOINTS) {
+    if (width >= minWidth) return columns;
+  }
+  return 2;
+}
+
+// Real masonry (via CSS `columns: N`) fills one column completely before
+// spilling into the next — on a long list that meant the first dozen-plus
+// products all stacked in a single column with no stagger at all, and the
+// interleaved, uneven-height look only showed up once the second column
+// finally started. Splitting the list into N arrays by hand and laying each
+// one out in its own flex column makes every product take its turn across
+// columns from the very first row instead.
+function distributeColumns<T>(items: T[], columnCount: number): T[][] {
+  const columns: T[][] = Array.from({ length: columnCount }, () => []);
+  items.forEach((item, index) => columns[index % columnCount].push(item));
+  return columns;
 }
 
 function shuffled<T>(items: T[]): T[] {
@@ -36,11 +74,48 @@ function shuffled<T>(items: T[]): T[] {
 export default function StorePage({ products }: StorePageProps) {
   const dict = useDictionary();
   const [ordered, setOrdered] = useState(products);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
+  const [columnCount, setColumnCount] = useState(2);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setOrdered(shuffled(products));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    function updateColumnCount() {
+      setColumnCount(columnCountForWidth(window.innerWidth));
+    }
+    updateColumnCount();
+    window.addEventListener("resize", updateColumnCount);
+    return () => window.removeEventListener("resize", updateColumnCount);
+  }, []);
+
+  // Grows visibleCount as the shopper nears the bottom of what's currently
+  // rendered — no extra network request, just revealing more of the
+  // already-fetched (and already-shuffled) list that was sitting unrendered.
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((count) => Math.min(count + BATCH_SIZE, ordered.length));
+        }
+      },
+      // Starts loading the next batch a bit before the sentinel actually
+      // scrolls into view, so new cards are ready by the time the shopper
+      // gets there instead of popping in right at the edge of the screen.
+      { rootMargin: "800px 0px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [ordered.length]);
+
+  const visibleProducts = ordered.slice(0, visibleCount);
+  const columns = distributeColumns(visibleProducts, columnCount);
 
   return (
     <div className={styles.page}>
@@ -52,13 +127,20 @@ export default function StorePage({ products }: StorePageProps) {
         {ordered.length === 0 ? (
           <p className={styles.empty}>{dict.store.noResults}</p>
         ) : (
-          <div className={styles.grid}>
-            {ordered.map((product) => (
-              <div className={styles.cardWrap} key={product.id}>
-                <ProductCard product={product} layout="column" />
-              </div>
-            ))}
-          </div>
+          <>
+            <div className={styles.grid}>
+              {columns.map((column, columnIndex) => (
+                <div className={styles.column} key={columnIndex}>
+                  {column.map((product) => (
+                    <div className={styles.cardWrap} key={product.id}>
+                      <ProductCard product={product} layout="column" />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            {visibleCount < ordered.length && <div ref={sentinelRef} aria-hidden="true" />}
+          </>
         )}
       </main>
 
