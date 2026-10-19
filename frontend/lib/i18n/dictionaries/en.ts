@@ -15,7 +15,7 @@ const en: Dictionary = {
     menu: "Menu",
     search: "Search",
     searchPlaceholder: "Search for a product",
-    searchPlaceholderMobile: "Search for a product...",
+    searchExamples: ["TVs", "phones", "headphones", "shoes"],
     searchButton: "Search",
     searchLoading: "Searching...",
     searchNoResults: "No products found.",

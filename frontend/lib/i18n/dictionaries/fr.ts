@@ -20,7 +20,7 @@ const fr = {
     menu: "Menu",
     search: "Rechercher",
     searchPlaceholder: "Rechercher un produit",
-    searchPlaceholderMobile: "Rechercher un produit...",
+    searchExamples: ["téléviseurs", "smartphones", "écouteurs", "chaussures"],
     searchButton: "Rechercher",
     searchLoading: "Recherche en cours...",
     searchNoResults: "Aucun produit trouvé.",
