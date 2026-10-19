@@ -500,29 +500,50 @@
 
    The gradient-plus-stars look (reference: noon.com's mobile header) is
    built entirely from CSS backgrounds/pseudo-elements, no canvas or WebGL —
-   the dots are a stack of tiny radial-gradients on the element's own
-   background (static, free), and the two "shooting stars" are ::before/
-   ::after layers whose background-position is animated across the box, kept
-   at z-index:-1 so they paint behind the real title/search content without
-   needing overflow:hidden on this element (which would otherwise clip the
-   search-suggestions dropdown below it). */
+   the dots are a stack of radial-gradients on the element's own background
+   (static, free), and the two "shooting stars" are ::before/::after layers
+   whose background-position is animated across the box, kept at z-index:-1
+   so they paint behind the real title/search content without needing
+   overflow:hidden on this element (which would otherwise clip the search-
+   suggestions dropdown below it).
+
+   Taller than the earlier version on purpose, with a dedicated blank tail
+   below the search bar (the padding-bottom below): noon's header fades all
+   the way to the page's own background color by the time its search bar
+   sits in it — the search bar lands in the ALREADY-faded part, not in the
+   saturated top — so the gradient needs real vertical room to resolve
+   before anything else starts, instead of ending abruptly where the box
+   itself ends (that hard edge, plus the box-shadow this used to have, is
+   what read as a "line" instead of a dissolve). The last gradient stop is
+   var(--color-bg), not a fixed color, so it actually lands on the exact
+   color sitting right below it in both themes. */
 .mobileCatalogueSticky {
   position: sticky;
   top: 0;
   z-index: 20;
+  padding-bottom: 46px;
   background-image:
-    radial-gradient(1.6px 1.6px at 12% 20%, rgba(255, 255, 255, 0.85), transparent 60%),
-    radial-gradient(1.2px 1.2px at 27% 55%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(1.8px 1.8px at 45% 14%, rgba(255, 255, 255, 0.75), transparent 60%),
-    radial-gradient(1.2px 1.2px at 61% 46%, rgba(255, 255, 255, 0.55), transparent 60%),
-    radial-gradient(1.5px 1.5px at 77% 18%, rgba(255, 255, 255, 0.8), transparent 60%),
-    radial-gradient(1.2px 1.2px at 89% 52%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(1.6px 1.6px at 18% 76%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(1.3px 1.3px at 55% 80%, rgba(255, 255, 255, 0.65), transparent 60%),
-    radial-gradient(1.4px 1.4px at 93% 83%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(1.3px 1.3px at 36% 36%, rgba(255, 255, 255, 0.55), transparent 60%),
-    linear-gradient(180deg, #e8590c 0%, #ff8a00 38%, #ffb347 72%, #ffdcb0 100%);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    radial-gradient(3px 3px at 10% 16%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(2.2px 2.2px at 24% 42%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(3.4px 3.4px at 40% 10%, rgba(255, 255, 255, 0.9), transparent 70%),
+    radial-gradient(2.2px 2.2px at 56% 34%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(3px 3px at 72% 14%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(2.4px 2.4px at 85% 38%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(3px 3px at 15% 56%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(2.2px 2.2px at 48% 58%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(2.6px 2.6px at 92% 58%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(2.2px 2.2px at 33% 26%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(2px 2px at 64% 50%, rgba(255, 255, 255, 0.65), transparent 70%),
+    linear-gradient(
+      180deg,
+      #e8590c 0%,
+      #ff8a00 16%,
+      #ffb347 34%,
+      #ffd9a8 50%,
+      #fff1e0 64%,
+      var(--color-bg) 85%,
+      var(--color-bg) 100%
+    );
 }
 
 .mobileCatalogueSticky::before,
@@ -536,65 +557,69 @@
   background-image: linear-gradient(
     115deg,
     transparent 0%,
-    transparent 40%,
-    rgba(255, 255, 255, 0.05) 46%,
-    rgba(255, 255, 255, 0.95) 49.3%,
-    rgba(255, 255, 255, 0.95) 50.7%,
-    rgba(255, 255, 255, 0.05) 54%,
-    transparent 60%,
+    transparent 44%,
+    rgba(255, 255, 255, 0.9) 48.5%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.4) 51.5%,
+    rgba(255, 255, 255, 0.08) 54%,
+    transparent 58%,
     transparent 100%
   );
   opacity: 0;
 }
 
 .mobileCatalogueSticky::before {
-  background-size: 55% 55%;
-  animation: shootingStarA 9s linear infinite;
+  background-size: 48% 48%;
+  animation: shootingStarA 8s linear infinite;
   animation-delay: 1.2s;
 }
 
 .mobileCatalogueSticky::after {
-  background-size: 38% 38%;
-  animation: shootingStarB 13s linear infinite;
-  animation-delay: 5.5s;
+  background-size: 34% 34%;
+  animation: shootingStarB 11s linear infinite;
+  animation-delay: 4.5s;
 }
 
+/* Travels -20%..100% vertically, not the box's full height — that keeps it
+   inside the saturated top part of the gradient above, where a bright
+   streak actually shows up against the color. Lower than that it'd be
+   crossing the pale/faded tail, where white-on-near-white is invisible. */
 @keyframes shootingStarA {
   0%,
-  80% {
-    background-position: -40% 140%;
+  78% {
+    background-position: -35% 100%;
     opacity: 0;
   }
-  83% {
+  81% {
     opacity: 1;
   }
-  91% {
-    background-position: 140% -40%;
-    opacity: 0.95;
+  89% {
+    background-position: 125% -15%;
+    opacity: 1;
   }
-  94%,
+  93%,
   100% {
-    background-position: 160% -60%;
+    background-position: 145% -35%;
     opacity: 0;
   }
 }
 
 @keyframes shootingStarB {
   0%,
-  85% {
-    background-position: 130% 120%;
+  83% {
+    background-position: 120% 90%;
     opacity: 0;
   }
-  87% {
+  86% {
     opacity: 1;
   }
-  95% {
-    background-position: -40% -20%;
-    opacity: 0.9;
+  93% {
+    background-position: -30% -10%;
+    opacity: 0.95;
   }
-  98%,
+  97%,
   100% {
-    background-position: -60% -40%;
+    background-position: -50% -30%;
     opacity: 0;
   }
 }
