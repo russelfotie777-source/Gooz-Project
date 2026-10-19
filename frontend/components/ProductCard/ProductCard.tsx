@@ -109,7 +109,27 @@ export default function ProductCard({
   const HORIZONTAL_COMMIT_PX = 6;
   const SWIPE_THRESHOLD_PX = 40;
 
+  // "row" cards are themselves laid out inside a horizontally-scrolling
+  // carousel (En Solde, Populaire, Produits recommandés...) — if they also
+  // read horizontal drags as "swipe this card's own images", a finger
+  // placed on a card's photo can never scroll the carousel past it at all.
+  // Multiple photos still get shown here, just as an automatic slideshow
+  // instead of something the shopper can grab — see the effect below. Only
+  // "column" cards (the catalogue/boutique grid, which isn't nested inside
+  // any outer horizontal scroller) stay swipeable by hand.
+  const manuallySwipeable = layout === "column";
+
+  useEffect(() => {
+    if (manuallySwipeable || images.length <= 1) return;
+    const id = window.setInterval(() => {
+      setActiveImageIndex((i) => (i + 1) % images.length);
+    }, 2500);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manuallySwipeable, images.length]);
+
   function handlePointerDown(e: React.PointerEvent<HTMLAnchorElement>) {
+    if (!manuallySwipeable) return;
     if (images.length <= 1 || e.pointerType === "mouse") return;
     dragState.current = {
       pointerId: e.pointerId,
