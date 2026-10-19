@@ -634,7 +634,12 @@
 
 .mobileSearchWrapper {
   position: relative;
-  margin: 0 16px 12px;
+  /* No bottom margin: this is the last thing inside .mobileCatalogueSticky
+     (the sticky, pinned box), so any margin here would just become extra
+     pinned-but-blank space past the search bar's own edge — which is
+     exactly what made scrolling content disappear slightly before the
+     search bar instead of right at it. */
+  margin: 0 16px;
 }
 
 .mobileSearchForm {
