@@ -494,17 +494,14 @@
 }
 
 /* Catalogue variant's sticky title+search block — a solid orange "card"
-   instead of the plain page background, rounded on its trailing edge since
-   it's the last thing visible once .mobilePromoZone has scrolled away.
-   Kept as its own class (not a recolor of .mobileSticky) because the cart
-   variant reuses .mobileSticky for its own back/title/info row, which stays
-   neutral. */
+   instead of the plain page background. Kept as its own class (not a
+   recolor of .mobileSticky) because the cart variant reuses .mobileSticky
+   for its own back/title/info row, which stays neutral. */
 .mobileCatalogueSticky {
   position: sticky;
   top: 0;
   z-index: 20;
   background: linear-gradient(180deg, #ff9500, #ff8a00);
-  border-radius: 0 0 20px 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
