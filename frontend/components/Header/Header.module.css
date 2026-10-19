@@ -507,41 +507,41 @@
    overflow:hidden on this element (which would otherwise clip the search-
    suggestions dropdown below it).
 
-   Taller than the earlier version on purpose, with a dedicated blank tail
-   below the search bar (the padding-bottom below): noon's header fades all
-   the way to the page's own background color by the time its search bar
-   sits in it — the search bar lands in the ALREADY-faded part, not in the
-   saturated top — so the gradient needs real vertical room to resolve
-   before anything else starts, instead of ending abruptly where the box
-   itself ends (that hard edge, plus the box-shadow this used to have, is
-   what read as a "line" instead of a dissolve). The last gradient stop is
-   var(--color-bg), not a fixed color, so it actually lands on the exact
-   color sitting right below it in both themes. */
+   No extra padding below the search bar — this box is `position: sticky`,
+   so its own box (whatever height it is) is what stays pinned and covers
+   page content scrolling up underneath it. A taller box with a blank tail
+   below the search bar meant products visibly disappeared into that empty
+   tail before ever reaching the search bar itself, instead of sliding
+   behind the search bar the way they should. The fade-to-background look
+   still happens, just compressed into the box's real (title+search)
+   height: the gradient reaches var(--color-bg) — not a fixed color, so it
+   lands on the exact color sitting right below it in both themes — well
+   before the search bar's own bottom edge, with no box-shadow to draw a
+   hard line under it. */
 .mobileCatalogueSticky {
   position: sticky;
   top: 0;
   z-index: 20;
-  padding-bottom: 46px;
   background-image:
-    radial-gradient(3px 3px at 10% 16%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(2.2px 2.2px at 24% 42%, rgba(255, 255, 255, 0.8), transparent 70%),
-    radial-gradient(3.4px 3.4px at 40% 10%, rgba(255, 255, 255, 0.9), transparent 70%),
-    radial-gradient(2.2px 2.2px at 56% 34%, rgba(255, 255, 255, 0.75), transparent 70%),
-    radial-gradient(3px 3px at 72% 14%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(2.4px 2.4px at 85% 38%, rgba(255, 255, 255, 0.8), transparent 70%),
-    radial-gradient(3px 3px at 15% 56%, rgba(255, 255, 255, 0.85), transparent 70%),
-    radial-gradient(2.2px 2.2px at 48% 58%, rgba(255, 255, 255, 0.7), transparent 70%),
-    radial-gradient(2.6px 2.6px at 92% 58%, rgba(255, 255, 255, 0.75), transparent 70%),
-    radial-gradient(2.2px 2.2px at 33% 26%, rgba(255, 255, 255, 0.7), transparent 70%),
-    radial-gradient(2px 2px at 64% 50%, rgba(255, 255, 255, 0.65), transparent 70%),
+    radial-gradient(3px 3px at 10% 14%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(2.2px 2.2px at 24% 36%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(3.4px 3.4px at 40% 9%, rgba(255, 255, 255, 0.9), transparent 70%),
+    radial-gradient(2.2px 2.2px at 56% 29%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(3px 3px at 72% 12%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(2.4px 2.4px at 85% 32%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(3px 3px at 15% 47%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(2.2px 2.2px at 48% 49%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(2.6px 2.6px at 92% 48%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(2.2px 2.2px at 33% 22%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(2px 2px at 64% 42%, rgba(255, 255, 255, 0.65), transparent 70%),
     linear-gradient(
       180deg,
       #e8590c 0%,
-      #ff8a00 16%,
-      #ffb347 34%,
-      #ffd9a8 50%,
-      #fff1e0 64%,
-      var(--color-bg) 85%,
+      #ff8a00 20%,
+      #ffb347 42%,
+      #ffd9a8 58%,
+      #fff3e4 72%,
+      var(--color-bg) 90%,
       var(--color-bg) 100%
     );
 }
@@ -580,14 +580,14 @@
   animation-delay: 4.5s;
 }
 
-/* Travels -20%..100% vertically, not the box's full height — that keeps it
-   inside the saturated top part of the gradient above, where a bright
-   streak actually shows up against the color. Lower than that it'd be
-   crossing the pale/faded tail, where white-on-near-white is invisible. */
+/* Stays within the saturated top ~70% of the (now short) box, where a
+   bright streak actually shows up against the color — the bottom of the
+   gradient is already pale/faded to var(--color-bg), where white-on-near-
+   white wouldn't be visible anyway. */
 @keyframes shootingStarA {
   0%,
   78% {
-    background-position: -35% 100%;
+    background-position: -35% 70%;
     opacity: 0;
   }
   81% {
@@ -607,7 +607,7 @@
 @keyframes shootingStarB {
   0%,
   83% {
-    background-position: 120% 90%;
+    background-position: 120% 60%;
     opacity: 0;
   }
   86% {
