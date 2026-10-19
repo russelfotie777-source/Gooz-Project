@@ -28,14 +28,53 @@
   padding: 0 20px;
 }
 
+/* Used to float as its own navy card on the plain page background — now
+   that it sits on Header's solid orange mobile block (.mobilePromoZone),
+   that card read as a mismatched stain instead of a brand element. Dropping
+   the fill/border/shadow lets the text and icons sit directly on the orange
+   instead; the dark (not white) foreground below is what keeps it readable
+   there, same choice as the wordmark below it. Nothing here touches the
+   slide/confetti/badge animations themselves, only the colors they paint
+   with (see the overrides right after this rule). */
 .barMobile {
   height: 50px;
   margin: 10px 12px 0;
   padding: 0 12px;
-  border-radius: 8px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 6px 16px rgba(2, 15, 33, 0.35);
+  background: transparent;
+  border-bottom: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.barMobile .iconBadge {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.barMobile .promoPill {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.barMobile .glowPulse {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.barMobile .progressDot {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.barMobile .progressFillComplete,
+.barMobile .progressFillActive {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.barMobile .dismissButton {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.barMobile .dismissButton:hover,
+.barMobile .dismissButton:focus-visible {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 @keyframes announcementBarEnter {
