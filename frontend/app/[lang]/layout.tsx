@@ -8,6 +8,7 @@ import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar/ServiceW
 import StructuredData from "@/components/StructuredData/StructuredData";
 import SupportButton from "@/components/SupportButton/SupportButton";
 import ToastProvider from "@/components/ToastProvider/ToastProvider";
+import ViewTransitionErrorSuppressor from "@/components/ViewTransitionErrorSuppressor/ViewTransitionErrorSuppressor";
 import WhatsAppButton from "@/components/WhatsAppButton/WhatsAppButton";
 import { isLocale, locales } from "@/lib/i18n/config";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
@@ -160,6 +161,7 @@ export default async function RootLayout({
           <AppDownloadPromo />
           <ServiceWorkerRegistrar />
           <PushNotificationRegistrar />
+          <ViewTransitionErrorSuppressor />
           <ToastProvider />
         </I18nProvider>
       </body>
