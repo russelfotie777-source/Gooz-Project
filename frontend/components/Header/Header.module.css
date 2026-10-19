@@ -499,13 +499,15 @@
    for its own back/title/info row, which stays neutral.
 
    The gradient-plus-stars look (reference: noon.com's mobile header) is
-   built entirely from CSS backgrounds/pseudo-elements, no canvas or WebGL —
-   the dots are a stack of radial-gradients on the element's own background
-   (static, free), and the two "shooting stars" are ::before/::after layers
-   whose background-position is animated across the box, kept at z-index:-1
-   so they paint behind the real title/search content without needing
-   overflow:hidden on this element (which would otherwise clip the search-
-   suggestions dropdown below it).
+   built entirely from CSS backgrounds/pseudo-elements, no canvas or WebGL.
+   Three separate layers, each doing one job: this element's own background
+   is just the static color gradient; ::before is the starfield (a stack of
+   radial-gradient dots, panned slowly as one group so it isn't perfectly
+   static); ::after is a single small point that flies across every few
+   seconds. Both pseudo-elements stay at z-index:-1 so they paint behind the
+   real title/search content without needing overflow:hidden on this
+   element (which would otherwise clip the search-suggestions dropdown
+   below it).
 
    No extra padding below the search bar — this box is `position: sticky`,
    so its own box (whatever height it is) is what stays pinned and covers
@@ -522,39 +524,60 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background-image:
-    radial-gradient(3px 3px at 10% 14%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(2.2px 2.2px at 24% 36%, rgba(255, 255, 255, 0.8), transparent 70%),
-    radial-gradient(3.4px 3.4px at 40% 9%, rgba(255, 255, 255, 0.9), transparent 70%),
-    radial-gradient(2.2px 2.2px at 56% 29%, rgba(255, 255, 255, 0.75), transparent 70%),
-    radial-gradient(3px 3px at 72% 12%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(2.4px 2.4px at 85% 32%, rgba(255, 255, 255, 0.8), transparent 70%),
-    radial-gradient(3px 3px at 15% 47%, rgba(255, 255, 255, 0.85), transparent 70%),
-    radial-gradient(2.2px 2.2px at 48% 49%, rgba(255, 255, 255, 0.7), transparent 70%),
-    radial-gradient(2.6px 2.6px at 92% 48%, rgba(255, 255, 255, 0.75), transparent 70%),
-    radial-gradient(2.2px 2.2px at 33% 22%, rgba(255, 255, 255, 0.7), transparent 70%),
-    radial-gradient(2px 2px at 64% 42%, rgba(255, 255, 255, 0.65), transparent 70%),
-    linear-gradient(
-      180deg,
-      #e8590c 0%,
-      #ff8a00 20%,
-      #ffb347 42%,
-      #ffd9a8 58%,
-      #fff3e4 72%,
-      var(--color-bg) 90%,
-      var(--color-bg) 100%
-    );
+  background-image: linear-gradient(
+    180deg,
+    #e8590c 0%,
+    #ff8a00 20%,
+    #ffb347 42%,
+    #ffd9a8 58%,
+    #fff3e4 72%,
+    var(--color-bg) 90%,
+    var(--color-bg) 100%
+  );
 }
 
-/* A real shooting star is a bright point with a tail trailing BEHIND it —
-   not a bar that's equally soft on both ends (which is all the previous
-   single symmetric gradient ever looked like, no matter how it was timed).
-   Two layers moving together as one unit via one background-position:
-   a tiny radial "head" (the glint) sitting right where the linear tail
-   reaches full brightness, and the tail itself fading gradually in over a
-   long stretch but cut off sharply right after the head — nothing visible
-   ahead of it, since it hasn't "arrived" there yet. */
-.mobileCatalogueSticky::before,
+.mobileCatalogueSticky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  /* Bigger than the box so there's room for background-position to pan it
+     a few % in each direction without ever showing a bare edge. */
+  background-size: 114% 114%;
+  background-image:
+    radial-gradient(2.6px at 10% 14%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(2px at 24% 36%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(3px at 40% 9%, rgba(255, 255, 255, 0.9), transparent 70%),
+    radial-gradient(2px at 56% 29%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(2.6px at 72% 12%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(2.2px at 85% 32%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(2.6px at 15% 47%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(2px at 48% 49%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(2.4px at 92% 48%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(2px at 33% 22%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(1.8px at 64% 42%, rgba(255, 255, 255, 0.65), transparent 70%);
+  animation: starDrift 22s ease-in-out infinite alternate;
+}
+
+/* Slow, small pan (not a twinkle) — reads as the whole sky drifting rather
+   than anything flashing, so it stays a background detail, not a
+   distraction next to the title/search. */
+@keyframes starDrift {
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: -9% -6%;
+  }
+}
+
+/* Just a point, no comet tail — a small glow that appears, crosses the
+   saturated top of the gradient in a straight line, and disappears. Stays
+   above roughly the top 70% of the (short) box: lower than that the
+   gradient has already faded close to var(--color-bg), where a white dot
+   wouldn't read against it anyway. */
 .mobileCatalogueSticky::after {
   content: "";
   position: absolute;
@@ -562,94 +585,38 @@
   z-index: -1;
   pointer-events: none;
   background-repeat: no-repeat;
-  background-image:
-    radial-gradient(
-      3px at 53% 50%,
-      #ffffff 0%,
-      rgba(255, 255, 255, 0.55) 55%,
-      transparent 100%
-    ),
-    linear-gradient(
-      115deg,
-      transparent 0%,
-      transparent 20%,
-      rgba(255, 255, 255, 0.03) 30%,
-      rgba(255, 255, 255, 0.12) 38%,
-      rgba(255, 255, 255, 0.3) 45%,
-      rgba(255, 255, 255, 0.65) 50%,
-      rgba(255, 255, 255, 0.95) 53%,
-      transparent 55%,
-      transparent 100%
-    );
-  /* One size for both layers — background-size's value list repeats to
-     cover every background-image layer when there are more layers than
-     values, so the radial "head" and the linear "tail" share the exact
-     same box and therefore the exact same background-position math; that's
-     what keeps them moving together as one comet instead of drifting
-     apart. */
+  background-size: 8px 8px;
+  background-image: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.7) 45%, transparent 75%);
   opacity: 0;
+  animation: shootingPoint 7s linear infinite;
+  animation-delay: 1.4s;
 }
 
-.mobileCatalogueSticky::before {
-  background-size: 48% 48%;
-  animation: shootingStarA 8s linear infinite;
-  animation-delay: 1.2s;
-}
-
-.mobileCatalogueSticky::after {
-  background-size: 34% 34%;
-  animation: shootingStarB 11s linear infinite;
-  animation-delay: 4.5s;
-}
-
-/* Stays within the saturated top ~70% of the (now short) box, where a
-   bright streak actually shows up against the color — the bottom of the
-   gradient is already pale/faded to var(--color-bg), where white-on-near-
-   white wouldn't be visible anyway. Both background layers share one
-   position (duplicated per keyframe step) so the glint and its tail move
-   together as a single comet instead of drifting apart. */
-@keyframes shootingStarA {
+@keyframes shootingPoint {
   0%,
-  78% {
-    background-position: -35% 70%, -35% 70%;
+  70% {
+    background-position: -10% 85%;
     opacity: 0;
   }
-  81% {
+  73% {
     opacity: 1;
   }
-  89% {
-    background-position: 125% -15%, 125% -15%;
+  85% {
+    background-position: 110% -10%;
     opacity: 1;
   }
-  93%,
+  88%,
   100% {
-    background-position: 145% -35%, 145% -35%;
-    opacity: 0;
-  }
-}
-
-@keyframes shootingStarB {
-  0%,
-  83% {
-    background-position: 120% 60%, 120% 60%;
-    opacity: 0;
-  }
-  86% {
-    opacity: 1;
-  }
-  93% {
-    background-position: -30% -10%, -30% -10%;
-    opacity: 0.95;
-  }
-  97%,
-  100% {
-    background-position: -50% -30%, -50% -30%;
+    background-position: 118% -18%;
     opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobileCatalogueSticky::before,
+  .mobileCatalogueSticky::before {
+    animation: none;
+  }
+
   .mobileCatalogueSticky::after {
     animation: none;
     opacity: 0;
