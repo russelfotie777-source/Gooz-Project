@@ -519,7 +519,7 @@
      orange block (.mobileCatalogueSticky) in both themes now, same as
      desktop's always-white .searchForm. */
   background: #ffffff;
-  border-radius: 9999px;
+  border-radius: 8px;
   height: 40px;
   padding: 0 16px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
