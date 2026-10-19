@@ -17,9 +17,20 @@ const PLACEHOLDER_IMAGE = "/images/placeholder-product.svg";
 
 interface ProductCardProps {
   product: Product;
-  /** "row" = compact card used in horizontal carousels (En Solde, Populaire).
-   *  "column" = larger tile used in grids (Catalogue, Bonnes affaires). */
+  /** "row" = compact card. "column" = larger tile. Purely a size/style
+   *  choice — several sections (Produits recommandés, Souvent acheté
+   *  aussi...) deliberately use "column"-sized cards inside a horizontally
+   *  scrolling carousel for emphasis, so this says nothing about whether
+   *  the card sits inside one — see `swipeable` for that. */
   layout?: "row" | "column";
+  /** Whether a touch drag on the card's own photo is read as "swipe to the
+   *  next photo". Defaults to true (catalogue/boutique grids, favorites —
+   *  nothing else around the card wants that horizontal gesture). Any card
+   *  rendered inside a horizontally-scrolling carousel (see ProductSection,
+   *  DynamicHomepageSection) must pass false: otherwise a finger placed on
+   *  that card's photo can never scroll the carousel past it, regardless of
+   *  which `layout` the card itself happens to use. */
+  swipeable?: boolean;
   onAddToCart?: (product: Product) => void;
   onToggleWishlist?: (product: Product) => void;
 }
@@ -37,6 +48,7 @@ function discountPercent(variant: ProductVariant | null): number | null {
 export default function ProductCard({
   product,
   layout = "row",
+  swipeable = true,
   onAddToCart,
   onToggleWishlist,
 }: ProductCardProps) {
@@ -109,15 +121,13 @@ export default function ProductCard({
   const HORIZONTAL_COMMIT_PX = 6;
   const SWIPE_THRESHOLD_PX = 40;
 
-  // "row" cards are themselves laid out inside a horizontally-scrolling
-  // carousel (En Solde, Populaire, Produits recommandés...) — if they also
-  // read horizontal drags as "swipe this card's own images", a finger
+  // Cards nested inside a horizontally-scrolling carousel (En Solde,
+  // Populaire, Produits recommandés...) pass swipeable={false} — if they
+  // also read horizontal drags as "swipe this card's own images", a finger
   // placed on a card's photo can never scroll the carousel past it at all.
   // Multiple photos still get shown here, just as an automatic slideshow
-  // instead of something the shopper can grab — see the effect below. Only
-  // "column" cards (the catalogue/boutique grid, which isn't nested inside
-  // any outer horizontal scroller) stay swipeable by hand.
-  const manuallySwipeable = layout === "column";
+  // instead of something the shopper can grab — see the effect below.
+  const manuallySwipeable = swipeable;
 
   useEffect(() => {
     if (manuallySwipeable || images.length <= 1) return;
@@ -273,7 +283,7 @@ export default function ProductCard({
             rather than native horizontal scroll. */}
         <LocaleLink
           href={productPath(product)}
-          className={styles.imageLink}
+          className={`${styles.imageLink} ${!manuallySwipeable ? styles.imageLinkStatic : ""}`}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

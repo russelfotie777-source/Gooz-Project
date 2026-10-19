@@ -57,7 +57,7 @@ export default function ProductSection({
         <div ref={trackRef} className={styles.track}>
           {products.map((product) => (
             <div className={styles.item} key={product.id}>
-              <ProductCard product={product} layout={cardLayout} />
+              <ProductCard product={product} layout={cardLayout} swipeable={false} />
             </div>
           ))}
         </div>

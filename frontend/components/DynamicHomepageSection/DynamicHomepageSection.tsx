@@ -72,7 +72,11 @@ export default function DynamicHomepageSection({ section }: DynamicHomepageSecti
           {section.content_type === "products" &&
             section.products.map((product) => (
               <div className={styles.item} key={product.id}>
-                <ProductCard product={product} layout={isHorizontal ? "row" : "column"} />
+                <ProductCard
+                  product={product}
+                  layout={isHorizontal ? "row" : "column"}
+                  swipeable={!isHorizontal}
+                />
               </div>
             ))}
 

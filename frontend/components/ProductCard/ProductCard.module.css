@@ -58,13 +58,13 @@
   touch-action: pan-y;
 }
 
-/* "row" cards don't read drags as a swipe at all (see ProductCard.tsx's
-   manuallySwipeable) — pan-y here would otherwise still claim the
-   horizontal axis for this element specifically and keep a touch that
-   starts on a card's photo from ever reaching the carousel it sits inside
-   (see ProductSection's own overflow-x: auto track), even though nothing
-   is left here to actually use it. */
-.row .imageLink {
+/* Cards with swipeable={false} (see ProductCard.tsx's manuallySwipeable)
+   don't read drags as a swipe at all — pan-y here would otherwise still
+   claim the horizontal axis for this element specifically and keep a touch
+   that starts on a card's photo from ever reaching the carousel it sits
+   inside (see ProductSection's own overflow-x: auto track), even though
+   nothing is left here to actually use it. */
+.imageLinkStatic {
   touch-action: auto;
 }
 
