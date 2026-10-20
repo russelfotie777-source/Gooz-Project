@@ -403,6 +403,14 @@
   width: 100%;
   overflow-x: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
+  /* A real catalogue has more categories than fit on one line — still
+     scrollable by drag/wheel, just without the native scrollbar track
+     sitting under this always-black bar like a stray gray stripe. */
+  scrollbar-width: none;
+}
+
+.categoriesBar::-webkit-scrollbar {
+  display: none;
 }
 
 .categoryButton {
