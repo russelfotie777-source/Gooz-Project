@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
 
+type WarehouseOption = { id: number; name: string };
+
 type Adjustment = {
   id: number;
   warehouse: { id: number; name: string } | null;
@@ -35,6 +37,48 @@ export default function AjustementStockPage() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
+  const [bulkWarehouseId, setBulkWarehouseId] = useState("");
+  const [bulkQuantity, setBulkQuantity] = useState("");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
+  useEffect(() => {
+    apiFetch<{ data: WarehouseOption[] }>("/admin/warehouses")
+      .then((res) => {
+        setWarehouses(res.data);
+        if (res.data.length === 1) setBulkWarehouseId(String(res.data[0].id));
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleBulkSet(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const warehouseName = warehouses.find((w) => String(w.id) === bulkWarehouseId)?.name ?? "cet entrepôt";
+    if (
+      !confirm(
+        `Mettre TOUS les produits/variantes de ${warehouseName} à ${bulkQuantity} unité(s) ? Cette action modifie le stock immédiatement.`
+      )
+    ) {
+      return;
+    }
+
+    setBulkSubmitting(true);
+    try {
+      await apiFetch("/admin/stock-adjustments/bulk-set", {
+        method: "POST",
+        body: JSON.stringify({ warehouse_id: Number(bulkWarehouseId), quantity: Number(bulkQuantity) }),
+      });
+      setBulkQuantity("");
+      load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Échec de la mise à jour en masse.");
+    } finally {
+      setBulkSubmitting(false);
+    }
+  }
 
   function load() {
     const query = new URLSearchParams({ page: String(page), per_page: "25" });
@@ -89,6 +133,60 @@ export default function AjustementStockPage() {
           {error}
         </p>
       )}
+
+      <form
+        onSubmit={handleBulkSet}
+        className="mb-6 rounded-2xl border border-white/5 bg-white/[0.03] p-5"
+      >
+        <h2 className="mb-1 text-sm font-semibold text-white/70">Mise à jour en masse</h2>
+        <p className="mb-4 text-xs text-white/40">
+          Fixe le stock disponible de TOUS les produits/variantes d&apos;un entrepôt à une même quantité — crée et
+          applique un ajustement automatiquement, visible ensuite dans la liste ci-dessous et le journal
+          d&apos;inventaire.
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[200px]">
+            <label className="mb-1.5 block text-xs text-white/50">Entrepôt</label>
+            <select
+              required
+              value={bulkWarehouseId}
+              onChange={(e) => setBulkWarehouseId(e.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-brand-orange/60"
+            >
+              <option value="" className="bg-[#12141c]">
+                Sélectionnez
+              </option>
+              {warehouses.map((w) => (
+                <option key={w.id} value={w.id} className="bg-[#12141c]">
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="w-32">
+            <label className="mb-1.5 block text-xs text-white/50">Quantité</label>
+            <input
+              required
+              type="number"
+              min={0}
+              step={1}
+              value={bulkQuantity}
+              onChange={(e) => setBulkQuantity(e.target.value)}
+              placeholder="10"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:border-brand-orange/60"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={bulkSubmitting || !bulkWarehouseId || bulkQuantity === ""}
+            className="rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-dark px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 disabled:opacity-50"
+          >
+            {bulkSubmitting ? "Application..." : "Appliquer à tous"}
+          </button>
+        </div>
+      </form>
 
       <div className="rounded-2xl border border-white/5 bg-white/[0.03]">
         <div className="flex items-center justify-between gap-3 border-b border-white/5 p-4">
