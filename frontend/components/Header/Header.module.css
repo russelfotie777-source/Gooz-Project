@@ -444,7 +444,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 10px;
+  padding: 10px 16px 8px;
 }
 
 .mobileMenuButton {
@@ -476,15 +476,20 @@
    "version F" (light-on-dark) file the always-black desktop .mainRow uses,
    since this sits on a fixed-dark sky regardless of theme too. */
 .mobileLogo {
-  height: 26px;
+  height: 22px;
   width: auto;
 }
 
 /* Fixed light icon + tint, not ThemeToggle's own themed defaults — same
    reasoning as .themeToggleDesktop below: this sits on a fixed-dark sky in
    both themes, so it can't follow var(--color-text) (which turns near-white
-   in dark mode and would vanish against a light toggle background). */
+   in dark mode and would vanish against a light toggle background). Also
+   smaller than ThemeToggle's own 32px default (shared with the desktop
+   header, left alone there) so it doesn't set a taller floor than the
+   logo next to it now needs. */
 .themeToggleMobile {
+  width: 26px;
+  height: 26px;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.14);
 }
