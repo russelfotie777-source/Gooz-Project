@@ -27,7 +27,17 @@ return [
     */
     'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000'))),
 
-    'allowed_origins_patterns' => [],
+    /*
+    | Local-only: testing the PWA on a real phone goes through a devtunnels
+    | forward of the Next.js dev server, whose subdomain is random and
+    | changes every tunnel session — listing it by exact origin in
+    | CORS_ALLOWED_ORIGINS would mean editing .env every time. Matched by
+    | pattern instead, and only when APP_ENV is local/testing so production
+    | never trusts an arbitrary *.devtunnels.ms origin.
+    */
+    'allowed_origins_patterns' => in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)
+        ? ['#^https://.*\.devtunnels\.ms$#']
+        : [],
 
     'allowed_headers' => ['*'],
 
