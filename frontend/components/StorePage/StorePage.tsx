@@ -113,15 +113,19 @@ export default function StorePage({ products }: StorePageProps) {
 
   // Grows visibleCount as the shopper nears the bottom of what's currently
   // rendered — no extra network request, just revealing more of the
-  // already-fetched (and already-shuffled) list that was sitting unrendered.
+  // already-fetched (and already-shuffled) list. Uncapped on purpose: once
+  // the shopper reaches the end of the shuffled catalogue, this keeps going
+  // and visibleProducts below wraps back around to the start, so the feed
+  // never "runs out" — it loops the same products again rather than
+  // stopping.
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel || ordered.length === 0) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setVisibleCount((count) => Math.min(count + BATCH_SIZE, ordered.length));
+          setVisibleCount((count) => count + BATCH_SIZE);
         }
       },
       // Starts loading the next batch a bit before the sentinel actually
@@ -133,7 +137,18 @@ export default function StorePage({ products }: StorePageProps) {
     return () => observer.disconnect();
   }, [ordered.length]);
 
-  const visibleProducts = ordered.slice(0, visibleCount);
+  // Wraps around via `i % ordered.length` instead of slicing — past the end
+  // of the shuffled list, this just starts handing out the same products
+  // again from the top, which is what makes the scroll genuinely infinite.
+  // Keyed by id + flat index (not id alone) since the same product can now
+  // appear more than once on the page at once.
+  const visibleProducts =
+    ordered.length === 0
+      ? []
+      : Array.from({ length: visibleCount }, (_, i) => {
+          const product = ordered[i % ordered.length];
+          return { product, key: `${product.id}-${i}` };
+        });
   const columns = distributeColumns(visibleProducts, columnCount);
 
   return (
@@ -150,15 +165,15 @@ export default function StorePage({ products }: StorePageProps) {
             <div className={styles.grid}>
               {columns.map((column, columnIndex) => (
                 <div className={styles.column} key={columnIndex}>
-                  {column.map((product) => (
-                    <div className={styles.cardWrap} key={product.id}>
+                  {column.map(({ product, key }) => (
+                    <div className={styles.cardWrap} key={key}>
                       <ProductCard product={product} layout="column" />
                     </div>
                   ))}
                 </div>
               ))}
             </div>
-            {visibleCount < ordered.length && <div ref={sentinelRef} aria-hidden="true" />}
+            <div ref={sentinelRef} aria-hidden="true" />
           </>
         )}
       </main>
