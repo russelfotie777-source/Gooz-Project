@@ -76,6 +76,7 @@ export default function StorePage({ products }: StorePageProps) {
   const [ordered, setOrdered] = useState(products);
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
   const [columnCount, setColumnCount] = useState(2);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -91,6 +92,24 @@ export default function StorePage({ products }: StorePageProps) {
     window.addEventListener("resize", updateColumnCount);
     return () => window.removeEventListener("resize", updateColumnCount);
   }, []);
+
+  // Mobile-only (see .scrollTopButton) — the global ScrollToTopButton in
+  // Footer is desktop-only everywhere else (BottomNav already sits in that
+  // corner on mobile), but this page's masonry grid can run to hundreds of
+  // products, long enough that jumping back to the top is worth the one
+  // exception.
+  useEffect(() => {
+    function handleScroll() {
+      setShowScrollTop(window.scrollY > 400);
+    }
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   // Grows visibleCount as the shopper nears the bottom of what's currently
   // rendered — no extra network request, just revealing more of the
@@ -145,6 +164,24 @@ export default function StorePage({ products }: StorePageProps) {
       </main>
 
       <Footer />
+
+      <button
+        type="button"
+        className={`${styles.scrollTopButton} ${showScrollTop ? styles.scrollTopButtonVisible : ""}`}
+        onClick={scrollToTop}
+        aria-label={dict.scrollTop.label}
+        tabIndex={showScrollTop ? 0 : -1}
+      >
+        <svg viewBox="0 0 20 20" fill="none" className={styles.scrollTopIcon}>
+          <path
+            d="M10 15V5M5 9l5-5 5 5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
 
       <BottomNav active="store" />
     </div>

@@ -72,6 +72,45 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* Mobile-only exception to ScrollToTopButton's desktop-only rule (see its
+   own comment) — this grid alone can run to hundreds of products. Stacks
+   above WhatsAppButton the same way the desktop ScrollToTopButton stacks
+   above it (right: 20px matches WhatsAppButton's own; bottom clears both
+   BottomNav and WhatsAppButton's 52px circle plus a gap). */
+.scrollTopButton {
+  position: fixed;
+  right: 20px;
+  bottom: calc(var(--bottom-nav-height) + 86px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent-strong);
+  color: var(--color-white);
+  box-shadow: 0 8px 20px rgba(255, 149, 0, 0.35);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.2s ease;
+}
+
+.scrollTopButtonVisible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.scrollTopIcon {
+  width: 22px;
+  height: 22px;
+  margin: 0 auto;
+}
+
 @media (min-width: 1024px) {
   .main {
     gap: 24px;
@@ -85,5 +124,10 @@
   .grid,
   .column {
     gap: 20px;
+  }
+
+  /* The global Footer ScrollToTopButton takes over here. */
+  .scrollTopButton {
+    display: none;
   }
 }
