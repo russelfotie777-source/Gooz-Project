@@ -497,7 +497,7 @@
    give AnnouncementBar's pill (left untouched) a dark backdrop instead of
    the plain page background. */
 .mobilePromoZone {
-  background: #05050a;
+  background: #000000;
 }
 
 /* Catalogue variant's sticky logo+toggle+search block — a starry night sky
@@ -505,15 +505,16 @@
    recolor of .mobileSticky) because the cart variant reuses .mobileSticky
    for its own back/title/info row, which stays neutral.
 
-   The gradient-plus-stars look is built entirely from CSS backgrounds/
-   pseudo-elements, no canvas or WebGL. Three separate layers, each doing
-   one job: this element's own background is just the static near-black
-   gradient; ::before is the starfield (a stack of radial-gradient dots,
-   panned slowly as one group so it isn't perfectly static); ::after is a
-   single small point that flies across every few seconds. Both pseudo-
-   elements stay at z-index:-1 so they paint behind the real logo/toggle/
-   search content without needing overflow:hidden on this element (which
-   would otherwise clip the search-suggestions dropdown below it).
+   The stars themselves are real elements (StarrySky, rendered as this
+   element's first child) so each one can twinkle on its own schedule —
+   see that component's own comments for why a single shared background-
+   image/background-position animation (the earlier version of this) never
+   reads as "twinkling", only as the whole sky panning.
+
+   Five real, perceptually distinct steps from zenith to horizon (not four
+   near-identical near-blacks) — a believable night sky needs an actual gap
+   between "almost pure black overhead" and "a bluer glow near the
+   horizon", not a flat near-black the eye reads as a single flat color.
 
    No extra padding below the search bar — this box is `position: sticky`,
    so its own box (whatever height it is) is what stays pinned and covers
@@ -534,100 +535,14 @@
   z-index: 20;
   background-image: linear-gradient(
     180deg,
-    #04040a 0%,
-    #08080f 30%,
-    #0e0e18 52%,
-    #171722 70%,
-    var(--color-bg) 92%,
+    #000000 0%,
+    #05050f 28%,
+    #0d0d26 48%,
+    #1a1a40 65%,
+    #272760 78%,
+    var(--color-bg) 93%,
     var(--color-bg) 100%
   );
-}
-
-.mobileCatalogueSticky::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-repeat: no-repeat;
-  /* Bigger than the box so there's room for background-position to pan it
-     a few % in each direction without ever showing a bare edge. */
-  background-size: 114% 114%;
-  background-image:
-    radial-gradient(2.6px at 10% 14%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(2px at 24% 36%, rgba(255, 255, 255, 0.8), transparent 70%),
-    radial-gradient(3px at 40% 9%, rgba(255, 255, 255, 0.9), transparent 70%),
-    radial-gradient(2px at 56% 29%, rgba(255, 255, 255, 0.75), transparent 70%),
-    radial-gradient(2.6px at 72% 12%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(2.2px at 85% 32%, rgba(255, 255, 255, 0.8), transparent 70%),
-    radial-gradient(2.6px at 15% 47%, rgba(255, 255, 255, 0.85), transparent 70%),
-    radial-gradient(2px at 48% 49%, rgba(255, 255, 255, 0.7), transparent 70%),
-    radial-gradient(2.4px at 92% 48%, rgba(255, 255, 255, 0.75), transparent 70%),
-    radial-gradient(2px at 33% 22%, rgba(255, 255, 255, 0.7), transparent 70%),
-    radial-gradient(1.8px at 64% 42%, rgba(255, 255, 255, 0.65), transparent 70%);
-  animation: starDrift 22s ease-in-out infinite alternate;
-}
-
-/* Slow, small pan (not a twinkle) — reads as the whole sky drifting rather
-   than anything flashing, so it stays a background detail, not a
-   distraction next to the title/search. */
-@keyframes starDrift {
-  from {
-    background-position: 0% 0%;
-  }
-  to {
-    background-position: -9% -6%;
-  }
-}
-
-/* Just a point, no comet tail — a small glow that appears, crosses the
-   saturated top of the gradient in a straight line, and disappears. Stays
-   above roughly the top 70% of the (short) box: lower than that the
-   gradient has already faded close to var(--color-bg), where a white dot
-   wouldn't read against it anyway. */
-.mobileCatalogueSticky::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-repeat: no-repeat;
-  background-size: 8px 8px;
-  background-image: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.7) 45%, transparent 75%);
-  opacity: 0;
-  animation: shootingPoint 7s linear infinite;
-  animation-delay: 1.4s;
-}
-
-@keyframes shootingPoint {
-  0%,
-  70% {
-    background-position: -10% 85%;
-    opacity: 0;
-  }
-  73% {
-    opacity: 1;
-  }
-  85% {
-    background-position: 110% -10%;
-    opacity: 1;
-  }
-  88%,
-  100% {
-    background-position: 118% -18%;
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mobileCatalogueSticky::before {
-    animation: none;
-  }
-
-  .mobileCatalogueSticky::after {
-    animation: none;
-    opacity: 0;
-  }
 }
 
 .mobileSearchWrapper {
@@ -646,13 +561,17 @@
   align-items: center;
   gap: 10px;
   /* Fixed white, not var(--color-placeholder) — this sits on the fixed
-     orange block (.mobileCatalogueSticky) in both themes now, same as
+     dark sky (.mobileCatalogueSticky) in both themes now, same as
      desktop's always-white .searchForm. */
   background: #ffffff;
   border-radius: 8px;
   height: 40px;
   padding: 0 16px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  /* The soft blue-tinted glow (second shadow) is what keeps a flat white
+     rectangle from reading as "pasted onto" the night sky behind it rather
+     than sitting in it — a plain dark drop-shadow alone reads the same on
+     any background. */
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18), 0 0 22px rgba(130, 150, 255, 0.22);
 }
 
 .mobileSearchFormIcon {

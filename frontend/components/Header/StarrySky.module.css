@@ -1,0 +1,131 @@
+/* Positioned by Header.module.css's .mobileCatalogueSticky (the parent is
+   `position: sticky`, which is a valid containing block for this). Its own
+   overflow:hidden is what keeps the shooting star's travel — which can
+   overshoot slightly past 100% before fading out — from ever bleeding onto
+   neighboring page content; the parent itself deliberately has no
+   overflow rule (it would clip the search-suggestions dropdown), so this
+   wrapper carries that instead. z-index:-1 puts the whole sky behind the
+   logo/toggle/search row without needing them individually raised above
+   it: within one stacking context, a negative-z-index positioned
+   descendant paints before (behind) the parent's normal, non-positioned
+   in-flow children. */
+.sky {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dustStar {
+  position: absolute;
+  border-radius: 999px;
+  background: #ffffff;
+  animation: starTwinkle ease-in-out infinite;
+}
+
+/* --peak (set per star, see StarrySky.tsx) varies how bright each one gets
+   at its brightest — not every star should hit full white, or the field
+   reads as uniform dots instead of a mix of faint and brighter ones. */
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: calc(var(--peak, 1) * 0.22);
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: var(--peak, 1);
+    transform: scale(1);
+  }
+}
+
+.anchorStar {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  animation: anchorTwinkle ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.65));
+}
+
+/* Bigger swing than the dust stars (opacity AND scale) — these five are
+   meant to anchor the eye, not blend into the field. */
+@keyframes anchorTwinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* A short tapered tail (the gradient) plus a bright point at its leading
+   edge (::after) — path and angle come from inline custom properties set
+   per occurrence in StarrySky.tsx (re-rolled in JS each time, which a pure
+   CSS keyframe can't do), so no two shooting stars retrace the same line.
+   `transform: rotate(...)` here is a fixed per-instance tilt (set inline,
+   matching the actual start->end direction); only `top`/`left` animate. */
+.shootingStar {
+  position: absolute;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95));
+  transform-origin: 0 50%;
+  animation: shootingTravel linear both;
+  opacity: 0;
+}
+
+.shootingStar::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.85);
+  transform: translateY(-50%);
+}
+
+@keyframes shootingTravel {
+  0% {
+    opacity: 0;
+    top: var(--start-y);
+    left: var(--start-x);
+  }
+  16% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    top: var(--end-y);
+    left: var(--end-x);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dustStar,
+  .anchorStar,
+  .shootingStar {
+    animation: none;
+  }
+
+  .dustStar {
+    opacity: var(--peak, 0.7);
+    transform: scale(1);
+  }
+
+  .anchorStar {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .shootingStar {
+    display: none;
+  }
+}

@@ -15,6 +15,7 @@ import { showToast } from "@/lib/toast";
 import type { Announcement, Category, User } from "@/lib/types";
 import AnnouncementBar from "@/components/AnnouncementBar/AnnouncementBar";
 import SearchSuggestions from "@/components/SearchSuggestions/SearchSuggestions";
+import StarrySky from "./StarrySky";
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
 import styles from "./Header.module.css";
 
@@ -430,6 +431,8 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
             </div>
 
             <div className={styles.mobileCatalogueSticky}>
+              <StarrySky />
+
               <div className={styles.mobileTopRow}>
                 <LocaleLink href="/" aria-label={dict.header.catalogueTitle}>
                   <img
