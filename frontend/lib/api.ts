@@ -30,15 +30,26 @@ import type {
 import { unstable_rethrow } from "next/navigation";
 import { notifySessionExpired } from "./sessionEvents";
 
-// Talks to the Laravel API described in API.md. Server Components call these
-// directly (Node fetch, no CORS involved); a "use client" component would
-// need NEXT_PUBLIC_API_URL to also be reachable from the browser.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
+// Talks to the Laravel API described in API.md. A "use client" component's
+// fetch runs in the shopper's own browser and genuinely needs
+// NEXT_PUBLIC_API_URL to be reachable from there (e.g. a devtunnels forward
+// while testing on a phone). A Server Component's fetch runs in this same
+// Node process as the backend, so it should always go straight to the real
+// backend (fast, reliable, no network hop) rather than out through whatever
+// public-facing tunnel NEXT_PUBLIC_API_URL happens to point at during that
+// kind of testing — INTERNAL_API_URL (server-only, never sent to the
+// browser) exists for exactly that split; it only needs setting when the
+// backend isn't reachable at 127.0.0.1:8001 from this machine.
+const PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
+const API_BASE_URL =
+  typeof window === "undefined" ? (process.env.INTERNAL_API_URL ?? "http://127.0.0.1:8001/api/v1") : PUBLIC_API_URL;
 
 // File uploads (banner images, ...) come back as a path relative to the
 // Laravel app's own origin (e.g. "/storage/banners/x.jpg"), not the "/api/v1"
-// API root — resolve it against the API origin so it's a real loadable URL.
-const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+// API root. These URLs end up in HTML the browser loads directly (<img
+// src>), so — unlike API_BASE_URL above — this always resolves against the
+// public-facing origin, even when computed during SSR.
+const API_ORIGIN = PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "");
 
 export function resolveMediaUrl(path: string): string {
   if (/^https?:\/\//.test(path)) return path;

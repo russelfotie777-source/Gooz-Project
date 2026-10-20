@@ -7,33 +7,41 @@ const apiOrigin = new URL(
   (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1").replace(/\/api\/v1\/?$/, "")
 );
 
-// Next 16 added a built-in SSRF guard that refuses to fetch an optimized
-// image from any host resolving to a private/loopback IP — 127.0.0.1
-// included — regardless of remotePatterns matching it. Only matters for
-// local dev (the Laravel backend is a real public domain in prod), so this
-// only opts back in when the configured API origin actually is loopback.
-const isLocalApiOrigin = apiOrigin.hostname === "127.0.0.1" || apiOrigin.hostname === "localhost";
+const isDev = process.env.NODE_ENV !== "production";
+
+// The Laravel backend bakes ITS OWN APP_URL into the absolute image_url/
+// image/logo URLs it returns — in local dev that's always some loopback
+// address (127.0.0.1:8001, or "localhost" with no port depending on
+// backend/.env), completely independent of whatever NEXT_PUBLIC_API_URL is
+// pointed at for the *browser's* sake (e.g. a devtunnels forward while
+// testing on a phone). Both need to be in remotePatterns: the configured
+// API origin (what lib/api.ts actually calls, and what prod really is), and
+// — dev only — the backend's always-loopback real origin, since those two
+// only happen to be the same value when nothing is being tunneled.
+const remotePatterns: NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]> = [
+  {
+    protocol: apiOrigin.protocol.replace(":", "") as "http" | "https",
+    hostname: apiOrigin.hostname,
+    port: apiOrigin.port,
+    pathname: "/storage/**",
+  },
+];
+
+if (isDev) {
+  remotePatterns.push(
+    { protocol: "http", hostname: "127.0.0.1", port: "8001", pathname: "/storage/**" },
+    { protocol: "http", hostname: "localhost", pathname: "/storage/**" }
+  );
+}
 
 const nextConfig: NextConfig = {
   images: {
-    dangerouslyAllowLocalIP: isLocalApiOrigin,
-    remotePatterns: [
-      {
-        protocol: apiOrigin.protocol.replace(":", "") as "http" | "https",
-        hostname: apiOrigin.hostname,
-        port: apiOrigin.port,
-        pathname: "/storage/**",
-      },
-      // backend/.env's APP_URL (what image_url/image/logo are actually
-      // built from server-side) is "http://localhost" with no port, which
-      // doesn't match the 127.0.0.1:8001 dev API origin above — covering
-      // both until that mismatch is reconciled.
-      {
-        protocol: "http",
-        hostname: "localhost",
-        pathname: "/storage/**",
-      },
-    ],
+    // Next 16's built-in SSRF guard refuses to fetch an optimized image
+    // from any host resolving to a private/loopback IP regardless of
+    // remotePatterns matching it — only relevant in dev (the backend is a
+    // real public domain in prod).
+    dangerouslyAllowLocalIP: isDev,
+    remotePatterns,
   },
   // Smaller, self-contained output for a containerized deploy — no effect
   // on `next dev`/`next start`.
