@@ -194,8 +194,8 @@ const fr = {
     buyNow: "Acheter",
     buyNowMobile: "Acheter maintenant",
     orderViaWhatsapp: "Commander via WhatsApp",
-    whatsappOrderMessage: (name: string, price: string) =>
-      `Bonjour, je souhaite commander : ${name} (${price}). Est-il disponible ?`,
+    whatsappOrderMessage: (name: string, price: string, url: string) =>
+      `Bonjour, je souhaite commander : ${name} (${price}). Est-il disponible ?\n${url}`,
     addedToCartMessage: "Ajouté au panier !",
     genericError: "Une erreur est survenue.",
     deliveryPrompt: "Où souhaitez-vous être livré",

@@ -14,12 +14,15 @@ import {
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
 import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/WhatsAppButton";
-import { useDictionary } from "@/lib/i18n/I18nProvider";
+import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { savePendingCartIntent } from "@/lib/pendingCartIntent";
 import { getDisplayVariant } from "@/lib/pricing";
+import { productPath } from "@/lib/productUrl";
 import { getViewSessionToken, recordRecentlyViewed } from "@/lib/productView";
+import { localizedPath } from "@/lib/seo";
+import { SITE_URL } from "@/lib/siteUrl";
 import type { City, Neighborhood, Product, Review } from "@/lib/types";
 import styles from "./ProductDetail.module.css";
 
@@ -57,6 +60,7 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ product, reviews }: ProductDetailProps) {
   const dict = useDictionary();
+  const lang = useLang();
   const router = useLocaleRouter();
   const FEATURES = dict.product.features.map((f, i) => ({ ...f, icon: FEATURE_ICONS[i] }));
   const MOODS = MOOD_DEFS.map((m) => ({ ...m, label: dict.product.moods[m.key] }));
@@ -157,10 +161,14 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
   // A pre-filled message so the shop owner knows what's being ordered
   // without the shopper having to type it themselves — wa.me opens the
   // chat with this already in the input, still editable before sending.
+  // Includes the product's own absolute URL so the shop owner can open it
+  // directly instead of having to search for the product by name.
+  const productUrl = `${SITE_URL}${localizedPath(lang, productPath(product).replace(/^\//, ""))}`;
   const whatsappOrderUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     dict.product.whatsappOrderMessage(
       product.name,
-      effectivePrice !== null ? formatPrice(effectivePrice) : dict.common.priceUnavailable
+      effectivePrice !== null ? formatPrice(effectivePrice) : dict.common.priceUnavailable,
+      productUrl
     )
   )}`;
 

@@ -189,8 +189,8 @@ const en: Dictionary = {
     buyNow: "Buy",
     buyNowMobile: "Buy now",
     orderViaWhatsapp: "Order via WhatsApp",
-    whatsappOrderMessage: (name: string, price: string) =>
-      `Hello, I'd like to order: ${name} (${price}). Is it available?`,
+    whatsappOrderMessage: (name: string, price: string, url: string) =>
+      `Hello, I'd like to order: ${name} (${price}). Is it available?\n${url}`,
     addedToCartMessage: "Added to cart!",
     genericError: "Something went wrong.",
     deliveryPrompt: "Where would you like to be delivered",
