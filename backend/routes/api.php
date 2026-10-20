@@ -315,6 +315,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'can:manage-stock-adjustments'])->group(function () {
         Route::get('/admin/stock-adjustments', [AdminStockAdjustmentController::class, 'index']);
+        Route::post('/admin/stock-adjustments/bulk-set', [AdminStockAdjustmentController::class, 'bulkSet']);
         Route::get('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'show']);
         Route::post('/admin/stock-adjustments', [AdminStockAdjustmentController::class, 'store']);
         Route::put('/admin/stock-adjustments/{stockAdjustment}', [AdminStockAdjustmentController::class, 'update']);

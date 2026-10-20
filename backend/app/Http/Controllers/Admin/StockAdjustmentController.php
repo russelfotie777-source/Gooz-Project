@@ -7,11 +7,13 @@ use App\Http\Requests\StockAdjustment\StoreStockAdjustmentRequest;
 use App\Http\Requests\StockAdjustment\UpdateStockAdjustmentRequest;
 use App\Http\Resources\StockAdjustmentResource;
 use App\Models\InventoryLedger;
+use App\Models\ProductVariant;
 use App\Models\Stock;
 use App\Models\StockAdjustment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class StockAdjustmentController extends Controller
@@ -56,6 +58,68 @@ class StockAdjustmentController extends Controller
 
             if ($data['status'] === 'appliqué') {
                 $this->apply($adjustment);
+            }
+
+            return $adjustment;
+        });
+
+        return new StockAdjustmentResource(
+            $adjustment->load(['warehouse', 'creator', 'lines.product', 'lines.variant'])
+        );
+    }
+
+    /**
+     * "Mettre tous les produits/variantes à X" — builds and immediately
+     * applies one adjustment line per variant for the chosen warehouse, so
+     * the shop owner doesn't have to pick every product/variant by hand one
+     * line at a time the way the regular create form requires. Goes through
+     * the exact same StockAdjustment + apply() path as a manual adjustment
+     * (locking, InventoryLedger entries, 'appliqué' status) so a mass
+     * equalize shows up in the inventory journal just like any other one.
+     */
+    public function bulkSet(Request $request): StockAdjustmentResource
+    {
+        $data = $request->validate([
+            'warehouse_id' => ['required', 'integer', Rule::exists('warehouses', 'id')],
+            'quantity' => ['required', 'integer', 'min:0'],
+            'motif' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $variants = ProductVariant::query()->select('id', 'product_id')->get();
+
+        $currentQuantities = Stock::query()
+            ->where('warehouse_id', $data['warehouse_id'])
+            ->whereIn('product_variant_id', $variants->pluck('id'))
+            ->pluck('quantity_available', 'product_variant_id');
+
+        $lines = $variants
+            ->map(function (ProductVariant $variant) use ($currentQuantities, $data) {
+                $before = $currentQuantities->get($variant->id, 0);
+                $delta = $data['quantity'] - $before;
+
+                return $delta === 0 ? null : [
+                    'product_id' => $variant->product_id,
+                    'product_variant_id' => $variant->id,
+                    'delta_quantity' => $delta,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        $adjustment = DB::transaction(function () use ($data, $request, $lines) {
+            $adjustment = StockAdjustment::create([
+                'warehouse_id' => $data['warehouse_id'],
+                'created_by' => $request->user()?->id,
+                'type' => 'masse',
+                'status' => 'brouillon',
+                'motif' => $data['motif'] ?? "Mise à {$data['quantity']} unités — tous les produits",
+            ]);
+
+            if ($lines->isNotEmpty()) {
+                $adjustment->lines()->createMany($lines->all());
+                $this->apply($adjustment);
+            } else {
+                $adjustment->update(['status' => 'appliqué', 'applied_at' => now()]);
             }
 
             return $adjustment;
