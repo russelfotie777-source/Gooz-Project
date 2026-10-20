@@ -1,0 +1,71 @@
+.trackWrapper {
+  overflow: hidden;
+  width: 100%;
+  background: var(--color-chrome-bg);
+  padding: 8px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  /* Not a native scroll container — the strip's position is a hand-rolled
+     `transform: translateX()`, both auto-advanced and draggable (see
+     CategoriesBar.tsx, same pattern as BrandsSection). */
+  touch-action: pan-y;
+  /* Soft fade at both edges instead of a hard clip against this bar's own
+     side padding. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  cursor: grab;
+}
+
+.trackWrapper:active .track {
+  cursor: grabbing;
+}
+
+.itemSet {
+  display: flex;
+  align-items: center;
+  /* Noticeably more breathing room than the old static row's 12px — that
+     read as cramped once every category name was competing for space on
+     one line. Matches the inter-item gap on padding-right so the seam
+     between the two back-to-back copies reads identically to the gap
+     between any other two categories. */
+  gap: 32px;
+  padding-right: 32px;
+}
+
+.categoryButton {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  font-size: 11px;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.categoryButton:hover {
+  opacity: 0.85;
+}
+
+.categoryIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.categoryLabel {
+  font-family: var(--font-body);
+  font-weight: 700;
+}

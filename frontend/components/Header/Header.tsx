@@ -14,6 +14,7 @@ import { onSessionExpired } from "@/lib/sessionEvents";
 import { showToast } from "@/lib/toast";
 import type { Announcement, Category, User } from "@/lib/types";
 import AnnouncementBar from "@/components/AnnouncementBar/AnnouncementBar";
+import CategoriesBar from "./CategoriesBar";
 import SearchSuggestions from "@/components/SearchSuggestions/SearchSuggestions";
 import StarrySky from "./StarrySky";
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
@@ -356,14 +357,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
             </div>
           </div>
 
-          <nav className={styles.categoriesBar} aria-label={dict.header.categories}>
-            {categories.map((category) => (
-              <LocaleLink key={category.id} href={`/categories/${category.slug}`} className={styles.categoryButton}>
-                {category.image && <img src={category.image} alt="" className={styles.categoryIcon} />}
-                <span className={styles.categoryLabel}>{category.name}</span>
-              </LocaleLink>
-            ))}
-          </nav>
+          <CategoriesBar categories={categories} label={dict.header.categories} />
         </div>
       </div>
 

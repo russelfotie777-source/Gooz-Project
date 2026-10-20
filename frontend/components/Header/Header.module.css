@@ -393,58 +393,10 @@
   white-space: nowrap;
 }
 
-.categoriesBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  background: var(--color-chrome-bg);
-  padding: 8px 24px;
-  width: 100%;
-  overflow-x: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  /* A real catalogue has more categories than fit on one line — still
-     scrollable by drag/wheel, just without the native scrollbar track
-     sitting under this always-black bar like a stray gray stripe. */
-  scrollbar-width: none;
-}
-
-.categoriesBar::-webkit-scrollbar {
-  display: none;
-}
-
-.categoryButton {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px;
-  background: transparent;
-  border: none;
-  font-weight: 700;
-  font-size: 11px;
-  color: #ffffff;
-  text-transform: uppercase;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.categoryButton:hover {
-  opacity: 0.85;
-}
-
-.categoryIcon {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.categoryLabel {
-  font-family: var(--font-body);
-  font-weight: 700;
-}
+/* .categoriesBar/.categoryButton/.categoryIcon/.categoryLabel moved to
+   CategoriesBar.module.css — that bar is now a self-contained auto-
+   scrolling/draggable component (see CategoriesBar.tsx), not a static
+   overflow-x row. */
 
 /* Mobile PWA header — Figma node 372:185 */
 
