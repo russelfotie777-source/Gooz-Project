@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { ApiValidationError, removeCartItem, updateCartItem, validateCoupon } from "@/lib/api";
+import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/WhatsAppButton";
 import { notifyCartUpdated } from "@/lib/cartEvents";
 import { persistCouponCode, readPersistedCouponCode } from "@/lib/coupon";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
@@ -124,6 +125,24 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
     );
   }
 
+  // Same idea as ProductDetail's own "order via WhatsApp" button, but for
+  // the whole cart at once — one line per item (with its variant, if any)
+  // plus the same total shown above, so the shop owner sees exactly what's
+  // being ordered without the shopper retyping it.
+  const whatsappOrderUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    dict.cart.whatsappCartMessage(
+      items
+        .map(
+          (item) =>
+            `- ${item.quantity} x ${item.product.name}${
+              item.variant?.display_name ? ` (${item.variant.display_name})` : ""
+            } : ${formatPrice(item.line_total)}`
+        )
+        .join("\n"),
+      formatPrice(total)
+    )
+  )}`;
+
   return (
     <div className={styles.layout}>
       <div className={styles.list}>
@@ -240,6 +259,10 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
           {dict.cart.checkoutButton}
           <img src="/icon/cart/arrow-right.svg" alt="" className={styles.mobileCheckoutArrow} />
         </LocaleLink>
+        <a href={whatsappOrderUrl} target="_blank" rel="noopener noreferrer" className={styles.whatsappCheckoutButton}>
+          <WhatsAppIcon className={styles.whatsappCheckoutIcon} />
+          {dict.cart.orderViaWhatsapp}
+        </a>
       </div>
 
       {/* Desktop — order summary sidebar (Figma node 1668:2283) */}
@@ -309,6 +332,10 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
         <LocaleLink href="/checkout" className={styles.checkoutButton}>
           {dict.cart.placeOrder}
         </LocaleLink>
+        <a href={whatsappOrderUrl} target="_blank" rel="noopener noreferrer" className={styles.whatsappCheckoutButton}>
+          <WhatsAppIcon className={styles.whatsappCheckoutIcon} />
+          {dict.cart.orderViaWhatsapp}
+        </a>
       </aside>
     </div>
   );

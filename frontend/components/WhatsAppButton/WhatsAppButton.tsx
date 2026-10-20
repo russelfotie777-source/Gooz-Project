@@ -14,9 +14,11 @@ export const WHATSAPP_NUMBER = "237688407756";
 
 // /connexion and /inscription (AuthDesktopPage/AuthMobileFlow) shouldn't
 // show this — it overlaps the form, especially the mobile sheet whose
-// bottom row sits right under it.
+// bottom row sits right under it. /cart shouldn't either: CartItems now has
+// its own "order via WhatsApp" button (the whole cart, not just a contact
+// link), so this floating one would just be a duplicate entry point there.
 function isHiddenOnPathname(pathname: string | null): boolean {
-  return pathname != null && /\/(connexion|inscription)$/.test(pathname);
+  return pathname != null && /\/(connexion|inscription|cart)$/.test(pathname);
 }
 
 function isProductDetailPath(pathname: string | null): boolean {

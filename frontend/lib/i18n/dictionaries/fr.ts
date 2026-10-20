@@ -272,6 +272,9 @@ const fr = {
     placeOrder: "Passer la commande",
     outOfStock: "Rupture de stock",
     lowStockRemaining: (n: number): string => `Plus que ${n} en stock`,
+    orderViaWhatsapp: "Commander via WhatsApp",
+    whatsappCartMessage: (lines: string, total: string): string =>
+      `Bonjour, je souhaite commander :\n${lines}\n\nTotal : ${total}`,
   },
   checkout: {
     loading: "Chargement...",

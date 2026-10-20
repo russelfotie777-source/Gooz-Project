@@ -266,6 +266,9 @@ const en: Dictionary = {
     placeOrder: "Place order",
     outOfStock: "Out of stock",
     lowStockRemaining: (n: number): string => `Only ${n} left in stock`,
+    orderViaWhatsapp: "Order via WhatsApp",
+    whatsappCartMessage: (lines: string, total: string): string =>
+      `Hello, I'd like to order:\n${lines}\n\nTotal: ${total}`,
   },
   checkout: {
     loading: "Loading...",

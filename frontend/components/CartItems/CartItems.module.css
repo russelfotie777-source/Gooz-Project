@@ -288,6 +288,38 @@
   height: 16px;
 }
 
+/* Same shape as .mobileCheckoutButton/.checkoutButton, WhatsApp's own
+   green instead of the brand accent — reused as-is in the desktop
+   .summary aside too (no separate desktop rule needed, .summary's own
+   gap already spaces it from .checkoutButton above it). No Figma source,
+   like WhatsAppButton itself. */
+.whatsappCheckoutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #25d366;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 5px;
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.whatsappCheckoutButton:hover {
+  filter: brightness(1.05);
+}
+
+.whatsappCheckoutIcon {
+  width: 18px;
+  height: 18px;
+}
+
 /* Desktop order summary — hidden on mobile (Figma node 1668:2283) */
 
 .summary {
