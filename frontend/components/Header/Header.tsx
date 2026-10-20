@@ -431,13 +431,14 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
             <div className={styles.mobileCatalogueSticky}>
               <div className={styles.mobileTopRow}>
-                {/* Not needed for now — see the desktop menu button above too.
-                <button type="button" className={styles.mobileMenuButton} aria-label={dict.header.menu}>
-                  <img src="/icon/header-mobile/menu.svg" alt="" className={styles.mobileMenuIcon} />
-                </button>
-                */}
-
-                <p className={`${styles.mobileTitle} ${styles.mobileTitleBrand}`}>{dict.header.catalogueTitle}</p>
+                <LocaleLink href="/" aria-label={dict.header.catalogueTitle}>
+                  <img
+                    src="/logo-shopitech-primaire/logoFichier 16version F.png"
+                    alt="Shopitech"
+                    className={styles.mobileLogo}
+                  />
+                </LocaleLink>
+                <ThemeToggle className={styles.themeToggleMobile} />
               </div>
 
               <div className={styles.mobileSearchWrapper} ref={mobileSearchWrapperRef}>

@@ -444,7 +444,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 10px;
+  /* Roomier than a plain title bar used to need — see .mobileCatalogueSticky's
+     comment: the extra top/bottom space is what gives the starry gradient
+     behind it room to actually read as a sky. */
+  padding: 24px 16px 18px;
 }
 
 .mobileMenuButton {
@@ -472,42 +475,45 @@
   flex: 1;
 }
 
-/* Catalogue header only (see .mobileCatalogueSticky) — a bold wordmark on
-   the fixed-orange block, overriding .mobileTitle's themed/centered defaults.
-   Fixed black, not var(--color-text): this sits on solid orange in both
-   themes, same reasoning as .searchInput's fixed color on desktop's always-
-   white search field. */
-.mobileTitleBrand {
-  font-weight: 800;
-  font-size: 20px;
-  color: #000000;
-  text-align: left;
-  letter-spacing: -0.3px;
+/* Catalogue header only (see .mobileCatalogueSticky) — the real logo, same
+   "version F" (light-on-dark) file the always-black desktop .mainRow uses,
+   since this sits on a fixed-dark sky regardless of theme too. */
+.mobileLogo {
+  height: 26px;
+  width: auto;
+}
+
+/* Fixed light icon + tint, not ThemeToggle's own themed defaults — same
+   reasoning as .themeToggleDesktop below: this sits on a fixed-dark sky in
+   both themes, so it can't follow var(--color-text) (which turns near-white
+   in dark mode and would vanish against a light toggle background). */
+.themeToggleMobile {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
 }
 
 /* Scrolls away with the page, sitting right above .mobileCatalogueSticky —
-   same solid orange so the two read as one block at rest; only exists to
-   give AnnouncementBar's pill (left untouched) an orange backdrop instead of
+   same near-black so the two read as one block at rest; only exists to
+   give AnnouncementBar's pill (left untouched) a dark backdrop instead of
    the plain page background. */
 .mobilePromoZone {
-  background: linear-gradient(180deg, #ff9500, #ff8a00);
+  background: #05050a;
 }
 
-/* Catalogue variant's sticky title+search block — a solid orange "card"
+/* Catalogue variant's sticky logo+toggle+search block — a starry night sky
    instead of the plain page background. Kept as its own class (not a
    recolor of .mobileSticky) because the cart variant reuses .mobileSticky
    for its own back/title/info row, which stays neutral.
 
-   The gradient-plus-stars look (reference: noon.com's mobile header) is
-   built entirely from CSS backgrounds/pseudo-elements, no canvas or WebGL.
-   Three separate layers, each doing one job: this element's own background
-   is just the static color gradient; ::before is the starfield (a stack of
-   radial-gradient dots, panned slowly as one group so it isn't perfectly
-   static); ::after is a single small point that flies across every few
-   seconds. Both pseudo-elements stay at z-index:-1 so they paint behind the
-   real title/search content without needing overflow:hidden on this
-   element (which would otherwise clip the search-suggestions dropdown
-   below it).
+   The gradient-plus-stars look is built entirely from CSS backgrounds/
+   pseudo-elements, no canvas or WebGL. Three separate layers, each doing
+   one job: this element's own background is just the static near-black
+   gradient; ::before is the starfield (a stack of radial-gradient dots,
+   panned slowly as one group so it isn't perfectly static); ::after is a
+   single small point that flies across every few seconds. Both pseudo-
+   elements stay at z-index:-1 so they paint behind the real logo/toggle/
+   search content without needing overflow:hidden on this element (which
+   would otherwise clip the search-suggestions dropdown below it).
 
    No extra padding below the search bar — this box is `position: sticky`,
    so its own box (whatever height it is) is what stays pinned and covers
@@ -515,23 +521,24 @@
    below the search bar meant products visibly disappeared into that empty
    tail before ever reaching the search bar itself, instead of sliding
    behind the search bar the way they should. The fade-to-background look
-   still happens, just compressed into the box's real (title+search)
-   height: the gradient reaches var(--color-bg) — not a fixed color, so it
-   lands on the exact color sitting right below it in both themes — well
-   before the search bar's own bottom edge, with no box-shadow to draw a
-   hard line under it. */
+   still happens, just compressed into the box's real height: the gradient
+   reaches var(--color-bg) — not a fixed color, so it lands on the exact
+   color sitting right below it in both themes — well before the search
+   bar's own bottom edge, with no box-shadow to draw a hard line under it.
+
+   Taller than a plain title bar on purpose (generous .mobileTopRow padding
+   below) so the sky actually reads as a sky instead of a sliver. */
 .mobileCatalogueSticky {
   position: sticky;
   top: 0;
   z-index: 20;
   background-image: linear-gradient(
     180deg,
-    #e8590c 0%,
-    #ff8a00 20%,
-    #ffb347 42%,
-    #ffd9a8 58%,
-    #fff3e4 72%,
-    var(--color-bg) 90%,
+    #04040a 0%,
+    #08080f 30%,
+    #0e0e18 52%,
+    #171722 70%,
+    var(--color-bg) 92%,
     var(--color-bg) 100%
   );
 }
