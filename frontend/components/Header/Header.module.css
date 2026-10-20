@@ -444,10 +444,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Roomier than a plain title bar used to need — see .mobileCatalogueSticky's
-     comment: the extra top/bottom space is what gives the starry gradient
-     behind it room to actually read as a sky. */
-  padding: 24px 16px 18px;
+  padding: 14px 16px 10px;
 }
 
 .mobileMenuButton {
@@ -525,10 +522,7 @@
    still happens, just compressed into the box's real height: the gradient
    reaches var(--color-bg) — not a fixed color, so it lands on the exact
    color sitting right below it in both themes — well before the search
-   bar's own bottom edge, with no box-shadow to draw a hard line under it.
-
-   Taller than a plain title bar on purpose (generous .mobileTopRow padding
-   below) so the sky actually reads as a sky instead of a sliver. */
+   bar's own bottom edge, with no box-shadow to draw a hard line under it. */
 .mobileCatalogueSticky {
   position: sticky;
   top: 0;
