@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PreventsDuplicateSubmission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserNotification\StoreUserNotificationRequest;
 use App\Http\Resources\UserNotificationResource;
@@ -13,6 +14,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class UserNotificationController extends Controller
 {
+    use PreventsDuplicateSubmission;
+
     public function __construct(private readonly PushNotificationService $pushNotifications) {}
 
     public function index(): AnonymousResourceCollection
@@ -32,6 +35,15 @@ class UserNotificationController extends Controller
     // own separate push pipeline.
     public function store(StoreUserNotificationRequest $request): JsonResponse
     {
+        // A double-submit here (admin double-clicks "Envoyer", especially
+        // on send_to_all) would otherwise re-send the exact same
+        // notification — in-app row AND push — to every affected customer a
+        // second time.
+        $this->rejectIfDuplicateSubmission('user-notification', [
+            'actor' => $request->user()?->id,
+            ...$request->validated(),
+        ]);
+
         $title = $request->validated('title');
         $body = $request->validated('body');
         $type = $request->validated('type');
