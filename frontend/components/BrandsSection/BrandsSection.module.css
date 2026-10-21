@@ -23,9 +23,12 @@
      why this doesn't just use native overflow-x scrolling instead. */
   touch-action: pan-y;
   /* Soft fade at both edges instead of a hard clip — logos entering/leaving
-     don't pop in and out abruptly. */
-  -webkit-mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0, black 32px, black calc(100% - 32px), transparent 100%);
+     don't pop in and out abruptly. Wider than it used to be (32px): at that
+     width a logo (especially a text fallback name, whose glyphs have hard
+     edges to begin with) was still mostly opaque right up to the visible
+     boundary, so it read as being sliced off rather than fading away. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 64px, black calc(100% - 64px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 64px, black calc(100% - 64px), transparent 100%);
 }
 
 .track {
