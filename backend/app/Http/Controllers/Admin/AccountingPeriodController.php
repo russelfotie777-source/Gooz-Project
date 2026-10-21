@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PreventsDuplicateSubmission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AccountingPeriod\StoreAccountingPeriodRequest;
 use App\Http\Resources\AccountingPeriodResource;
@@ -12,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class AccountingPeriodController extends Controller
 {
+    use PreventsDuplicateSubmission;
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = min((int) $request->query('per_page', 25), 100) ?: 25;
@@ -29,6 +32,16 @@ class AccountingPeriodController extends Controller
     public function store(StoreAccountingPeriodRequest $request): AccountingPeriodResource
     {
         $data = $request->validated();
+
+        // No "only one open period" business rule exists here to lock
+        // against (there isn't even a "close period" action yet) — this
+        // just stops a double-click/retry from creating two identical
+        // periods, without inventing a new constraint on top of what the
+        // app already does.
+        $this->rejectIfDuplicateSubmission('accounting-period', [
+            'actor' => $request->user()?->id,
+            ...$data,
+        ]);
 
         $period = AccountingPeriod::create([
             'name' => $data['name'],

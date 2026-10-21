@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PreventsDuplicateSubmission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrder\StorePurchaseOrderRequest;
 use App\Http\Resources\PurchaseOrderResource;
@@ -9,10 +10,13 @@ use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PurchaseOrderController extends Controller
 {
+    use PreventsDuplicateSubmission;
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = min((int) $request->query('per_page', 25), 100) ?: 25;
@@ -38,15 +42,29 @@ class PurchaseOrderController extends Controller
     {
         $data = $request->validated();
 
+        // Double-submit guard — a plain create with no existing row/
+        // invariant to lock against.
+        $this->rejectIfDuplicateSubmission('purchase-order', [
+            'actor' => $request->user()?->id,
+            ...$data,
+        ]);
+
         $order = DB::transaction(function () use ($data, $request) {
             $order = PurchaseOrder::create([
-                'code' => 'BC-'.str_pad((string) (PurchaseOrder::max('id') + 1), 5, '0', STR_PAD_LEFT),
+                // See ExpenseController::store() for why this isn't
+                // Purchase Order::max('id') + 1 (a race under concurrent
+                // creates, given `code` is unique) — replaced right below
+                // with a code derived from this row's own, inherently
+                // unique, DB-assigned id.
+                'code' => 'BC-TMP-'.Str::random(16),
                 'supplier_id' => $data['supplier_id'],
                 'currency' => $data['currency'] ?? 'XAF',
                 'status' => 'ouverte',
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $request->user()?->id,
             ]);
+
+            $order->update(['code' => 'BC-'.str_pad((string) $order->id, 5, '0', STR_PAD_LEFT)]);
 
             $order->lines()->createMany($data['lines']);
 

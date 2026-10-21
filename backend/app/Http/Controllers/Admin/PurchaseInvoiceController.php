@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\PreventsDuplicateSubmission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseInvoice\StorePurchaseInvoiceRequest;
 use App\Http\Requests\PurchaseInvoice\UpdatePurchaseInvoiceRequest;
@@ -13,10 +14,13 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PurchaseInvoiceController extends Controller
 {
+    use PreventsDuplicateSubmission;
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = min((int) $request->query('per_page', 25), 100) ?: 25;
@@ -52,6 +56,17 @@ class PurchaseInvoiceController extends Controller
                 'purchase_order_id' => "Cette commande d'achat n'est plus ouverte.",
             ]);
         }
+
+        // The lockForUpdate() below correctly stops a double-submit from
+        // over-invoicing PAST the ordered quantity, but under it (plenty of
+        // billable room left) two submissions would both happily create
+        // their own, separately valid, duplicate invoice. 'attachment' is
+        // an uploaded file object, not meaningfully comparable — left out
+        // of the dedupe key on purpose.
+        $this->rejectIfDuplicateSubmission('purchase-invoice', [
+            'actor' => $request->user()?->id,
+            ...collect($data)->except('attachment')->all(),
+        ]);
 
         $invoice = DB::transaction(function () use ($data, $request, $purchaseOrder) {
             $total = 0;
@@ -92,7 +107,10 @@ class PurchaseInvoiceController extends Controller
             }
 
             $invoice = PurchaseInvoice::create([
-                'code' => 'FA-'.str_pad((string) (PurchaseInvoice::max('id') + 1), 5, '0', STR_PAD_LEFT),
+                // See ExpenseController::store() for why this isn't
+                // PurchaseInvoice::max('id') + 1 (a race under concurrent
+                // creates, given `code` is unique).
+                'code' => 'FA-TMP-'.Str::random(16),
                 'purchase_order_id' => $purchaseOrder->id,
                 'supplier_id' => $purchaseOrder->supplier_id,
                 'currency' => $purchaseOrder->currency,
@@ -106,6 +124,8 @@ class PurchaseInvoiceController extends Controller
                 'total' => $total,
                 'created_by' => $request->user()?->id,
             ]);
+
+            $invoice->update(['code' => 'FA-'.str_pad((string) $invoice->id, 5, '0', STR_PAD_LEFT)]);
 
             $invoice->lines()->createMany($linesToCreate);
 
