@@ -164,36 +164,41 @@ export default function CategoryResults({
 
   return (
     <section className={styles.section} id="catalogue">
+      <h1 className={styles.pageTitle}>{heading}</h1>
+
       <div className={styles.resultBar}>
         <p className={styles.count}>{dict.category.resultsFound(total)}</p>
-        <h1 className={styles.pageTitle}>{heading}</h1>
 
-        <label className={styles.sort}>
-          <span>{dict.category.sortBy}</span>
-          <select
-            className={styles.sortSelect}
-            value={sort}
-            onChange={(e) => {
-              setSort(e.target.value as SortOption);
-              goToPage(1);
-            }}
+        <div className={styles.resultActions}>
+          <div className={styles.sortPill}>
+            <select
+              className={styles.sortSelect}
+              aria-label={dict.category.sortBy}
+              value={sort}
+              onChange={(e) => {
+                setSort(e.target.value as SortOption);
+                goToPage(1);
+              }}
+            >
+              <option value="">{dict.category.sortDefault}</option>
+              {Object.entries(SORT_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <img src="/icon/product-detail/chevron-down.svg" alt="" className={styles.sortChevron} />
+          </div>
+
+          <button
+            type="button"
+            className={styles.filterToggle}
+            onClick={() => setFiltersOpen((v) => !v)}
           >
-            <option value="">{dict.category.sortDefault}</option>
-            {Object.entries(SORT_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button
-          type="button"
-          className={styles.filterToggle}
-          onClick={() => setFiltersOpen((v) => !v)}
-        >
-          {dict.category.filters}
-        </button>
+            <FilterIcon className={styles.filterIcon} />
+            {dict.category.filters}
+          </button>
+        </div>
       </div>
 
       <div className={styles.layout}>
@@ -241,5 +246,19 @@ export default function CategoryResults({
 
       <Pagination page={page} lastPage={lastPage} loading={loading} pageHref={pageHref} onNavigate={goToPage} />
     </section>
+  );
+}
+
+function FilterIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none">
+      <path
+        d="M3 5h14M6 10h8M8.5 15h3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

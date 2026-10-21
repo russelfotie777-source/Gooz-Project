@@ -14,24 +14,6 @@
   color: var(--color-text-muted);
 }
 
-.resultBar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
-  padding: 14px 16px;
-}
-
-.count {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 13px;
-  margin: 0;
-  color: var(--color-text);
-}
-
 .pageTitle {
   font-family: var(--font-heading);
   font-weight: 700;
@@ -40,27 +22,75 @@
   color: var(--color-text);
 }
 
-.sort {
+/* No card/shadow/background on purpose — a thin divider line reads as
+   "metadata about the title above it" instead of a second, competing box.
+   See the brief this replaced: a shadowed card stacking count → title →
+   sort → filter (in that order) made the small count text outrank the
+   actual page title, and took up far more height than the content needed. */
+.resultBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.count {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13px;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.resultActions {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--color-text);
+  flex: 0 0 auto;
+}
+
+.sortPill {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .sortSelect {
+  appearance: none;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  padding: 6px 24px 6px 12px;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-weight: 600;
+  font-size: 12px;
   color: var(--color-text);
-  background: var(--color-elevated);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* The opened dropdown list is a separate browser-rendered popup that
+   doesn't inherit the (transparent) select's background. */
+.sortSelect option {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.sortChevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
 }
 
 .filterToggle {
-  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 700;
@@ -68,6 +98,12 @@
   border-radius: var(--radius-pill);
   padding: 6px 14px;
   color: var(--color-text);
+}
+
+.filterIcon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
 }
 
 .layout {
@@ -150,15 +186,20 @@
 }
 
 @media (min-width: 1024px) {
-  .resultBar {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 32px;
-  }
-
   .pageTitle {
     font-size: 22px;
+  }
+
+  .resultBar {
+    padding-bottom: 16px;
+  }
+
+  .count {
+    font-size: 14px;
+  }
+
+  .sortSelect {
+    font-size: 13px;
   }
 
   .filterToggle {
