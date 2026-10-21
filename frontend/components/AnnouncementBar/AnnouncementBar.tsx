@@ -122,14 +122,21 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
   const promoMatch = announcement.text.match(PROMO_PATTERN);
   const showNav = variant === "desktop" && count > 1;
 
-  const slideBody = (
+  const slideBody = isBrandSlide ? (
+    <span
+      key={exiting ? `exit-${index}` : `enter-${index}`}
+      className={`${styles.slideContent} ${styles.paymentShowcase} ${exiting ? styles.slideExit : styles.slideEnter}`}
+    >
+      <PaymentLogosShowcase caption={dict.header.paymentMethodsCaption} />
+    </span>
+  ) : (
     <span
       key={exiting ? `exit-${index}` : `enter-${index}`}
       className={`${styles.slideContent} ${exiting ? styles.slideExit : styles.slideEnter}`}
     >
-      {(isBrandSlide || announcement.icon) && (
+      {announcement.icon && (
         <span className={styles.iconBadge} aria-hidden="true">
-          {isBrandSlide ? <CameroonFlagIcon className={styles.flagIcon} /> : announcement.icon}
+          {announcement.icon}
         </span>
       )}
 
@@ -251,21 +258,39 @@ function ConfettiBurst({ side }: { side: "left" | "right" }) {
   );
 }
 
-function CameroonFlagIcon({ className }: { className?: string }) {
+// Replaces the brand slide's old plain-text sentence (too long to read on
+// a narrow mobile bar before it truncates) with the two Mobile Money logos
+// themselves — the actual information ("we take OM/MoMo") lands instantly
+// as a recognizable image instead of a sentence that gets cut off. The
+// shine sweep + spark + entrance animation are what's meant to read as
+// "wow" (see AnnouncementBar.module.css's .paymentShowcase rules); the
+// confetti/glow the carousel already fires on every slide change (see
+// ConfettiBurst/.glowPulse above) plays for this slide too, for free.
+function PaymentLogosShowcase({ caption }: { caption: string }) {
   return (
-    <svg className={className} viewBox="0 0 32 32" aria-hidden="true">
-      <clipPath id="announcement-flag-clip">
-        <circle cx="16" cy="16" r="16" />
-      </clipPath>
-      <g clipPath="url(#announcement-flag-clip)">
-        <rect x="0" y="0" width="10.67" height="32" fill="#007a5e" />
-        <rect x="10.67" y="0" width="10.67" height="32" fill="#ce1126" />
-        <rect x="21.33" y="0" width="10.67" height="32" fill="#fcd116" />
-        <polygon
-          points="16,12.2 17.05,15.2 20.2,15.2 17.6,17.05 18.6,20.1 16,18.2 13.4,20.1 14.4,17.05 11.8,15.2 14.95,15.2"
-          fill="#fcd116"
+    <span className={styles.paymentLogos}>
+      <span className={styles.paymentLogoWrap}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icon/payment/orange-money.png"
+          alt="Orange Money"
+          className={styles.paymentLogo}
+          draggable={false}
         />
-      </g>
-    </svg>
+        <span className={styles.paymentShine} aria-hidden="true" />
+      </span>
+
+      <span className={styles.paymentSpark} aria-hidden="true">
+        ✦
+      </span>
+
+      <span className={styles.paymentLogoWrap}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon/payment/momo.png" alt="MTN MoMo" className={styles.paymentLogo} draggable={false} />
+        <span className={styles.paymentShine} aria-hidden="true" />
+      </span>
+
+      <span className={styles.paymentCaption}>{caption}</span>
+    </span>
   );
 }
