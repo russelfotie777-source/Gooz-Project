@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Rules\ImageUploadRule;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -72,7 +73,7 @@ class ImageResizer
      */
     public function resizeAndStore(UploadedFile $file, string $dir, int $maxWidth, string $disk = 'public'): string
     {
-        $image = $this->manager->read($file->getRealPath());
+        $image = $this->decode($file);
         $image->scaleDown(width: $maxWidth);
         $encoded = $this->encode($image);
 
@@ -91,6 +92,33 @@ class ImageResizer
         Storage::disk($disk)->put($path, (string) $encoded);
 
         return $path;
+    }
+
+    /**
+     * GD's AVIF decoder (Intervention\Image\Drivers\Gd\Decoders\
+     * FilePathImageDecoder) calls imagecreatefromavif() with no
+     * function_exists() guard — on a GD build compiled without AVIF
+     * support that's a "call to undefined function" fatal, which PHP 8
+     * raises as an \Error, not an \Exception. ImageUploadRule accepts
+     * .avif at the validation stage regardless of what this particular
+     * server's GD build can actually decode (it can't know), so a decode
+     * failure here is an expected possibility, not a bug — caught broadly
+     * (\Throwable, to catch that \Error too) and turned into a plain 422
+     * with a message an admin can act on, instead of a bare 500.
+     */
+    private function decode(UploadedFile $file): ImageInterface
+    {
+        try {
+            return $this->manager->read($file->getRealPath());
+        } catch (\Throwable $e) {
+            Log::warning('ImageResizer: decode failed', [
+                'mime' => $file->getMimeType(),
+                'original_name' => $file->getClientOriginalName(),
+                'error' => $e->getMessage(),
+            ]);
+
+            abort(422, "Ce format d'image n'est pas pris en charge par le serveur. Réessayez avec un JPG, PNG ou WebP.");
+        }
     }
 
     /**
