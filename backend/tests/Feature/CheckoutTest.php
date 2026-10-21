@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Models\Stock;
 use App\Models\User;
 use App\Models\Warehouse;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CheckoutTest extends TestCase
@@ -215,5 +216,78 @@ class CheckoutTest extends TestCase
 
         $response->assertUnprocessable()->assertJsonValidationErrors('cart');
         $this->assertDatabaseCount('orders', 0);
+    }
+
+    /**
+     * Idempotency regression test: a cash checkout retried/double-submitted
+     * (double-tap, client timeout + retry) must not place a second order or
+     * decrement stock twice. Cash orders deactivate the cart immediately, so
+     * the retry simply lands on the existing "empty cart" error path.
+     */
+    public function test_double_submitted_cash_checkout_does_not_create_a_duplicate_order(): void
+    {
+        $user = User::factory()->create();
+        $warehouse = Warehouse::factory()->create();
+        [, , $variant] = $this->cartWithStockedVariant($user, quantity: 1, stockAvailable: 10);
+
+        $payload = [
+            'delivery_method' => 'retrait',
+            'shipping_phone' => '670000030',
+            'payment_method' => self::CASH,
+            'warehouse_id' => $warehouse->id,
+        ];
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/v1/checkout', $payload)->assertCreated();
+
+        $retry = $this->actingAs($user, 'sanctum')->postJson('/api/v1/checkout', $payload);
+        $retry->assertUnprocessable()->assertJsonValidationErrors('cart');
+
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertDatabaseHas('stocks', ['product_variant_id' => $variant->id, 'quantity_available' => 9]);
+    }
+
+    /**
+     * Same regression, but for mobile money — where the cart is deliberately
+     * left active until payment clears (see CheckoutController::store()'s
+     * own comment), so the empty-cart path above doesn't apply here. The
+     * retry must hand back the SAME order instead of placing a second one.
+     */
+    public function test_double_submitted_mobile_money_checkout_reuses_the_pending_order(): void
+    {
+        Http::fake([
+            '*/token' => Http::response(['access_token' => 'fake-token'], 200),
+            '*/api/order' => Http::response([
+                'orderTransactionId' => 'TXN-DUPTEST',
+                'redirectUrl' => 'https://pay.enkap.example/redirect/TXN-DUPTEST',
+            ], 200),
+        ]);
+
+        $user = User::factory()->create();
+        $warehouse = Warehouse::factory()->create();
+        [, , $variant] = $this->cartWithStockedVariant($user, quantity: 1, stockAvailable: 10);
+
+        $payload = [
+            'delivery_method' => 'retrait',
+            'shipping_phone' => '670000031',
+            'payment_method' => 'mobile_money',
+            'warehouse_id' => $warehouse->id,
+        ];
+
+        $first = $this->actingAs($user, 'sanctum')->postJson('/api/v1/checkout', $payload);
+        $first->assertCreated();
+
+        // 200, not 201: Laravel's resource-response auto-status only picks
+        // 201 when the underlying model was *just* created
+        // (wasRecentlyCreated) — correctly not the case for a deduped
+        // retry that hands back an order fetched from the DB, not a new
+        // one. That's also the more accurate status for this case either
+        // way: "here's the existing order", not "I made you a new one".
+        $retry = $this->actingAs($user, 'sanctum')->postJson('/api/v1/checkout', $payload);
+        $retry->assertOk();
+        $retry->assertJsonPath('data.order_reference', $first->json('data.order_reference'));
+
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertDatabaseCount('payments', 1);
+        $this->assertDatabaseHas('stocks', ['product_variant_id' => $variant->id, 'quantity_available' => 9]);
     }
 }

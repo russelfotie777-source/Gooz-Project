@@ -27,18 +27,54 @@ class CheckoutController extends Controller
 
     public function store(CheckoutRequest $request): OrderResource
     {
-        $cart = $request->user()->carts()
-            ->where('is_active', true)
-            ->with('items.product', 'items.variant')
-            ->first();
+        // Set to false below when store() hands back an already-existing
+        // order instead of creating a new one (see the pending-order check)
+        // — the notification + Enkap order-creation that follow the
+        // transaction only make sense for a genuinely new order, not a
+        // deduped retry of one already handled by the first request.
+        $isNewOrder = true;
 
-        if (! $cart || $cart->items->isEmpty()) {
-            throw ValidationException::withMessages([
-                'cart' => ['Votre panier est vide.'],
-            ]);
-        }
+        $order = DB::transaction(function () use ($request, &$isNewOrder) {
+            // Locked here (not just read) so a second request for the same
+            // cart — a double-tap, a client retry after a timed-out
+            // response, or genuine concurrency — serializes behind this
+            // one instead of racing it. For cash orders this alone closes
+            // the gap: is_active flips to false before the transaction
+            // commits (see below), so the second request's own locked
+            // SELECT ... WHERE is_active = true simply finds no row once
+            // it's unblocked. Mobile-money orders deliberately leave the
+            // cart active until payment clears (see the comment further
+            // down), so they need the extra pending-order check below too.
+            $cart = $request->user()->carts()
+                ->where('is_active', true)
+                ->with('items.product', 'items.variant')
+                ->lockForUpdate()
+                ->first();
 
-        $order = DB::transaction(function () use ($cart, $request) {
+            if (! $cart || $cart->items->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'cart' => ['Votre panier est vide.'],
+                ]);
+            }
+
+            // A retry of a mobile-money payment that's already in flight
+            // goes through PaymentController::refresh() on the EXISTING
+            // order (see its own docblock) — it never comes back through
+            // this endpoint. So if this exact cart already has an order
+            // whose payment hasn't resolved yet, this request can only be a
+            // duplicate submission of the checkout itself: hand back that
+            // same order instead of placing a second one.
+            $pendingOrder = $cart->orders()
+                ->whereHas('payment', fn ($q) => $q->where('payment_status', 'en_attente'))
+                ->latest('id')
+                ->first();
+
+            if ($pendingOrder) {
+                $isNewOrder = false;
+
+                return $pendingOrder;
+            }
+
             $subtotal = 0;
             $lines = [];
             $ledgerEntries = [];
@@ -76,6 +112,7 @@ class CheckoutController extends Controller
 
             $order = Order::create([
                 'user_id' => $request->user()->id,
+                'cart_id' => $cart->id,
                 'coupon_id' => $coupon?->id,
                 'order_reference' => 'ORD-'.now()->format('ymd').'-'.strtoupper(Str::random(6)),
                 'status' => 'en_attente',
@@ -121,27 +158,34 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        $this->pushNotifications->sendToUser(
-            $request->user(),
-            'Commande reçue',
-            "Votre commande {$order->order_reference} a bien été enregistrée.",
-            ['order_id' => $order->id]
-        );
+        // A deduped retry (see the pending-order check above) already got
+        // this notification and its Enkap checkout session from the
+        // original request — redoing either here would be the exact
+        // duplicate-notification/redundant-session problem this fix exists
+        // to avoid.
+        if ($isNewOrder) {
+            $this->pushNotifications->sendToUser(
+                $request->user(),
+                'Commande reçue',
+                "Votre commande {$order->order_reference} a bien été enregistrée.",
+                ['order_id' => $order->id]
+            );
 
-        // Card/mobile-money orders go through Enkap's hosted checkout page;
-        // the order itself is already committed above regardless of whether
-        // this succeeds, so a failure here doesn't lose the order — it just
-        // leaves payment.checkout_url null, which the frontend treats as
-        // "payment could not be started" and offers a retry (see
-        // PaymentController::retry).
-        if ($request->validated('payment_method') === 'mobile_money') {
-            try {
-                $this->enkapPayments->createOrder($order, $order->payment);
-            } catch (RuntimeException $e) {
-                Log::error('enkap_checkout_initiation_failed', [
-                    'order_id' => $order->id,
-                    'error' => $e->getMessage(),
-                ]);
+            // Card/mobile-money orders go through Enkap's hosted checkout page;
+            // the order itself is already committed above regardless of whether
+            // this succeeds, so a failure here doesn't lose the order — it just
+            // leaves payment.checkout_url null, which the frontend treats as
+            // "payment could not be started" and offers a retry (see
+            // PaymentController::retry).
+            if ($request->validated('payment_method') === 'mobile_money') {
+                try {
+                    $this->enkapPayments->createOrder($order, $order->payment);
+                } catch (RuntimeException $e) {
+                    Log::error('enkap_checkout_initiation_failed', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 

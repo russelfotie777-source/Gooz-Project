@@ -11,6 +11,7 @@ class Order extends Model
 {
     protected $fillable = [
         'user_id',
+        'cart_id',
         'coupon_id',
         'order_reference',
         'status',
@@ -44,6 +45,11 @@ class Order extends Model
         // here so order history keeps showing "Utilisateur supprimé" instead
         // of a null user.
         return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    public function cart(): BelongsTo
+    {
+        return $this->belongsTo(Cart::class);
     }
 
     public function coupon(): BelongsTo
