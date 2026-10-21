@@ -432,47 +432,32 @@
   flex: 1;
 }
 
-.mobileBrand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
 /* Catalogue header only (see .mobileCatalogueSticky) — the real logo, same
    "version F" (light-on-dark) file the always-black desktop .mainRow uses,
    since this sits on a fixed-dark sky regardless of theme too. */
 .mobileLogo {
   height: 22px;
   width: auto;
-  flex-shrink: 0;
 }
 
-/* Hidden at rest — the logo alone is enough branding right under the
-   search bar. Revealed only once scrolled (see Header.tsx's `scrolled`
-   state), so it only appears once the categories/search bar has scrolled
-   out of view and this sticky bar is the only branding left on screen.
-   max-width (not width/display) animates so the fade and the layout shift
-   happen together rather than the text popping in at its full width. */
-.mobileCatalogueLabel {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 15px;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
+/* Product detail header only (variant="detail") — the title sits over the
+   product's own hero image at rest, with .mobileDetailSticky still fully
+   transparent, so plain text there would be unreadable against whatever
+   photo is behind it. Hidden until scrolled, fading in together with
+   .mobileDetailStickyScrolled's backdrop (same `scrolled` state). The cart
+   variant's own .mobileTitle (no backdrop issue — .mobileSticky isn't
+   transparent) is unaffected since it never gets these two classes. */
+.mobileDetailTitle {
   opacity: 0;
-  max-width: 0;
-  transition: opacity 0.25s ease, max-width 0.25s ease;
+  transition: opacity 0.3s ease;
 }
 
-.mobileCatalogueLabelVisible {
+.mobileDetailTitleVisible {
   opacity: 1;
-  max-width: 160px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobileCatalogueLabel {
+  .mobileDetailTitle {
     transition: none;
   }
 }

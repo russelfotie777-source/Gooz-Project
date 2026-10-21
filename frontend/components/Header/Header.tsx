@@ -192,10 +192,8 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchFocused]);
 
-  // Also drives the "default" variant's mobile catalogue title (see
-  // .mobileCatalogueLabel) — only "cart" never needs the scrolled state.
   useEffect(() => {
-    if (variant === "cart") return;
+    if (variant !== "detail") return;
 
     function handleScroll() {
       setScrolled(window.scrollY > 40);
@@ -382,7 +380,17 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 <img src="/icon/product-detail/back.svg" alt="" className={styles.mobileBackIcon} />
               </button>
 
-              <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
+              {/* Hidden at rest — the back button sits over the product's
+                  own hero image there, with no backdrop yet, so the title
+                  text would be unreadable. Revealed once scrolled, in sync
+                  with .mobileDetailStickyScrolled's backdrop fading in. */}
+              <p
+                className={`${styles.mobileTitle} ${styles.mobileDetailTitle} ${
+                  scrolled ? styles.mobileDetailTitleVisible : ""
+                }`}
+              >
+                {dict.header.catalogueTitle}
+              </p>
 
               {/* Balances .mobileBackButton's width so the centered title
                   text lands at the row's true center instead of drifting
@@ -430,21 +438,12 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               <StarrySky />
 
               <div className={styles.mobileTopRow}>
-                <LocaleLink href="/" aria-label={dict.header.catalogueTitle} className={styles.mobileBrand}>
+                <LocaleLink href="/" aria-label={dict.header.catalogueTitle}>
                   <img
                     src="/logo-shopitech-primaire/logoFichier 16version F.png"
                     alt="Shopitech"
                     className={styles.mobileLogo}
                   />
-                  {/* Only revealed once scrolled — the logo alone is enough
-                      branding at rest, but once the categories/search bar
-                      has scrolled past, this gives the sticky bar back some
-                      textual context. */}
-                  <span
-                    className={`${styles.mobileCatalogueLabel} ${scrolled ? styles.mobileCatalogueLabelVisible : ""}`}
-                  >
-                    {dict.header.catalogueTitle}
-                  </span>
                 </LocaleLink>
                 <ThemeToggle className={styles.themeToggleMobile} />
               </div>
