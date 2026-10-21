@@ -87,26 +87,40 @@ class StockAdjustmentController extends Controller
 
         $variants = ProductVariant::query()->select('id', 'product_id')->get();
 
-        $currentQuantities = Stock::query()
-            ->where('warehouse_id', $data['warehouse_id'])
-            ->whereIn('product_variant_id', $variants->pluck('id'))
-            ->pluck('quantity_available', 'product_variant_id');
+        $adjustment = DB::transaction(function () use ($data, $request, $variants) {
+            // Snapshotting+computing the deltas BEFORE the transaction (the
+            // previous version of this) meant a double-click on "Mettre à
+            // X" computed the same deltas twice from the same stale
+            // pre-click quantities — the second request's delta then landed
+            // on top of the first's already-applied result instead of
+            // actually converging on X, overshooting the target. Locking
+            // the Stock rows for update first and computing deltas from
+            // THAT snapshot means a second, overlapping call serializes
+            // behind the first (same lockForUpdate the per-line apply()
+            // below also takes — re-entrant within one transaction) and
+            // then sees the already-updated quantities, computing a
+            // (correctly near-zero) delta instead of repeating the first
+            // one.
+            $currentQuantities = Stock::query()
+                ->where('warehouse_id', $data['warehouse_id'])
+                ->whereIn('product_variant_id', $variants->pluck('id'))
+                ->lockForUpdate()
+                ->pluck('quantity_available', 'product_variant_id');
 
-        $lines = $variants
-            ->map(function (ProductVariant $variant) use ($currentQuantities, $data) {
-                $before = $currentQuantities->get($variant->id, 0);
-                $delta = $data['quantity'] - $before;
+            $lines = $variants
+                ->map(function (ProductVariant $variant) use ($currentQuantities, $data) {
+                    $before = $currentQuantities->get($variant->id, 0);
+                    $delta = $data['quantity'] - $before;
 
-                return $delta === 0 ? null : [
-                    'product_id' => $variant->product_id,
-                    'product_variant_id' => $variant->id,
-                    'delta_quantity' => $delta,
-                ];
-            })
-            ->filter()
-            ->values();
+                    return $delta === 0 ? null : [
+                        'product_id' => $variant->product_id,
+                        'product_variant_id' => $variant->id,
+                        'delta_quantity' => $delta,
+                    ];
+                })
+                ->filter()
+                ->values();
 
-        $adjustment = DB::transaction(function () use ($data, $request, $lines) {
             $adjustment = StockAdjustment::create([
                 'warehouse_id' => $data['warehouse_id'],
                 'created_by' => $request->user()?->id,
@@ -135,17 +149,30 @@ class StockAdjustmentController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data, $stockAdjustment) {
-            $stockAdjustment->update(collect($data)->except(['lines', 'status'])->all());
+            // Re-fetch and LOCK the adjustment row itself before trusting
+            // its status. The $stockAdjustment the route bound is read
+            // before this transaction even opens, so its ->status can
+            // already be stale: two overlapping PUT requests for the same
+            // adjustment (a double-click on "Appliquer" before the button
+            // disables, or a retried request) would otherwise both read
+            // status='brouillon', both pass the status check below, and
+            // both call apply() — double-applying the same delta onto the
+            // stock. Locking here is what actually serializes the second
+            // request behind the first's full commit, so it re-reads
+            // status='appliqué' and skips re-applying.
+            $locked = StockAdjustment::query()->lockForUpdate()->findOrFail($stockAdjustment->id);
+
+            $locked->update(collect($data)->except(['lines', 'status'])->all());
 
             if (array_key_exists('lines', $data)) {
-                $stockAdjustment->lines()->delete();
-                $stockAdjustment->lines()->createMany($data['lines']);
+                $locked->lines()->delete();
+                $locked->lines()->createMany($data['lines']);
             }
 
-            $wantsApply = ($data['status'] ?? $stockAdjustment->status) === 'appliqué';
+            $wantsApply = ($data['status'] ?? $locked->status) === 'appliqué';
 
-            if ($wantsApply && $stockAdjustment->status !== 'appliqué') {
-                $this->apply($stockAdjustment->fresh('lines'));
+            if ($wantsApply && $locked->status !== 'appliqué') {
+                $this->apply($locked->fresh('lines'));
             }
         });
 
