@@ -192,8 +192,10 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchFocused]);
 
+  // Also drives the "default" variant's mobile catalogue title (see
+  // .mobileCatalogueLabel) — only "cart" never needs the scrolled state.
   useEffect(() => {
-    if (variant !== "detail") return;
+    if (variant === "cart") return;
 
     function handleScroll() {
       setScrolled(window.scrollY > 40);
@@ -428,12 +430,21 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               <StarrySky />
 
               <div className={styles.mobileTopRow}>
-                <LocaleLink href="/" aria-label={dict.header.catalogueTitle}>
+                <LocaleLink href="/" aria-label={dict.header.catalogueTitle} className={styles.mobileBrand}>
                   <img
                     src="/logo-shopitech-primaire/logoFichier 16version F.png"
                     alt="Shopitech"
                     className={styles.mobileLogo}
                   />
+                  {/* Only revealed once scrolled — the logo alone is enough
+                      branding at rest, but once the categories/search bar
+                      has scrolled past, this gives the sticky bar back some
+                      textual context. */}
+                  <span
+                    className={`${styles.mobileCatalogueLabel} ${scrolled ? styles.mobileCatalogueLabelVisible : ""}`}
+                  >
+                    {dict.header.catalogueTitle}
+                  </span>
                 </LocaleLink>
                 <ThemeToggle className={styles.themeToggleMobile} />
               </div>
