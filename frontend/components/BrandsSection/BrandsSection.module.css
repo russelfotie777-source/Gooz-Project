@@ -1,25 +1,15 @@
-/* Reworked to read as its own distinct band (var(--color-surface), rounded
-   panel) with a centered title — same idea as the "Nos partenaires" section
-   on itechservices.cm (subtle gray band, centered title, nothing else
-   framing the logos). The edge-fade mask below reveals this panel's own
-   background instead of the page background now, so it still works without
-   a hardcoded fade color. */
 .section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  background: var(--color-surface);
-  border-radius: 20px;
-  padding: 28px 20px 32px;
+  gap: 12px;
 }
 
 .title {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 18px;
+  font-weight: 700;
+  font-size: 16px;
   margin: 0;
-  color: var(--color-text-muted);
-  text-align: center;
+  color: var(--color-text);
 }
 
 .trackWrapper {
@@ -95,12 +85,8 @@
 }
 
 @media (min-width: 1024px) {
-  .section {
-    padding: 36px 32px 40px;
-  }
-
   .title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .logoSet {
