@@ -1,15 +1,25 @@
+/* Reworked to read as its own distinct band (var(--color-surface), rounded
+   panel) with a centered title — same idea as the "Nos partenaires" section
+   on itechservices.cm (subtle gray band, centered title, nothing else
+   framing the logos). The edge-fade mask below reveals this panel's own
+   background instead of the page background now, so it still works without
+   a hardcoded fade color. */
 .section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
+  background: var(--color-surface);
+  border-radius: 20px;
+  padding: 28px 20px 32px;
 }
 
 .title {
   font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 18px;
   margin: 0;
-  color: var(--color-text);
+  color: var(--color-text-muted);
+  text-align: center;
 }
 
 .trackWrapper {
@@ -54,15 +64,16 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  height: 40px;
+  height: 48px;
 }
 
 .logo {
   height: 100%;
   width: auto;
-  max-width: 120px;
+  max-width: 130px;
   object-fit: contain;
   display: block;
+  transition: transform 0.15s ease;
 }
 
 .fallbackName {
@@ -71,11 +82,25 @@
   font-size: 15px;
   color: var(--color-text-muted);
   white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+
+/* Only on devices with real hover (not touch) — a tap on mobile shouldn't
+   leave a logo "stuck" scaled up the way :hover would without this guard. */
+@media (hover: hover) and (pointer: fine) {
+  .logo:hover,
+  .fallbackName:hover {
+    transform: scale(1.1);
+  }
 }
 
 @media (min-width: 1024px) {
+  .section {
+    padding: 36px 32px 40px;
+  }
+
   .title {
-    font-size: 22px;
+    font-size: 24px;
   }
 
   .logoSet {
@@ -84,14 +109,14 @@
   }
 
   .item {
-    height: 56px;
+    height: 64px;
   }
 
   .logo {
-    max-width: 160px;
+    max-width: 170px;
   }
 
   .fallbackName {
-    font-size: 18px;
+    font-size: 20px;
   }
 }
