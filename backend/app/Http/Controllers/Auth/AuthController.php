@@ -24,11 +24,25 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
-            'name' => $request->validated('name'),
-            'phone' => $request->validated('phone'),
-            'password' => Hash::make($request->validated('password')),
-        ]);
+        // RegisterRequest's own unique:users,phone rule already catches
+        // the common sequential case cleanly — this only matters under
+        // real concurrency (two signups for the same phone validated at
+        // nearly the same instant, both seeing "not taken" before either
+        // commits): the loser hits the DB's own unique constraint instead,
+        // which — uncaught — would otherwise surface as a raw 500 rather
+        // than the same clean validation error. Same pattern as social()
+        // below, for its own email-uniqueness race.
+        try {
+            $user = User::create([
+                'name' => $request->validated('name'),
+                'phone' => $request->validated('phone'),
+                'password' => Hash::make($request->validated('password')),
+            ]);
+        } catch (QueryException $e) {
+            throw ValidationException::withMessages([
+                'phone' => ['Ce numéro de téléphone est déjà associé à un compte.'],
+            ]);
+        }
 
         // is_active/role/status aren't mass-assignable and are never set
         // above — without this, UserResource below would serialize them as

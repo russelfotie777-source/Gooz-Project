@@ -5,6 +5,7 @@ namespace App\Services\Enkap;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\PushNotificationService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -120,8 +121,6 @@ class EnkapPaymentService
      */
     public function refreshStatus(Payment $payment): string
     {
-        $order = $payment->order;
-
         if (! $payment->transaction_reference) {
             return $payment->payment_status;
         }
@@ -145,48 +144,62 @@ class EnkapPaymentService
         // JSON string response).
         $providerStatus = (string) $response->json('status');
         $mapped = self::STATUS_MAP[$providerStatus] ?? $payment->payment_status;
-        $previousStatus = $payment->payment_status;
 
-        $payment->update([
-            'payment_status' => $mapped,
-            'provider_status' => $providerStatus,
-        ]);
+        // This gets called repeatedly and from several places (webhook
+        // redeliveries, the customer's return-page poll, a manual admin
+        // recheck) — plausibly at nearly the same instant for the same
+        // order. Locking the order row and re-reading its status AFTER
+        // acquiring the lock (not the possibly-stale $payment->order
+        // already in memory) is what makes the "only on transition" checks
+        // below actually hold under real concurrency, not just when called
+        // sequentially: a second call that was blocked on this lock sees
+        // the first call's already-committed status and correctly skips
+        // re-notifying/re-clearing the cart.
+        DB::transaction(function () use ($payment, $mapped, $providerStatus) {
+            $previousStatus = $payment->payment_status;
 
-        if ($mapped === 'payé' && $order->status === 'en_attente') {
-            $order->update(['status' => 'confirmée']);
-            $this->clearPurchasedCartItems($order);
+            $payment->update([
+                'payment_status' => $mapped,
+                'provider_status' => $providerStatus,
+            ]);
 
-            if ($order->user && ! $order->user->trashed()) {
-                $title = 'Commande '.$order->order_reference;
-                $body = 'Votre paiement a été confirmé — votre commande est en cours de préparation.';
+            $order = Order::query()->lockForUpdate()->findOrFail($payment->order_id);
+
+            if ($mapped === 'payé' && $order->status === 'en_attente') {
+                $order->update(['status' => 'confirmée']);
+                $this->clearPurchasedCartItems($order);
+
+                if ($order->user && ! $order->user->trashed()) {
+                    $title = 'Commande '.$order->order_reference;
+                    $body = 'Votre paiement a été confirmé — votre commande est en cours de préparation.';
+
+                    $order->user->userNotifications()->create([
+                        'title' => $title,
+                        'body' => $body,
+                        'type' => 'order_status',
+                    ]);
+                    $this->pushNotifications->sendToUser($order->user, $title, $body, [
+                        'order_id' => $order->id,
+                        'status' => 'confirmée',
+                    ]);
+                }
+            }
+
+            // Only on the transition into "échoué", not every re-check —
+            // an already-failed payment re-checked later shouldn't notify
+            // the shopper a second time.
+            if ($mapped === 'échoué' && $previousStatus !== 'échoué' && $order->user && ! $order->user->trashed()) {
+                $title = 'Paiement échoué';
+                $body = "Le paiement de votre commande {$order->order_reference} n'a pas abouti. Vous pouvez réessayer depuis votre espace commandes.";
 
                 $order->user->userNotifications()->create([
                     'title' => $title,
                     'body' => $body,
-                    'type' => 'order_status',
+                    'type' => 'payment_failed',
                 ]);
-                $this->pushNotifications->sendToUser($order->user, $title, $body, [
-                    'order_id' => $order->id,
-                    'status' => 'confirmée',
-                ]);
+                $this->pushNotifications->sendToUser($order->user, $title, $body);
             }
-        }
-
-        // Only on the transition into "échoué", not every re-check — this
-        // gets called repeatedly (webhook retries, the customer's return
-        // page, a manual admin recheck), and an already-failed payment
-        // re-checked later shouldn't notify the shopper a second time.
-        if ($mapped === 'échoué' && $previousStatus !== 'échoué' && $order->user && ! $order->user->trashed()) {
-            $title = 'Paiement échoué';
-            $body = "Le paiement de votre commande {$order->order_reference} n'a pas abouti. Vous pouvez réessayer depuis votre espace commandes.";
-
-            $order->user->userNotifications()->create([
-                'title' => $title,
-                'body' => $body,
-                'type' => 'payment_failed',
-            ]);
-            $this->pushNotifications->sendToUser($order->user, $title, $body);
-        }
+        });
 
         return $mapped;
     }
