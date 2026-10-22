@@ -1,21 +1,19 @@
-/* Deep, solid navy chrome (same family as glotelho.cm's header — a
-   near-black blue, not a loud gradient) sitting right above the header's
-   own black chrome bar below it. A single gold accent (icon badge, bottom
-   line, progress dots) does the work a busy multi-color gradient was
-   trying to do. */
+/* Clean white chrome — a single orange accent (icon badge, bottom line,
+   progress dots) does the work the previous navy version's gold-on-dark
+   contrast used to do, just inverted. Fixed white regardless of light/dark
+   site theme, same as the navy version was always fixed-dark before —
+   this bar has never followed the page's own theme. */
 .bar,
 .barMobile {
   position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #ffffff;
+  color: #1a1a1a;
   overflow: hidden;
-  background:
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 7px),
-    linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-navy) 100%);
+  background: #ffffff;
   border-bottom: 2px solid var(--color-accent-strong);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   /* Plays once, at mount — this component is never remounted for a plain
      slide rotation (only the inner .slideContent/.progressFillActive nodes
      get keyed/remounted for that), so there's no risk of this looping. */
@@ -28,16 +26,14 @@
   padding: 0 20px;
 }
 
-/* Edge-to-edge on the mobile orange block, no rounded corners — unlike the
-   desktop .bar, which stays its own inset navy card. */
+/* Edge-to-edge on mobile, no rounded corners — unlike the desktop .bar,
+   which stays its own inset card. */
 .barMobile {
   height: 50px;
   margin: 0;
   padding: 0 12px;
   border-radius: 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 6px 16px rgba(2, 15, 33, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 @keyframes announcementBarEnter {
@@ -134,7 +130,7 @@
   height: 24px;
   border: none;
   background: transparent;
-  color: #ffffff;
+  color: #1a1a1a;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -242,7 +238,8 @@
   flex: 0 0 auto;
   padding: 2px 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 149, 0, 0.14);
+  color: #c96f00;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -278,9 +275,16 @@
   height: 32px;
   padding: 4px;
   border-radius: 9px;
-  background: #ffffff;
+  /* A plain white chip (the pre-white-bar version) would disappear
+     against the bar's own now-white background — a light neutral fill +
+     border is what keeps it reading as its own card. Fixed, not
+     var(--color-surface): the bar itself stays white regardless of the
+     site's light/dark theme (see .bar/.barMobile), so this shouldn't
+     flip to a dark chip in dark mode either. */
+  background: #f3f4f6;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .paymentLogoWrap:first-child {
@@ -364,11 +368,10 @@
 @keyframes paymentGlowAlt {
   0%,
   100% {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   }
   50% {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.4) inset,
-      0 0 12px 3px var(--color-accent-strong);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 0 12px 3px var(--color-accent-strong);
   }
 }
 
@@ -503,7 +506,7 @@ a.message:hover .linkArrow {
   height: 3px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .progressFillIdle {
@@ -516,14 +519,14 @@ a.message:hover .linkArrow {
   display: block;
   width: 100%;
   height: 100%;
-  background: #ffffff;
+  background: var(--color-accent-strong);
 }
 
 .progressFillActive {
   display: block;
   width: 0%;
   height: 100%;
-  background: #ffffff;
+  background: var(--color-accent-strong);
   animation-name: announcementProgressFill;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
@@ -548,8 +551,8 @@ a.message:hover .linkArrow {
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #ffffff;
-  opacity: 0.7;
+  color: #1a1a1a;
+  opacity: 0.6;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -559,7 +562,7 @@ a.message:hover .linkArrow {
 .dismissButton:hover,
 .dismissButton:focus-visible {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.08);
   transform: rotate(90deg);
 }
 
