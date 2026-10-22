@@ -22,6 +22,22 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('notifications:cart-reminders')->hourly();
         $schedule->command('notifications:review-requests')->daily();
+        // Sanctum only REFUSES an expired token at auth time (see
+        // config/sanctum.php's 'expiration') — it never deletes the row on
+        // its own, so personal_access_tokens would otherwise grow forever.
+        $schedule->command('sanctum:prune-expired --hours=24')->daily();
+
+        // See config/backup.php for what's actually backed up (the
+        // database + storage/app/public, not the codebase — that's
+        // already in git) and where it's stored. clean → run → monitor,
+        // in that order, each given enough room to finish before the next
+        // starts: old archives are pruned first so cleanup isn't racing
+        // disk space against the backup that just landed, and the health
+        // check runs last so it's reporting on the archive this same
+        // night actually produced.
+        $schedule->command('backup:clean')->daily()->at('01:00');
+        $schedule->command('backup:run')->daily()->at('01:30');
+        $schedule->command('backup:monitor')->daily()->at('02:30');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

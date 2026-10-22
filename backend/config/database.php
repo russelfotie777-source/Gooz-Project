@@ -62,6 +62,14 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            // Read by spatie/laravel-backup's DbDumperFactory (backup:run)
+            // to locate `mysqldump` — only needed when it isn't already on
+            // PATH, which is the case for XAMPP's bundled MySQL on
+            // Windows. Directory only (not the .exe itself), with a
+            // trailing slash handled either way.
+            'dump' => [
+                'dump_binary_path' => env('MYSQLDUMP_PATH'),
+            ],
         ],
 
         'mariadb' => [
