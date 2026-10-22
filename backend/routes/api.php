@@ -69,9 +69,12 @@ use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/auth/social', [AuthController::class, 'social']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    // Firebase already verifies the id_token itself (see
+    // FirebaseIdTokenVerifier) — the same register-level limit is just a
+    // backstop against this endpoint being hammered, not a credential guess.
+    Route::post('/auth/social', [AuthController::class, 'social'])->middleware('throttle:register');
 
     Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 

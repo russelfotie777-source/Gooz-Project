@@ -63,15 +63,14 @@ class AuthController extends Controller
     {
         $user = User::where('phone', $request->validated('phone'))->first();
 
-        if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
+        // Same message whether the phone doesn't exist, the password is
+        // wrong, OR the account is suspended — a distinct "this account is
+        // suspended" response would let anyone confirm a given phone number
+        // belongs to a real (if blocked) account, just by trying to log
+        // into it. The suspended user still can't get a token either way.
+        if (! $user || ! Hash::check($request->validated('password'), $user->password) || ! $user->is_active) {
             throw ValidationException::withMessages([
                 'phone' => ['Les identifiants fournis sont incorrects.'],
-            ]);
-        }
-
-        if (! $user->is_active) {
-            throw ValidationException::withMessages([
-                'phone' => ['Ce compte a été suspendu.'],
             ]);
         }
 

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Services\FirebaseIdTokenVerifier;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -66,14 +67,76 @@ class AuthTest extends TestCase
         $response->assertUnprocessable()->assertJsonValidationErrors('phone');
     }
 
-    public function test_login_rejects_a_suspended_account(): void
+    /**
+     * A suspended account's login is still rejected, but with the exact
+     * same generic message as a wrong password/unknown phone — a distinct
+     * "this account is suspended" response would let anyone confirm a
+     * given phone number belongs to a real account just by trying to log
+     * into it.
+     */
+    public function test_login_rejects_a_suspended_account_with_the_generic_message(): void
     {
         User::factory()->suspended()->create(['phone' => '670000005', 'password' => Hash::make('password')]);
 
-        $response = $this->postJson('/api/v1/login', ['phone' => '670000005', 'password' => 'password']);
+        $wrongPhone = $this->postJson('/api/v1/login', ['phone' => '670099999', 'password' => 'password']);
+        $suspended = $this->postJson('/api/v1/login', ['phone' => '670000005', 'password' => 'password']);
 
-        $response->assertUnprocessable();
-        $this->assertStringContainsString('suspendu', $response->json('errors.phone.0'));
+        $wrongPhone->assertUnprocessable();
+        $suspended->assertUnprocessable();
+        $this->assertSame($wrongPhone->json('errors.phone.0'), $suspended->json('errors.phone.0'));
+        $this->assertStringNotContainsString('suspendu', $suspended->json('errors.phone.0'));
+    }
+
+    /**
+     * Brute-force guard regression: repeated failed login attempts for the
+     * same phone number get rate-limited (429) instead of letting an
+     * attacker keep guessing passwords indefinitely — see the 'login'
+     * RateLimiter defined in AppServiceProvider.
+     */
+    public function test_repeated_failed_logins_are_rate_limited(): void
+    {
+        User::factory()->create(['phone' => '670000006', 'password' => Hash::make('password')]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/v1/login', ['phone' => '670000006', 'password' => 'wrong'])
+                ->assertUnprocessable();
+        }
+
+        $this->postJson('/api/v1/login', ['phone' => '670000006', 'password' => 'wrong'])
+            ->assertStatus(429);
+
+        // The correct password doesn't bypass the limiter either, once hit.
+        $this->postJson('/api/v1/login', ['phone' => '670000006', 'password' => 'password'])
+            ->assertStatus(429);
+    }
+
+    /**
+     * Regression for config/sanctum.php's 'expiration' — tokens used to
+     * never expire (null) at all. A token older than the configured
+     * window must stop authenticating; one still within it keeps working.
+     */
+    public function test_a_token_older_than_the_configured_expiration_stops_authenticating(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        PersonalAccessToken::query()->update(['created_at' => now()->subDays(31)]);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/me')
+            ->assertUnauthorized();
+    }
+
+    public function test_a_token_within_the_configured_expiration_still_authenticates(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        PersonalAccessToken::query()->update(['created_at' => now()->subDays(29)]);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/me')
+            ->assertOk();
     }
 
     public function test_logout_revokes_the_current_token(): void

@@ -50,7 +50,17 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Tokens used to never expire at all (null) — once issued, a stolen or
+    // forgotten token stayed valid forever. 30 days: long enough that a
+    // regular shopper is never logged out mid-use, short enough that a
+    // leaked token eventually stops working on its own. The frontend
+    // already treats any 401 as "session expired" and clears its stored
+    // token (see lib/api.ts's authedFetch + Header's onSessionExpired), so
+    // this doesn't need any client-side handling beyond what's already
+    // there. Pruning the now-expired rows themselves (Sanctum only refuses
+    // them at auth time, it doesn't delete them) is scheduled in
+    // bootstrap/app.php via `sanctum:prune-expired`.
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION_MINUTES', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------
