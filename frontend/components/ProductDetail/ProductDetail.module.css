@@ -1061,7 +1061,7 @@
   }
 
   .buyButton {
-    background: var(--color-navy);
+    background: var(--color-accent-strong);
     border-radius: var(--radius-md);
     font-size: 18px;
     padding: 18px;
