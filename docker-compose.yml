@@ -1,0 +1,91 @@
+# Local/staging container stack — a first step toward #10 of the
+# performance audit (no Docker/CI existed before this). The real
+# deployment (backend.shopitech.cm / shopitech.cm / admin.shopitech.cm)
+# is untouched and keeps running the traditional way for now.
+#
+# Secrets (DB password, APP_KEY, Enkap/Firebase credentials, ...) are NOT
+# in this file — put them in a root-level `.env` (gitignored, picked up
+# automatically by `docker compose`) and they'll fill the ${...}
+# placeholders below. See backend/.env.example for the full list of keys
+# the backend expects.
+#
+# Build order matters for `frontend` (and would for `admin` too, if it
+# ever grows a page like this): pages with no generateStaticParams/
+# force-dynamic (e.g. /boutique) are prerendered during the image build
+# itself, not at request time, so that build-time fetch needs a reachable,
+# already-migrated backend — Compose's `build:` step is otherwise isolated
+# from every other service, `depends_on` doesn't change that. In practice:
+#   docker compose up -d db backend
+#   docker compose exec backend php artisan migrate --force   # once
+#   docker compose build frontend admin
+#   docker compose up -d frontend admin
+# A single `docker compose up --build` will fail on that /boutique
+# prerender for the same reason — verified live, not theoretical.
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-gooz}
+      MYSQL_USER: ${DB_USERNAME:-gooz}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-gooz}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${BACKEND_URL:-http://localhost:8001}
+      DB_CONNECTION: mysql
+      # "db" is this compose file's service name above, not a real
+      # hostname — Docker's internal DNS resolves it for every container
+      # on this stack.
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: ${DB_DATABASE:-gooz}
+      DB_USERNAME: ${DB_USERNAME:-gooz}
+      DB_PASSWORD: ${DB_PASSWORD:-gooz}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
+    ports:
+      - "8001:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      # Lets the build's RUN steps reach the already-running `backend`
+      # service by name — only works if `backend` is up on this same
+      # network before this build runs (see the note above).
+      network: default
+      args:
+        NEXT_PUBLIC_API_URL: ${FRONTEND_PUBLIC_API_URL:-http://localhost:8001/api/v1}
+        INTERNAL_API_URL: http://backend:8000/api/v1
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      INTERNAL_API_URL: http://backend:8000/api/v1
+    ports:
+      - "3000:3000"
+
+  admin:
+    build:
+      context: ./admin
+      args:
+        NEXT_PUBLIC_API_URL: ${ADMIN_PUBLIC_API_URL:-http://localhost:8001/api/v1}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3001:3001"
+
+volumes:
+  db_data:

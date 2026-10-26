@@ -1,0 +1,13 @@
+vendor
+node_modules
+.env
+.env.*
+!.env.example
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/app/public/*
+!storage/app/public/.gitignore
+.git
+.phpunit.result.cache
