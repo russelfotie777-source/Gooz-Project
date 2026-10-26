@@ -259,6 +259,7 @@ function normalizeProduct(raw: Product): Product {
     price_from: raw.price_from !== null && raw.price_from !== undefined ? Number(raw.price_from) : null,
     images: raw.images ?? [],
     variants: (raw.variants ?? []).map(normalizeVariant),
+    specifications: raw.specifications ?? [],
   };
 }
 

@@ -309,29 +309,34 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
     setOpenAccordion((current) => (current === name ? null : name));
   }
 
-  // "Spécifications" — assembled from fields that already exist (no new
-  // admin-managed content type yet), one row per piece of data that's
-  // actually present. Rows collapse away entirely rather than showing "—"
-  // for a product/category that doesn't have that attribute.
-  const specRows: { label: string; value: string }[] = [];
-  if (product.reference) specRows.push({ label: dict.product.specReference, value: product.reference });
-  if (product.categories && product.categories.length > 0) {
-    specRows.push({
-      label: dict.product.specCategory,
-      value: product.categories.map((c) => c.name).join(", "),
-    });
-  }
-  if (product.brand?.name) specRows.push({ label: dict.product.specBrand, value: product.brand.name });
-  if (product.brand?.country_origin) {
-    specRows.push({ label: dict.product.specOrigin, value: product.brand.country_origin });
-  }
-  for (const [label, field] of [
-    [dict.product.specColors, "color"],
-    [dict.product.specSizes, "size"],
-    [dict.product.specMaterial, "material"],
-  ] as const) {
-    const values = [...new Set(product.variants.map((v) => v[field]).filter((v): v is string => Boolean(v)))];
-    if (values.length > 0) specRows.push({ label, value: values.join(", ") });
+  // "Spécifications" — admin-authored label/value rows (set from the
+  // admin product form, see ProductSpecification) take over entirely once
+  // any are set. A product nobody has edited yet (specifications: [])
+  // falls back to the old auto-recombined list below, so existing
+  // products don't suddenly show an empty section.
+  const specRows: { label: string; value: string }[] =
+    product.specifications.length > 0 ? product.specifications : [];
+
+  if (specRows.length === 0) {
+    if (product.reference) specRows.push({ label: dict.product.specReference, value: product.reference });
+    if (product.categories && product.categories.length > 0) {
+      specRows.push({
+        label: dict.product.specCategory,
+        value: product.categories.map((c) => c.name).join(", "),
+      });
+    }
+    if (product.brand?.name) specRows.push({ label: dict.product.specBrand, value: product.brand.name });
+    if (product.brand?.country_origin) {
+      specRows.push({ label: dict.product.specOrigin, value: product.brand.country_origin });
+    }
+    for (const [label, field] of [
+      [dict.product.specColors, "color"],
+      [dict.product.specSizes, "size"],
+      [dict.product.specMaterial, "material"],
+    ] as const) {
+      const values = [...new Set(product.variants.map((v) => v[field]).filter((v): v is string => Boolean(v)))];
+      if (values.length > 0) specRows.push({ label, value: values.join(", ") });
+    }
   }
 
   function handleTrackScroll() {
@@ -695,11 +700,17 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
           </button>
           {openAccordion === "details" && (
             <div className={styles.accordionBody}>
-              <p>
-                {dict.product.reference} {product.reference}
-              </p>
-              {product.variants.length > 0 && (
-                <p>{dict.product.variantsAvailable(product.variants.length)}</p>
+              {product.product_details ? (
+                product.product_details.split("\n").map((paragraph, index) => <p key={index}>{paragraph}</p>)
+              ) : (
+                <>
+                  <p>
+                    {dict.product.reference} {product.reference}
+                  </p>
+                  {product.variants.length > 0 && (
+                    <p>{dict.product.variantsAvailable(product.variants.length)}</p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -721,17 +732,23 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
           </button>
           {openAccordion === "info" && (
             <div className={styles.accordionBody}>
-              <p>
-                {dict.product.brand}{" "}
-                {product.brand ? (
-                  <LocaleLink href={`/marques/${product.brand.slug}`} className={styles.brandLink}>
-                    {product.brand.name}
-                  </LocaleLink>
-                ) : (
-                  "—"
-                )}
-              </p>
-              <p>{dict.product.returnsPolicy}</p>
+              {product.more_info ? (
+                product.more_info.split("\n").map((paragraph, index) => <p key={index}>{paragraph}</p>)
+              ) : (
+                <>
+                  <p>
+                    {dict.product.brand}{" "}
+                    {product.brand ? (
+                      <LocaleLink href={`/marques/${product.brand.slug}`} className={styles.brandLink}>
+                        {product.brand.name}
+                      </LocaleLink>
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                  <p>{dict.product.returnsPolicy}</p>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
-import { ProductForm, ProductOption } from "@/components/product-form";
+import { ProductForm, ProductOption, ProductSpecificationValue } from "@/components/product-form";
 
 type Product = {
   id: number;
   name: string;
   description: string | null;
   meta_description: string | null;
+  specifications: ProductSpecificationValue[];
+  product_details: string | null;
+  more_info: string | null;
   reference: string | null;
   is_active: boolean;
   categories: { id: number }[];
@@ -78,6 +81,9 @@ export default function EditProductPage() {
             is_active: product.is_active,
             description: product.description ?? "",
             meta_description: product.meta_description ?? "",
+            specifications: product.specifications,
+            product_details: product.product_details ?? "",
+            more_info: product.more_info ?? "",
           }}
           submitting={submitting}
           error={error}

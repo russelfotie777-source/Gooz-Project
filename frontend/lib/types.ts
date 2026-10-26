@@ -91,6 +91,11 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface ProductSpecification {
+  label: string;
+  value: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -98,6 +103,12 @@ export interface Product {
   description: string | null;
   /** Short SEO summary for <meta name="description">/Open Graph — distinct from the long on-page `description`. Falls back to it when empty. */
   meta_description: string | null;
+  /** Admin-authored label/value rows for the "Spécifications" accordion — set from the admin product form, not derived from other fields. */
+  specifications: ProductSpecification[];
+  /** Admin-authored free text for the "Détails du produit" accordion. */
+  product_details: string | null;
+  /** Admin-authored free text for the "Plus d'information" accordion. */
+  more_info: string | null;
   /** Cheapest variant's effective price (promo if on sale, else base). Null if the product has no variants loaded/at all. */
   price_from: number | null;
   reference: string;

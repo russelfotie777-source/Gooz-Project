@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { Plus, X } from "lucide-react";
 
 export type ProductOption = { id: number; name: string };
+
+export type ProductSpecificationValue = { label: string; value: string };
 
 export type ProductFormValues = {
   name: string;
@@ -12,6 +15,9 @@ export type ProductFormValues = {
   is_active: boolean;
   description: string;
   meta_description: string;
+  specifications: ProductSpecificationValue[];
+  product_details: string;
+  more_info: string;
 };
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -63,9 +69,26 @@ export function ProductForm({
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [description, setDescription] = useState(initial?.description ?? "");
   const [metaDescription, setMetaDescription] = useState(initial?.meta_description ?? "");
+  const [specifications, setSpecifications] = useState<ProductSpecificationValue[]>(
+    initial?.specifications ?? []
+  );
+  const [productDetails, setProductDetails] = useState(initial?.product_details ?? "");
+  const [moreInfo, setMoreInfo] = useState(initial?.more_info ?? "");
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+  }
+
+  function addSpecificationRow() {
+    setSpecifications((prev) => [...prev, { label: "", value: "" }]);
+  }
+
+  function updateSpecificationRow(index: number, field: "label" | "value", fieldValue: string) {
+    setSpecifications((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: fieldValue } : row)));
+  }
+
+  function removeSpecificationRow(index: number) {
+    setSpecifications((prev) => prev.filter((_, i) => i !== index));
   }
 
   function buildPayload(): Record<string, unknown> {
@@ -77,6 +100,14 @@ export function ProductForm({
       is_active: isActive,
       description: description || null,
       meta_description: metaDescription || null,
+      // Rows left half-filled by the admin (e.g. a label typed with no
+      // value yet) are dropped rather than sent — the backend requires
+      // both when a row is present at all (specifications.*.value is
+      // required_with:specifications), so this avoids a confusing 422 for
+      // what's really just a draft row still being filled in.
+      specifications: specifications.filter((row) => row.label.trim() && row.value.trim()),
+      product_details: productDetails || null,
+      more_info: moreInfo || null,
     };
   }
 
@@ -190,6 +221,78 @@ export function ProductForm({
         <p className="mt-5 rounded-lg bg-brand-blue/10 px-3 py-2.5 text-xs text-brand-blue">
           Le prix se définit au niveau des variantes, une fois le produit créé.
         </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-6">
+        <h2 className="mb-1 text-sm font-semibold text-white/70">Fiche produit (page client)</h2>
+        <p className="mb-5 text-xs text-white/40">
+          Contrôle directement ce qui s&apos;affiche dans les sections &quot;Spécifications&quot;, &quot;Détails du
+          produit&quot; et &quot;Plus d&apos;information&quot; de la fiche produit. Laissé vide, chaque section
+          retombe sur un contenu généré automatiquement à partir des autres champs du produit.
+        </p>
+
+        <div className="mb-5">
+          <label className="mb-1.5 block text-sm text-white/70">Spécifications</label>
+          <div className="flex flex-col gap-2">
+            {specifications.length === 0 && (
+              <p className="text-sm text-white/30">Aucune spécification — la section sera générée automatiquement.</p>
+            )}
+            {specifications.map((row, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  value={row.label}
+                  onChange={(e) => updateSpecificationRow(index, "label", e.target.value)}
+                  placeholder="Poids"
+                  className={`${inputClass} w-2/5`}
+                />
+                <input
+                  value={row.value}
+                  onChange={(e) => updateSpecificationRow(index, "value", e.target.value)}
+                  placeholder="350 g"
+                  className={inputClass}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeSpecificationRow(index)}
+                  className="rounded p-2 text-red-400 hover:bg-white/10"
+                  aria-label="Supprimer cette ligne"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={addSpecificationRow}
+            className="mt-2 flex items-center gap-1 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-white/70 hover:bg-white/5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Ajouter une spécification
+          </button>
+        </div>
+
+        <div className="mb-5">
+          <label className="mb-1.5 block text-sm text-white/70">Détails du produit</label>
+          <textarea
+            value={productDetails}
+            onChange={(e) => setProductDetails(e.target.value)}
+            rows={4}
+            placeholder="Un paragraphe par ligne."
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm text-white/70">Plus d&apos;information</label>
+          <textarea
+            value={moreInfo}
+            onChange={(e) => setMoreInfo(e.target.value)}
+            rows={4}
+            placeholder="Garantie, retours, service après-vente propres à ce produit..."
+            className={inputClass}
+          />
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}

@@ -17,6 +17,9 @@ class Product extends Model
         'slug',
         'description',
         'meta_description',
+        'specifications',
+        'product_details',
+        'more_info',
         'brand_id',
         'reference',
         'is_active',
@@ -28,6 +31,7 @@ class Product extends Model
         return [
             'is_active' => 'boolean',
             'min_price' => 'decimal:2',
+            'specifications' => 'array',
         ];
     }
 
