@@ -14,7 +14,6 @@ import { onSessionExpired } from "@/lib/sessionEvents";
 import { showToast } from "@/lib/toast";
 import type { Announcement, Category, User } from "@/lib/types";
 import AnnouncementBar from "@/components/AnnouncementBar/AnnouncementBar";
-import CategoriesBar from "./CategoriesBar";
 import SearchSuggestions from "@/components/SearchSuggestions/SearchSuggestions";
 import StarrySky from "./StarrySky";
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
@@ -357,7 +356,14 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
             </div>
           </div>
 
-          <CategoriesBar categories={categories} label={dict.header.categories} />
+          <nav className={styles.categoriesBar} aria-label={dict.header.categories}>
+            {categories.map((category) => (
+              <LocaleLink key={category.id} href={`/categories/${category.slug}`} className={styles.categoryButton}>
+                {category.image && <img src={category.image} alt="" className={styles.categoryIcon} />}
+                <span className={styles.categoryLabel}>{category.name}</span>
+              </LocaleLink>
+            ))}
+          </nav>
         </div>
       </div>
 
@@ -380,17 +386,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 <img src="/icon/product-detail/back.svg" alt="" className={styles.mobileBackIcon} />
               </button>
 
-              {/* Hidden at rest — the back button sits over the product's
-                  own hero image there, with no backdrop yet, so the title
-                  text would be unreadable. Revealed once scrolled, in sync
-                  with .mobileDetailStickyScrolled's backdrop fading in. */}
-              <p
-                className={`${styles.mobileTitle} ${styles.mobileDetailTitle} ${
-                  scrolled ? styles.mobileDetailTitleVisible : ""
-                }`}
-              >
-                {dict.header.catalogueTitle}
-              </p>
+              <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
 
               {/* Balances .mobileBackButton's width so the centered title
                   text lands at the row's true center instead of drifting

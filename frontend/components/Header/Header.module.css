@@ -393,10 +393,50 @@
   white-space: nowrap;
 }
 
-/* .categoriesBar/.categoryButton/.categoryIcon/.categoryLabel moved to
-   CategoriesBar.module.css — that bar is now a self-contained auto-
-   scrolling/draggable component (see CategoriesBar.tsx), not a static
-   overflow-x row. */
+.categoriesBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-chrome-bg);
+  padding: 8px 24px;
+  width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.categoryButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  font-size: 11px;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.categoryButton:hover {
+  opacity: 0.85;
+}
+
+.categoryIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.categoryLabel {
+  font-family: var(--font-body);
+  font-weight: 700;
+}
 
 /* Mobile PWA header — Figma node 372:185 */
 
@@ -404,7 +444,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px 8px;
+  /* Roomier than a plain title bar used to need — see .mobileCatalogueSticky's
+     comment: the extra top/bottom space is what gives the starry gradient
+     behind it room to actually read as a sky. */
+  padding: 24px 16px 18px;
 }
 
 .mobileMenuButton {
@@ -436,42 +479,15 @@
    "version F" (light-on-dark) file the always-black desktop .mainRow uses,
    since this sits on a fixed-dark sky regardless of theme too. */
 .mobileLogo {
-  height: 22px;
+  height: 26px;
   width: auto;
-}
-
-/* Product detail header only (variant="detail") — the title sits over the
-   product's own hero image at rest, with .mobileDetailSticky still fully
-   transparent, so plain text there would be unreadable against whatever
-   photo is behind it. Hidden until scrolled, fading in together with
-   .mobileDetailStickyScrolled's backdrop (same `scrolled` state). The cart
-   variant's own .mobileTitle (no backdrop issue — .mobileSticky isn't
-   transparent) is unaffected since it never gets these two classes. */
-.mobileDetailTitle {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.mobileDetailTitleVisible {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mobileDetailTitle {
-    transition: none;
-  }
 }
 
 /* Fixed light icon + tint, not ThemeToggle's own themed defaults — same
    reasoning as .themeToggleDesktop below: this sits on a fixed-dark sky in
    both themes, so it can't follow var(--color-text) (which turns near-white
-   in dark mode and would vanish against a light toggle background). Also
-   smaller than ThemeToggle's own 32px default (shared with the desktop
-   header, left alone there) so it doesn't set a taller floor than the
-   logo next to it now needs. */
+   in dark mode and would vanish against a light toggle background). */
 .themeToggleMobile {
-  width: 26px;
-  height: 26px;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.14);
 }
@@ -509,7 +525,10 @@
    still happens, just compressed into the box's real height: the gradient
    reaches var(--color-bg) — not a fixed color, so it lands on the exact
    color sitting right below it in both themes — well before the search
-   bar's own bottom edge, with no box-shadow to draw a hard line under it. */
+   bar's own bottom edge, with no box-shadow to draw a hard line under it.
+
+   Taller than a plain title bar on purpose (generous .mobileTopRow padding
+   below) so the sky actually reads as a sky instead of a sliver. */
 .mobileCatalogueSticky {
   position: sticky;
   top: 0;

@@ -16,8 +16,8 @@ interface AnnouncementBarProps {
 // from the API, so it can't collide with one that does.
 const BRAND_SLIDE_ID = -1;
 
-const MIN_SLIDE_MS = 2600;
-const MAX_SLIDE_MS = 5500;
+const MIN_SLIDE_MS = 6500;
+const MAX_SLIDE_MS = 9000;
 // How long the outgoing slide gets to animate away before the incoming one
 // takes its place — see the exiting/entering dance below.
 const EXIT_MS = 180;
@@ -56,7 +56,9 @@ const CONFETTI_PIECES = [
 export default function AnnouncementBar({ announcements, dismissed, variant, onDismiss }: AnnouncementBarProps) {
   const dict = useDictionary();
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focusWithin, setFocusWithin] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [marqueeDistance, setMarqueeDistance] = useState(0);
   const textRef = useRef<HTMLSpanElement>(null);
@@ -74,16 +76,27 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
 
   const slides = useMemo(() => [brandSlide, ...announcements], [brandSlide, announcements]);
   const count = slides.length;
+  const paused = hovered || focusWithin;
 
   useEffect(() => {
     setIndex(0);
     setExiting(false);
   }, [announcements]);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mediaQuery) return;
+
+    const updatePreference = () => setReducedMotion(mediaQuery.matches);
+    updatePreference();
+    mediaQuery.addEventListener("change", updatePreference);
+    return () => mediaQuery.removeEventListener("change", updatePreference);
+  }, []);
+
   const announcement = slides[index % count];
 
   function advance(direction: 1 | -1) {
-    if (count <= 1) return;
+    if (count <= 1 || exiting) return;
     setExiting(true);
     window.setTimeout(() => {
       setIndex((i) => (i + direction + count) % count);
@@ -95,12 +108,12 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
   // paused on hover/focus, and stands down entirely while a manual
   // exit/enter transition (see advance()) is already in flight.
   useEffect(() => {
-    if (count <= 1 || paused || exiting) return;
+    if (count <= 1 || paused || exiting || reducedMotion) return;
     const duration = slideDurationMs(announcement.text);
     const timer = window.setTimeout(() => advance(1), duration);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, paused, exiting, index]);
+  }, [count, paused, exiting, reducedMotion, index]);
 
   // Only relevant while paused (hovered/focused) — that's when the marquee
   // in the render below actually gets to run, so there's no point measuring
@@ -120,14 +133,17 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
   const barClassName = variant === "desktop" ? styles.bar : styles.barMobile;
   const isBrandSlide = announcement.id === BRAND_SLIDE_ID;
   const promoMatch = announcement.text.match(PROMO_PATTERN);
-  const showNav = variant === "desktop" && count > 1;
+  const showNav = count > 1;
 
   const slideBody = isBrandSlide ? (
     <span
       key={exiting ? `exit-${index}` : `enter-${index}`}
       className={`${styles.slideContent} ${styles.paymentShowcase} ${exiting ? styles.slideExit : styles.slideEnter}`}
     >
-      <PaymentLogosShowcase caption={dict.header.paymentMethodsCaption} />
+      <span className={styles.paymentVisual} aria-hidden="true">
+        <PaymentLogosShowcase caption={dict.header.paymentMethodsCaption} />
+      </span>
+      <span className={styles.srOnly}>{dict.header.announcementBrand}</span>
     </span>
   ) : (
     <span
@@ -168,19 +184,25 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
   return (
     <div
       className={barClassName}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocusWithin(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusWithin(false);
+      }}
     >
       <span key={`glow-${index}`} className={styles.glowPulse} aria-hidden="true" />
-      <ConfettiBurst key={`confetti-left-${index}`} side="left" />
-      <ConfettiBurst key={`confetti-right-${index}`} side="right" />
+      {variant === "desktop" && (
+        <>
+          <ConfettiBurst key={`confetti-left-${index}`} side="left" />
+          <ConfettiBurst key={`confetti-right-${index}`} side="right" />
+        </>
+      )}
 
       {showNav && (
         <button
           type="button"
-          className={styles.navButton}
+          className={`${styles.navButton} ${variant === "mobile" ? styles.navButtonMobile : ""}`}
           onClick={() => advance(-1)}
           aria-label={dict.common.previous}
         >
@@ -197,12 +219,17 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
       )}
 
       {showNav && (
-        <button type="button" className={styles.navButton} onClick={() => advance(1)} aria-label={dict.common.next}>
+        <button
+          type="button"
+          className={`${styles.navButton} ${variant === "mobile" ? styles.navButtonMobile : ""}`}
+          onClick={() => advance(1)}
+          aria-label={dict.common.next}
+        >
           ›
         </button>
       )}
 
-      {count > 1 && (
+      {count > 1 && variant === "desktop" && (
         <div className={styles.progressDots} aria-hidden="true">
           {slides.map((slide, i) => (
             <span key={`${slide.id}-${i}`} className={styles.progressDot}>
@@ -221,6 +248,12 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
             </span>
           ))}
         </div>
+      )}
+
+      {count > 1 && variant === "mobile" && (
+        <span className={styles.mobileSlideCount} aria-hidden="true">
+          {index + 1}/{count}
+        </span>
       )}
 
       <button type="button" className={styles.dismissButton} onClick={onDismiss} aria-label={dict.common.close}>
@@ -258,14 +291,9 @@ function ConfettiBurst({ side }: { side: "left" | "right" }) {
   );
 }
 
-// Replaces the brand slide's old plain-text sentence (too long to read on
-// a narrow mobile bar before it truncates) with the two Mobile Money logos
-// themselves — the actual information ("we take OM/MoMo") lands instantly
-// as a recognizable image instead of a sentence that gets cut off. The
-// shine sweep + spark + entrance animation are what's meant to read as
-// "wow" (see AnnouncementBar.module.css's .paymentShowcase rules); the
-// confetti/glow the carousel already fires on every slide change (see
-// ConfettiBurst/.glowPulse above) plays for this slide too, for free.
+// The payment marks communicate the accepted methods at a glance; the
+// concise caption keeps delivery visible on mobile, while a full description
+// remains available to assistive technology in the slide body above.
 function PaymentLogosShowcase({ caption }: { caption: string }) {
   return (
     <span className={styles.paymentLogos}>

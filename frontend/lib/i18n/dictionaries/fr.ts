@@ -39,11 +39,7 @@ const fr = {
     toggleToDark: "Activer le mode sombre",
     toggleToLight: "Activer le mode clair",
     announcementBrand: "Shopitech — Paiement Mobile Money sécurisé • Livraison partout au Cameroun",
-    // Short on purpose — sits next to two logos in the same narrow bar that
-    // couldn't fit announcementBrand's full sentence on mobile (see
-    // AnnouncementBar's brand slide, which shows this instead of that
-    // sentence).
-    paymentMethodsCaption: "Paiement disponible",
+    paymentMethodsCaption: "Mobile Money sécurisé · Livraison Cameroun",
   },
   bottomNav: {
     home: "Accueil",

@@ -39,6 +39,7 @@ describe("AnnouncementBar", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   test("always shows the hardcoded brand slide, even with zero admin announcements", () => {
@@ -86,14 +87,24 @@ describe("AnnouncementBar", () => {
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
   });
 
-  test("desktop with more than one slide shows manual prev/next controls, mobile never does", () => {
+  test("desktop and mobile with multiple slides both expose manual previous/next controls", () => {
     const announcements = [makeAnnouncement()];
     const { unmount } = renderBar({ announcements, variant: "desktop" });
     expect(screen.getByRole("button", { name: "Suivant" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Précédent" })).toBeInTheDocument();
     unmount();
 
     renderBar({ announcements, variant: "mobile" });
-    expect(screen.queryByRole("button", { name: "Suivant" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Suivant" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Précédent" })).toBeInTheDocument();
+    expect(screen.getByText("1/2")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Suivant" }));
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(screen.getByText("Livraison gratuite ce week-end")).toBeInTheDocument();
+    expect(screen.getByText("2/2")).toBeInTheDocument();
   });
 
   test("auto-rotates from the brand slide into an admin announcement over time", () => {
@@ -101,7 +112,7 @@ describe("AnnouncementBar", () => {
     expect(screen.getByText(BRAND_TEXT)).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(6000); // past even the longest possible slide duration
+      vi.advanceTimersByTime(7000); // past the minimum slide duration
     });
     act(() => {
       vi.advanceTimersByTime(500); // past the exit/enter handoff
@@ -117,7 +128,7 @@ describe("AnnouncementBar", () => {
 
     fireEvent.mouseEnter(bar);
     act(() => {
-      vi.advanceTimersByTime(6000);
+      vi.advanceTimersByTime(7000);
       vi.advanceTimersByTime(500);
     });
 
@@ -133,5 +144,24 @@ describe("AnnouncementBar", () => {
     });
 
     expect(screen.getByText("Nouvelle collection dispo")).toBeInTheDocument();
+  });
+
+  test("reduced-motion preference disables automatic slide changes", () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockReturnValue({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })
+    );
+    renderBar({ announcements: [makeAnnouncement({ text: "Nouvelle collection dispo" })] });
+
+    act(() => {
+      vi.advanceTimersByTime(12000);
+    });
+
+    expect(screen.getByText(BRAND_TEXT)).toBeInTheDocument();
+    expect(screen.queryByText("Nouvelle collection dispo")).not.toBeInTheDocument();
   });
 });

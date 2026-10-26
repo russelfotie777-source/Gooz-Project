@@ -34,7 +34,7 @@ const en: Dictionary = {
     toggleToDark: "Switch to dark mode",
     toggleToLight: "Switch to light mode",
     announcementBrand: "Shopitech — Secure Mobile Money payment • Delivery all across Cameroon",
-    paymentMethodsCaption: "Payment available",
+    paymentMethodsCaption: "Secure Mobile Money · Cameroon delivery",
   },
   bottomNav: {
     home: "Home",
