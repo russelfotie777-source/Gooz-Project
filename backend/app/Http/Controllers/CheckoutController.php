@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Order\CheckoutRequest;
 use App\Http\Resources\OrderResource;
+use App\Jobs\SendPushNotificationJob;
 use App\Models\Coupon;
 use App\Models\InventoryLedger;
 use App\Models\Order;
 use App\Models\Stock;
 use App\Services\DeliveryFeeCalculator;
 use App\Services\Enkap\EnkapPaymentService;
-use App\Services\PushNotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -20,7 +20,6 @@ use RuntimeException;
 class CheckoutController extends Controller
 {
     public function __construct(
-        private readonly PushNotificationService $pushNotifications,
         private readonly DeliveryFeeCalculator $deliveryFeeCalculator,
         private readonly EnkapPaymentService $enkapPayments,
     ) {}
@@ -164,8 +163,8 @@ class CheckoutController extends Controller
         // duplicate-notification/redundant-session problem this fix exists
         // to avoid.
         if ($isNewOrder) {
-            $this->pushNotifications->sendToUser(
-                $request->user(),
+            SendPushNotificationJob::dispatch(
+                $request->user()->id,
                 'Commande reçue',
                 "Votre commande {$order->order_reference} a bien été enregistrée.",
                 ['order_id' => $order->id]

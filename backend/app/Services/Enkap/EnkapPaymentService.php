@@ -2,9 +2,9 @@
 
 namespace App\Services\Enkap;
 
+use App\Jobs\SendPushNotificationJob;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Services\PushNotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -30,7 +30,6 @@ class EnkapPaymentService
 
     public function __construct(
         private readonly EnkapClient $client,
-        private readonly PushNotificationService $pushNotifications,
     ) {}
 
     /**
@@ -178,7 +177,7 @@ class EnkapPaymentService
                         'body' => $body,
                         'type' => 'order_status',
                     ]);
-                    $this->pushNotifications->sendToUser($order->user, $title, $body, [
+                    SendPushNotificationJob::dispatch($order->user->id, $title, $body, [
                         'order_id' => $order->id,
                         'status' => 'confirmée',
                     ]);
@@ -197,7 +196,7 @@ class EnkapPaymentService
                     'body' => $body,
                     'type' => 'payment_failed',
                 ]);
-                $this->pushNotifications->sendToUser($order->user, $title, $body);
+                SendPushNotificationJob::dispatch($order->user->id, $title, $body);
             }
         });
 

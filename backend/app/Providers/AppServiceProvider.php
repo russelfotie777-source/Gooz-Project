@@ -52,5 +52,16 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('register', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
         });
+
+        // Global backstop on every /api/v1/* route (see bootstrap/app.php) —
+        // keyed by IP rather than the authenticated user, since this runs as
+        // part of the global 'api' middleware group, before route-level
+        // auth:sanctum resolves $request->user(). Endpoints like
+        // /checkout, /products and /cart/items had no throttle at all
+        // before this; the tighter per-action limiters above still apply on
+        // top of it.
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
     }
 }
