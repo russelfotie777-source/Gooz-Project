@@ -3,6 +3,7 @@
 import Header from "@/components/Header/Header";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { formatPrice } from "@/lib/pricing";
 import { useCheckout } from "./CheckoutContext";
 import styles from "./CheckoutMobileShell.module.css";
 
@@ -12,10 +13,6 @@ interface CheckoutMobileShellProps {
   continueLabel: string;
   continueDisabled?: boolean;
   onContinue: () => void;
-}
-
-function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
 }
 
 // Figma mobile checkout: node 556:63 (step 1), 567:357 (step 2), 607:315

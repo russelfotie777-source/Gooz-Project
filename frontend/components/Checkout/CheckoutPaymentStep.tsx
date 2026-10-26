@@ -3,14 +3,11 @@
 import { useEffect, useState } from "react";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
+import { formatPrice } from "@/lib/pricing";
 import CheckoutMobileShell from "./CheckoutMobileShell";
 import CheckoutRedirectingContent from "./CheckoutRedirectingContent";
 import { useCheckout } from "./CheckoutContext";
 import styles from "./CheckoutPaymentStep.module.css";
-
-function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
-}
 
 export default function CheckoutPaymentStep() {
   const dict = useDictionary();

@@ -7,3 +7,7 @@ export function getDisplayVariant(product: Product): ProductVariant | null {
   if (product.variants.length === 0) return null;
   return product.variants.reduce((cheapest, v) => (v.price < cheapest.price ? v : cheapest));
 }
+
+export function formatPrice(value: number): string {
+  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
+}

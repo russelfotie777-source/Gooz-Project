@@ -8,7 +8,7 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { savePendingCartIntent } from "@/lib/pendingCartIntent";
-import { getDisplayVariant } from "@/lib/pricing";
+import { formatPrice, getDisplayVariant } from "@/lib/pricing";
 import { productPath } from "@/lib/productUrl";
 import type { Product, ProductVariant } from "@/lib/types";
 import styles from "./ProductCard.module.css";
@@ -33,10 +33,6 @@ interface ProductCardProps {
   swipeable?: boolean;
   onAddToCart?: (product: Product) => void;
   onToggleWishlist?: (product: Product) => void;
-}
-
-function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
 }
 
 function discountPercent(variant: ProductVariant | null): number | null {

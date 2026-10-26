@@ -8,6 +8,7 @@ import { notifyCartUpdated } from "@/lib/cartEvents";
 import { persistCouponCode, readPersistedCouponCode } from "@/lib/coupon";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { formatPrice } from "@/lib/pricing";
 import { showToast } from "@/lib/toast";
 import type { CartItemLine } from "@/lib/types";
 import styles from "./CartItems.module.css";
@@ -18,10 +19,6 @@ interface CartItemsProps {
   initialItems: CartItemLine[];
   initialTotal: number;
   token: string;
-}
-
-function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
 }
 
 export default function CartItems({ initialItems, initialTotal, token }: CartItemsProps) {

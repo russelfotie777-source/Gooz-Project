@@ -18,7 +18,7 @@ import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { savePendingCartIntent } from "@/lib/pendingCartIntent";
-import { getDisplayVariant } from "@/lib/pricing";
+import { formatPrice, getDisplayVariant } from "@/lib/pricing";
 import { productPath } from "@/lib/productUrl";
 import { getViewSessionToken, recordRecentlyViewed } from "@/lib/productView";
 import { localizedPath } from "@/lib/seo";
@@ -43,10 +43,6 @@ const MOOD_DEFS = [
   { id: "calm", icon: "/icon/product-detail/mood-calm.svg", key: "calm", rating: 4 },
   { id: "happy", icon: "/icon/product-detail/mood-happy.svg", key: "happy", rating: 5 },
 ] as const;
-
-function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
-}
 
 interface ProductDetailProps {
   product: Product;

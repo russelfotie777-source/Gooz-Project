@@ -5,14 +5,11 @@ import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { formatPrice } from "@/lib/pricing";
 import { useCheckout } from "./CheckoutContext";
 import CheckoutConfirmationVerified from "./CheckoutConfirmationVerified";
 import CheckoutRedirectingContent from "./CheckoutRedirectingContent";
 import styles from "./CheckoutDesktopPage.module.css";
-
-function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
-}
 
 type Step = 1 | 2 | 3;
 

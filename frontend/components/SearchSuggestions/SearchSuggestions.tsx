@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getProducts } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
-import { getDisplayVariant } from "@/lib/pricing";
+import { formatPrice, getDisplayVariant } from "@/lib/pricing";
 import { productPath } from "@/lib/productUrl";
 import type { Product } from "@/lib/types";
 import styles from "./SearchSuggestions.module.css";
@@ -19,10 +19,6 @@ interface SearchSuggestionsProps {
 const MIN_QUERY_LENGTH = 2;
 const DEBOUNCE_MS = 300;
 const SUGGESTION_COUNT = 5;
-
-function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
-}
 
 // Mounted next to both the desktop and mobile search inputs (see Header.tsx)
 // whenever one of them is focused — reuses ProductController's own search

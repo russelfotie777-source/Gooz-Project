@@ -1,4 +1,11 @@
+import { formatPrice } from "@/lib/pricing";
 import type { ApiDeliveryMethod, ApiPaymentMethod, Order, OrderStatus, PaymentStatus } from "@/lib/types";
+
+// Re-exported so existing imports from this file (OrderHistoryPage,
+// PaymentHistoryPage, their desktop variants) don't need to change — the
+// actual implementation now lives in lib/pricing.ts, shared with every
+// other price display in the app.
+export { formatPrice };
 
 // Shared label-key lookups so OrderHistoryPage (mobile) and
 // OrderHistoryDesktop render identical wording — dict.orders is authoritative,
@@ -55,10 +62,6 @@ export const DELIVERY_METHOD_LABEL_KEYS: Record<ApiDeliveryMethod, "deliveryMeth
   livraison: "deliveryMethodHome",
   retrait: "deliveryMethodPickup",
 };
-
-export function formatPrice(value: number): string {
-  return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
-}
 
 // Reconstructed client-side from three separate API values — normalizeOrder
 // (lib/api.ts) already coerces them to numbers, but a malformed/unexpected
