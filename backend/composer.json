@@ -11,6 +11,7 @@
         "laravel/framework": "^13.8",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "predis/predis": "^3.7",
         "spatie/laravel-backup": "^10.3"
     },
     "require-dev": {

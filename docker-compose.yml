@@ -35,28 +35,54 @@ services:
     ports:
       - "3307:3306"
 
-  backend:
+  # Cache and the queue both ride on this instead of MySQL now (audit
+  # finding #1 — Cache::remember on categories/brands/cities was hitting
+  # the same primary database every read, undoing the point of caching).
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  backend: &backend-base
     build:
       context: ./backend
     restart: unless-stopped
     depends_on:
       - db
+      - redis
     environment:
       APP_ENV: ${APP_ENV:-local}
       APP_KEY: ${APP_KEY}
       APP_URL: ${BACKEND_URL:-http://localhost:8001}
       DB_CONNECTION: mysql
-      # "db" is this compose file's service name above, not a real
-      # hostname — Docker's internal DNS resolves it for every container
-      # on this stack.
+      # "db"/"redis" are this compose file's service names above, not real
+      # hostnames — Docker's internal DNS resolves them for every
+      # container on this stack.
       DB_HOST: db
       DB_PORT: "3306"
       DB_DATABASE: ${DB_DATABASE:-gooz}
       DB_USERNAME: ${DB_USERNAME:-gooz}
       DB_PASSWORD: ${DB_PASSWORD:-gooz}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001}
     ports:
       - "8001:8000"
+
+  # Jobs dispatched onto the redis queue (SendPushNotificationJob, see
+  # audit finding #2) sit there forever without something running
+  # `queue:work` to consume them — this is that something. Same image as
+  # `backend`, different command, so it shares the exact same code/config.
+  queue-worker:
+    <<: *backend-base
+    ports: []
+    command: ["php", "artisan", "queue:work", "--tries=3"]
 
   frontend:
     build:
@@ -89,3 +115,4 @@ services:
 
 volumes:
   db_data:
+  redis_data:
