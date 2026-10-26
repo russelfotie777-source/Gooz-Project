@@ -12,6 +12,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { CreateTicketModal } from "@/components/create-ticket-modal";
 import { UserStatusModal } from "@/components/user-status-modal";
 
@@ -71,10 +72,6 @@ const STATUS_STYLES: Record<string, string> = {
   blocked: "bg-red-500/10 text-red-400",
   silently_blocked: "bg-violet-500/10 text-violet-400",
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-}
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();

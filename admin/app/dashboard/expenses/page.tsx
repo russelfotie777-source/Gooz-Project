@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Plus, XCircle } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { formatAmount, formatDate as formatDateTime } from "@/lib/format";
 
 type Expense = {
   id: number;
@@ -24,11 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", { dateStyle: "medium" });
-}
-
-function formatAmount(value: string, currency: string): string {
-  return `${Number(value).toLocaleString("fr-FR")} ${currency}`;
+  return formatDateTime(iso, { dateStyle: "medium" });
 }
 
 export default function ExpensesPage() {

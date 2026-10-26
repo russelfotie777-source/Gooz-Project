@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, XCircle } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type Expense = {
   id: number;
@@ -27,7 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", { dateStyle: "long" });
+  return formatDateTime(iso, { dateStyle: "long" });
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

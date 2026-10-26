@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type Period = {
   id: number;
@@ -22,8 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function formatDate(value: string | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("fr-FR", { dateStyle: "medium" });
+  return formatDateTime(value, { dateStyle: "medium" });
 }
 
 export default function PeriodesComptablesPage() {

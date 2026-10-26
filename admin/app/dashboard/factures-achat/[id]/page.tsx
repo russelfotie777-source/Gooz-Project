@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, XCircle } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type Line = {
   id: number;
@@ -43,8 +44,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function formatDate(value: string | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("fr-FR", { dateStyle: "long" });
+  return formatDateTime(value, { dateStyle: "long" });
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 
 type WarehouseOption = { id: number; name: string };
 
@@ -25,9 +26,6 @@ const STATUS_LABELS: Record<string, string> = {
   appliqué: "Appliqué",
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-}
 
 export default function AjustementStockPage() {
   const router = useRouter();

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Eye, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type StaffRole = "admin" | "super_admin" | "manager" | "staff" | "stagiaire" | "comptable" | "delivery";
 
@@ -40,7 +41,7 @@ const ROLE_STYLES: Record<StaffRole, string> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", { dateStyle: "medium" });
+  return formatDateTime(iso, { dateStyle: "medium" });
 }
 
 export default function UtilisateursPage() {

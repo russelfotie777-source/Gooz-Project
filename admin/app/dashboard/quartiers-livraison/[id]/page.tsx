@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Pencil } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type Neighborhood = {
   id: number;
@@ -35,7 +36,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "short" });
 }
 
 export default function NeighborhoodDetailPage() {

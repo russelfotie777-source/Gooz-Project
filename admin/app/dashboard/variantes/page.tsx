@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
 import { Toast } from "@/components/toast";
+import { formatXAF } from "@/lib/format";
 
 type Variant = {
   id: number;
@@ -26,10 +27,6 @@ type Variant = {
   is_active: boolean;
   images_count: number;
 };
-
-function formatXAF(value: number): string {
-  return `${Number(value).toLocaleString("fr-FR")} XAF`;
-}
 
 export default function VariantesPage() {
   const router = useRouter();

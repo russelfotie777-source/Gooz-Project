@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatAmount as formatAmountWithCurrency, formatDate as formatDateTime } from "@/lib/format";
 
 type CashSession = {
   id: number;
@@ -28,13 +29,12 @@ const inputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:border-brand-orange/60";
 
 function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "short" });
 }
 
 function formatAmount(value: string | null): string {
   if (value === null) return "—";
-  return `${Number(value).toLocaleString("fr-FR")} FCFA`;
+  return formatAmountWithCurrency(value, "FCFA");
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

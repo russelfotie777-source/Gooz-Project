@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, ImageOff, Pencil, Star } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { formatXAF } from "@/lib/format";
 
 type VariantImage = { id: number; image_url: string; is_primary: boolean };
 
@@ -25,10 +26,6 @@ type Variant = {
   is_active: boolean;
   images: VariantImage[];
 };
-
-function formatXAF(value: number): string {
-  return `${Number(value).toLocaleString("fr-FR")} XAF`;
-}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

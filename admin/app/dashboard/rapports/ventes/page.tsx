@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronRight as Crumb, Download, FileSpreadsheet } from "lucide-react";
 import { apiFetch, Paginated } from "@/lib/api";
+import { formatXAF } from "@/lib/format";
 import { exportSalesReportToExcel, exportSalesReportToPdf, SalesReportRow } from "@/lib/reportExport";
 
 const STATUSES = ["en_attente", "confirmée", "en_préparation", "expédiée", "livrée", "annulée"];
@@ -15,10 +16,6 @@ const STATUS_STYLES: Record<string, string> = {
   livrée: "bg-emerald-500/10 text-emerald-400",
   annulée: "bg-red-500/10 text-red-400",
 };
-
-function formatXAF(value: number): string {
-  return `${Number(value).toLocaleString("fr-FR")} FCFA`;
-}
 
 function toDateInput(date: Date): string {
   return date.toISOString().slice(0, 10);

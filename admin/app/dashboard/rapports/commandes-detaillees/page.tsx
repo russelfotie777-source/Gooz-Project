@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronRight as Crumb, Download, FileSpreadsheet } from "lucide-react";
 import { apiFetch, Paginated } from "@/lib/api";
+import { formatXAF } from "@/lib/format";
 import {
   exportCustomersDetailedToExcel,
   exportCustomersDetailedToPdf,
@@ -11,10 +12,6 @@ import {
 
 const PAYMENT_STATUSES = ["en_attente", "payé", "échoué", "remboursé"];
 const PAYMENT_METHODS = ["carte", "mobile_money", "paypal", "espèces"];
-
-function formatXAF(value: number): string {
-  return `${Number(value).toLocaleString("fr-FR")} FCFA`;
-}
 
 function toDateInput(date: Date): string {
   return date.toISOString().slice(0, 10);

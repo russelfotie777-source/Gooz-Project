@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { formatAmount as formatAmountWithCurrency, formatDate } from "@/lib/format";
 
 type CashSession = {
   id: number;
@@ -20,12 +21,8 @@ const STATUS_LABELS: Record<string, string> = {
   fermée: "Fermée",
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-}
-
 function formatAmount(value: string): string {
-  return `${Number(value).toLocaleString("fr-FR")} FCFA`;
+  return formatAmountWithCurrency(value, "FCFA");
 }
 
 export default function SessionsCaissePage() {

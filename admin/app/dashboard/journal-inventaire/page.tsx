@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
 import { apiFetch, Paginated } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 
 type LedgerEntry = {
   id: number;
@@ -26,10 +27,6 @@ const MOVEMENT_COLORS: Record<string, string> = {
   adjustment: "bg-amber-500/10 text-amber-400",
   order: "bg-blue-500/10 text-blue-400",
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-}
 
 export default function JournalInventairePage() {
   const [entries, setEntries] = useState<LedgerEntry[] | null>(null);

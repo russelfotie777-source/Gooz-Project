@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Trash2 } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type StaffRole = "customer" | "admin" | "super_admin" | "manager" | "staff" | "stagiaire" | "comptable" | "delivery";
 
@@ -46,7 +47,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "short" });
 }
 
 export default function UtilisateurDetailPage() {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Lock, Unlock } from "lucide-react";
 import { apiFetch, Paginated } from "@/lib/api";
+import { formatAmount } from "@/lib/format";
 
 type MoneyMovement = {
   id: number;
@@ -22,14 +23,6 @@ const CHANNEL_LABELS: Record<string, string> = {
   pos: "Point de vente",
   manual: "Manuel",
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-}
-
-function formatAmount(value: string, currency: string): string {
-  return `${Number(value).toLocaleString("fr-FR")} ${currency}`;
-}
 
 export default function MouvementsArgentPage() {
   const [movements, setMovements] = useState<MoneyMovement[] | null>(null);

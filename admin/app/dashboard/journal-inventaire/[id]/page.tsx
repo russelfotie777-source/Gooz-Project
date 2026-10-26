@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type MetaRow = { key: string; value: string };
 
@@ -33,7 +34,7 @@ const MOVEMENT_LABELS: Record<string, string> = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "short" });
 }
 
 function Section({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {

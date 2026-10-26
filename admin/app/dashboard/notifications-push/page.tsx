@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Plus } from "lucide-react";
 import { apiFetch, type Paginated } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 
 type AdminNotification = {
   id: number;
@@ -16,10 +17,6 @@ type AdminNotification = {
   is_read: boolean;
   created_at: string;
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-}
 
 export default function NotificationsPushPage() {
   const router = useRouter();

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { formatXAF } from "@/lib/format";
 
 type Order = {
   id: number;
@@ -33,10 +34,6 @@ const PAYMENT_STYLES: Record<string, string> = {
   échoué: "bg-red-500/10 text-red-400",
   remboursé: "bg-white/5 text-white/50",
 };
-
-function formatXAF(value: number): string {
-  return `${Number(value).toLocaleString("fr-FR")} XAF`;
-}
 
 export default function CommandesPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);

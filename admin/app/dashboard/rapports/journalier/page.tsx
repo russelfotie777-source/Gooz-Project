@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronRight as Crumb, Download, FileSpreadsheet } from "lucide-react";
 import { apiFetch, Paginated } from "@/lib/api";
+import { formatXAF } from "@/lib/format";
 import { exportDailyReportToExcel, exportDailyReportToPdf, DailyReportRow } from "@/lib/reportExport";
 
 type GroupBy = "day" | "week" | "month";
@@ -12,10 +13,6 @@ const GROUP_LABELS: Record<GroupBy, string> = {
   week: "Hebdomadaire",
   month: "Mensuel",
 };
-
-function formatXAF(value: number): string {
-  return `${Number(value).toLocaleString("fr-FR")} FCFA`;
-}
 
 function toDateInput(date: Date): string {
   return date.toISOString().slice(0, 10);

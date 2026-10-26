@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type AddressDetail = {
   id: number;
@@ -25,7 +26,7 @@ type AddressDetail = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "medium" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "medium" });
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

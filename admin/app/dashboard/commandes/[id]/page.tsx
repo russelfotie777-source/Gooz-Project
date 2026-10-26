@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Truck } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatDate as formatDateTime, formatXAF } from "@/lib/format";
 
 type OrderItem = {
   id: number;
@@ -84,12 +85,8 @@ const DELIVERY_STATUS_STYLES: Record<string, string> = {
   échec: "bg-red-500/10 text-red-400",
 };
 
-function formatXAF(value: number): string {
-  return `${Number(value).toLocaleString("fr-FR")} XAF`;
-}
-
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "short" });
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

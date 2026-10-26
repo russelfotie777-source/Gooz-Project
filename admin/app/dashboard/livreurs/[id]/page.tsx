@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, UserMinus } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type StatusHistory = {
   id: number;
@@ -62,7 +63,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "short" });
 }
 
 export default function LivreurDetailPage() {

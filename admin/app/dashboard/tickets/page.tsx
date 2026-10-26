@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Plus, Search, X } from "lucide-react";
 import { apiFetch, Paginated } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import { CreateTicketModal } from "@/components/create-ticket-modal";
 
 type Ticket = {
@@ -49,10 +50,6 @@ const STATUS_STYLES: Record<Ticket["status"], string> = {
   résolu: "bg-emerald-500/10 text-emerald-400",
   fermé: "bg-white/10 text-white/50",
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
-}
 
 function ClientPickerModal({ onClose, onPick }: { onClose: () => void; onPick: (client: ClientOption) => void }) {
   const [q, setQ] = useState("");

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, ImageOff, Pencil } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { formatDate as formatDateTime } from "@/lib/format";
 
 type Brand = {
   id: number;
@@ -19,7 +20,7 @@ type Brand = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "medium" });
+  return formatDateTime(iso, { dateStyle: "long", timeStyle: "medium" });
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
