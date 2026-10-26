@@ -67,25 +67,28 @@ export default async function Page({ params }: { params: Promise<{ lang: string;
 
   // The main product above already has to succeed (404s otherwise) — a
   // failure on any of these secondary calls isn't worth taking down a page
-  // that otherwise loaded fine; each just shows its section as empty.
-  const relatedProducts = await getRelatedProducts(product.id).catch(() => []);
-  const alsoViewedProducts = await getAlsoViewedProducts(product.id).catch(() => []);
+  // that otherwise loaded fine; each just shows its section as empty. Run
+  // them in parallel rather than one after another — they're independent
+  // network calls, so awaiting each in turn only adds up their latencies
+  // for no benefit.
+  const [relatedProducts, alsoViewedProducts, brandProductsRaw, adBanners, reviews] = await Promise.all([
+    getRelatedProducts(product.id).catch(() => []),
+    getAlsoViewedProducts(product.id).catch(() => []),
+    product.brand
+      ? getProducts({ brand_id: product.brand.id, per_page: 12 }).catch(() => [])
+      : Promise.resolve([]),
+    getBanners("product").catch(() => []),
+    getProductReviews(product.id).catch(() => []),
+  ]);
+
   // Same brand, minus the product itself and whatever already showed up in
   // the two sections above — no point suggesting the same item three times.
-  const brandProducts = product.brand
-    ? await getProducts({ brand_id: product.brand.id, per_page: 12 })
-        .then((products) => {
-          const shown = new Set([
-            product.id,
-            ...relatedProducts.map((p) => p.id),
-            ...alsoViewedProducts.map((p) => p.id),
-          ]);
-          return products.filter((p) => !shown.has(p.id)).slice(0, 8);
-        })
-        .catch(() => [])
-    : [];
-  const adBanners = await getBanners("product").catch(() => []);
-  const reviews = await getProductReviews(product.id).catch(() => []);
+  const shownProductIds = new Set([
+    product.id,
+    ...relatedProducts.map((p) => p.id),
+    ...alsoViewedProducts.map((p) => p.id),
+  ]);
+  const brandProducts = brandProductsRaw.filter((p) => !shownProductIds.has(p.id)).slice(0, 8);
 
   const absoluteUrl = `${SITE_URL}${localizedPath(resolvedLang, productPath(product).replace(/^\//, ""))}`;
   const primaryImage = product.images.find((img) => img.is_primary) ?? product.images[0];
