@@ -32,7 +32,6 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   const router = useLocaleRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [scrolled, setScrolled] = useState(false);
 
   const search = useHeaderSearch();
   const { user, cartCount, displayName, handleLogout } = useHeaderSession(cartCountProp);
@@ -45,18 +44,6 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (variant !== "detail") return;
-
-    function handleScroll() {
-      setScrolled(window.scrollY > 40);
-    }
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [variant]);
 
   return (
     <header className={styles.header}>
@@ -149,7 +136,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
              to the title, opening /recherche) was removed — it served no
              purpose here (search is already reachable from the main
              header). */
-          <div className={`${styles.mobileDetailSticky} ${scrolled ? styles.mobileDetailStickyScrolled : ""}`}>
+          <div className={styles.mobileDetailSticky}>
             <div className={styles.mobileDetailRow}>
               <button
                 type="button"

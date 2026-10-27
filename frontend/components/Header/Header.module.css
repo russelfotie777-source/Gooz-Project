@@ -625,11 +625,10 @@
   left: 0;
   right: 0;
   z-index: 20;
-  background: transparent;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
-}
-
-.mobileDetailStickyScrolled {
+  /* Opaque from the first paint, not just once scrolled past a threshold —
+     this bar sits directly over the product gallery's top edge, and
+     starting it transparent left the title unreadable against whatever
+     photo happened to be underneath until the shopper scrolled. */
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
