@@ -26,6 +26,11 @@
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
+        <!-- Always the local public disk in tests, whatever MEDIA_DISK is
+             set to for real dev/prod use — Storage::fake('public') across
+             the test suite assumes that, and a test run shouldn't ever
+             touch a real S3/R2 bucket. -->
+        <env name="MEDIA_DISK" value="public"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

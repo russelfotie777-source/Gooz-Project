@@ -9,6 +9,15 @@ const apiOrigin = new URL(
 
 const isDev = process.env.NODE_ENV !== "production";
 
+// Once the backend's MEDIA_DISK is "s3" (see backend/.env.example), image_
+// url/image/logo point at the bucket's own public URL (R2, S3, or any
+// other S3-compatible host) instead of the backend's own /storage/** path
+// — a completely different host next/image also needs to be told is safe
+// to fetch from. Unset in dev by default (local disk doesn't need it);
+// set NEXT_PUBLIC_MEDIA_URL to the same value as the backend's AWS_URL
+// once that's live.
+const mediaUrl = process.env.NEXT_PUBLIC_MEDIA_URL ? new URL(process.env.NEXT_PUBLIC_MEDIA_URL) : null;
+
 // The Laravel backend bakes ITS OWN APP_URL into the absolute image_url/
 // image/logo URLs it returns — in local dev that's always some loopback
 // address (127.0.0.1:8001, or "localhost" with no port depending on
@@ -32,6 +41,18 @@ if (isDev) {
     { protocol: "http", hostname: "127.0.0.1", port: "8001", pathname: "/storage/**" },
     { protocol: "http", hostname: "localhost", pathname: "/storage/**" }
   );
+}
+
+if (mediaUrl) {
+  remotePatterns.push({
+    protocol: mediaUrl.protocol.replace(":", "") as "http" | "https",
+    hostname: mediaUrl.hostname,
+    port: mediaUrl.port,
+    // Not /storage/** like the backend-served pattern above — the bucket
+    // is flat (products/**, banners/**, categories/**, brands/**, ...) at
+    // its root, there's no /storage prefix once files live there instead.
+    pathname: "/**",
+  });
 }
 
 const nextConfig: NextConfig = {
