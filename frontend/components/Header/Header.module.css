@@ -628,8 +628,10 @@
   /* Opaque from the first paint, not just once scrolled past a threshold —
      this bar sits directly over the product gallery's top edge, and
      starting it transparent left the title unreadable against whatever
-     photo happened to be underneath until the shopper scrolled. */
-  background: rgba(255, 255, 255, 0.55);
+     photo happened to be underneath until the shopper scrolled. 0.55 still
+     let that photo show through enough to be distracting — high enough now
+     that nothing behind it is visible, blur is just a finishing touch. */
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, var(--shadow-card);

@@ -25,7 +25,7 @@ const fr = {
     searchLoading: "Recherche en cours...",
     searchNoResults: "Aucun produit trouvé.",
     searchSeeAll: (query: string) => `Voir tous les résultats pour "${query}"`,
-    catalogueTitle: "Shopitech Catalogue.",
+    catalogueTitle: "Catalogue Shopitech",
     cartTitle: "Mon Panier.",
     myAccount: "Mon compte",
     login: "Connexion",
