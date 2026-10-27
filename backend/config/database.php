@@ -168,6 +168,14 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
+            // Predis defaults read_write_timeout to -1 (block forever) when
+            // unset — confirmed live: a stalled read on a healthy-but-slow
+            // connection hung for the full 30s PHP execution limit and
+            // fataled, instead of failing fast and letting max_retries/
+            // backoff below actually do their job. These turn that into a
+            // sub-second retry instead.
+            'timeout' => env('REDIS_TIMEOUT', 2.0),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 3.0),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
@@ -181,6 +189,8 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
+            'timeout' => env('REDIS_TIMEOUT', 2.0),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 3.0),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
