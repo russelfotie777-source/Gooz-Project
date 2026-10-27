@@ -1,16 +1,17 @@
-/* The desktop bar stays a clean white card; mobile echoes the night-sky
-   header below it, with the orange edge acting as a deliberate bridge. */
+/* Same night-sky look on both — desktop used to be a plain white card;
+   normalized onto mobile's dark gradient instead (the orange edge still
+   acts as the bridge into the header below). */
 .bar,
 .barMobile {
   position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #1a1a1a;
+  color: #ffffff;
   overflow: hidden;
-  background: #ffffff;
+  background: linear-gradient(110deg, #090b14 0%, #101326 54%, #171934 100%);
   border-bottom: 2px solid var(--color-accent-strong);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
   /* Plays once, at mount — this component is never remounted for a plain
      slide rotation (only the inner .slideContent/.progressFillActive nodes
      get keyed/remounted for that), so there's no risk of this looping. */
@@ -30,10 +31,6 @@
   gap: 4px;
   padding: 0 8px;
   border-radius: 0;
-  color: #ffffff;
-  background: linear-gradient(110deg, #090b14 0%, #101326 54%, #171934 100%);
-  border-bottom: 2px solid var(--color-accent-strong);
-  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes announcementBarEnter {
@@ -130,7 +127,7 @@
   height: 24px;
   border: none;
   background: transparent;
-  color: #1a1a1a;
+  color: #ffffff;
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -147,7 +144,7 @@
   opacity: 1;
 }
 
-.barMobile .dismissButton:focus-visible {
+.dismissButton:focus-visible {
   outline: 2px solid var(--color-accent-strong);
   outline-offset: 1px;
 }
@@ -257,12 +254,11 @@
   height: 32px;
   padding: 4px;
   border-radius: 9px;
-  /* A plain white chip (the pre-white-bar version) would disappear
-     against the bar's own now-white background — a light neutral fill +
-     border is what keeps it reading as its own card. Fixed, not
-     var(--color-surface): the bar itself stays white regardless of the
-     site's light/dark theme (see .bar/.barMobile), so this shouldn't
-     flip to a dark chip in dark mode either. */
+  /* A light neutral chip reads as its own little card against the bar's
+     dark gradient (see .bar/.barMobile) — already proven on mobile, now
+     shared by desktop too. Fixed, not var(--color-surface): the bar
+     itself doesn't follow the site's light/dark theme either, so this
+     shouldn't flip to a dark chip in dark mode. */
   background: #f3f4f6;
   border: 1px solid rgba(0, 0, 0, 0.08);
   overflow: hidden;
@@ -401,14 +397,8 @@
 .barMobile .dismissButton {
   width: 32px;
   height: 32px;
-  color: #ffffff;
   opacity: 0.78;
   font-size: 20px;
-}
-
-.barMobile .dismissButton:hover,
-.barMobile .dismissButton:focus-visible {
-  background: rgba(255, 255, 255, 0.12);
 }
 
 .srOnly {
@@ -517,7 +507,7 @@ a.message:hover .linkArrow {
   height: 3px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .progressFillIdle {
@@ -562,7 +552,7 @@ a.message:hover .linkArrow {
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #1a1a1a;
+  color: #ffffff;
   opacity: 0.6;
   font-size: 18px;
   line-height: 1;
@@ -573,7 +563,7 @@ a.message:hover .linkArrow {
 .dismissButton:hover,
 .dismissButton:focus-visible {
   opacity: 1;
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   transform: rotate(90deg);
 }
 
