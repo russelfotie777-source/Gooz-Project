@@ -81,8 +81,15 @@ body {
      box (e.g. ProductAdBanner's .halo, deliberately wider than its
      wrapper for an ambient glow) turning into real, page-wide horizontal
      scroll — those should stay purely visual, clipped at the viewport's
-     own edge, never something a shopper can actually scroll into. */
-  overflow-x: hidden;
+     own edge, never something a shopper can actually scroll into.
+     `clip`, not `hidden`: per the CSS Overflow spec, setting overflow-x
+     to anything but `visible` while overflow-y is left unset forces the
+     computed overflow-y to `auto` too — silently turning <body> into its
+     own scroll container, which broke every `position: sticky` element
+     on the page (Header's sticky nav among them) the moment you scrolled
+     far enough to notice. `clip` doesn't carry that visible/auto
+     coupling, so it clips the same way without that side effect. */
+  overflow-x: clip;
 }
 
 body {
