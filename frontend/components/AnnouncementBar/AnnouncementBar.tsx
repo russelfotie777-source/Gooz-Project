@@ -133,7 +133,9 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
   const barClassName = variant === "desktop" ? styles.bar : styles.barMobile;
   const isBrandSlide = announcement.id === BRAND_SLIDE_ID;
   const promoMatch = announcement.text.match(PROMO_PATTERN);
-  const showNav = count > 1;
+  // Desktop only — on mobile these ate into an already tight bar (plus the
+  // "1/2" counter below), and the bar already auto-advances on its own.
+  const showNav = count > 1 && variant === "desktop";
 
   const slideBody = isBrandSlide ? (
     <span
@@ -202,7 +204,7 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
       {showNav && (
         <button
           type="button"
-          className={`${styles.navButton} ${variant === "mobile" ? styles.navButtonMobile : ""}`}
+          className={styles.navButton}
           onClick={() => advance(-1)}
           aria-label={dict.common.previous}
         >
@@ -221,7 +223,7 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
       {showNav && (
         <button
           type="button"
-          className={`${styles.navButton} ${variant === "mobile" ? styles.navButtonMobile : ""}`}
+          className={styles.navButton}
           onClick={() => advance(1)}
           aria-label={dict.common.next}
         >
@@ -248,12 +250,6 @@ export default function AnnouncementBar({ announcements, dismissed, variant, onD
             </span>
           ))}
         </div>
-      )}
-
-      {count > 1 && variant === "mobile" && (
-        <span className={styles.mobileSlideCount} aria-hidden="true">
-          {index + 1}/{count}
-        </span>
       )}
 
       <button type="button" className={styles.dismissButton} onClick={onDismiss} aria-label={dict.common.close}>

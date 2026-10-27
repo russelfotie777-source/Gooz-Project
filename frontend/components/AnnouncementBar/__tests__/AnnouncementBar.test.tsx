@@ -87,24 +87,27 @@ describe("AnnouncementBar", () => {
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
   });
 
-  test("desktop and mobile with multiple slides both expose manual previous/next controls", () => {
+  test("desktop with multiple slides exposes manual previous/next controls", () => {
     const announcements = [makeAnnouncement()];
-    const { unmount } = renderBar({ announcements, variant: "desktop" });
+    renderBar({ announcements, variant: "desktop" });
     expect(screen.getByRole("button", { name: "Suivant" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Précédent" })).toBeInTheDocument();
-    unmount();
-
-    renderBar({ announcements, variant: "mobile" });
-    expect(screen.getByRole("button", { name: "Suivant" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Précédent" })).toBeInTheDocument();
-    expect(screen.getByText("1/2")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Suivant" }));
     act(() => {
       vi.advanceTimersByTime(500);
     });
     expect(screen.getByText("Livraison gratuite ce week-end")).toBeInTheDocument();
-    expect(screen.getByText("2/2")).toBeInTheDocument();
+  });
+
+  // Nav arrows + the "1/2" counter ate into the bar's already tight space on
+  // mobile — removed there on purpose, it still auto-rotates on its own.
+  test("mobile with multiple slides has no manual controls or slide counter", () => {
+    const announcements = [makeAnnouncement()];
+    renderBar({ announcements, variant: "mobile" });
+    expect(screen.queryByRole("button", { name: "Suivant" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Précédent" })).not.toBeInTheDocument();
+    expect(screen.queryByText("1/2")).not.toBeInTheDocument();
   });
 
   test("auto-rotates from the brand slide into an admin announcement over time", () => {
