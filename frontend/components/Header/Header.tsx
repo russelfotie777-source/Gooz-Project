@@ -1,27 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import { getAnnouncements, getCart, getCategories, logout as apiLogout } from "@/lib/api";
-import { clearSession, getSession } from "@/lib/auth";
-import { notifyCartUpdated, onCartUpdated } from "@/lib/cartEvents";
-import type { Locale } from "@/lib/i18n/config";
-import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
+import { useEffect, useState } from "react";
+import { getCategories } from "@/lib/api";
+import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
-import { splitName } from "@/lib/name";
-import { onSessionExpired } from "@/lib/sessionEvents";
-import { showToast } from "@/lib/toast";
-import type { Announcement, Category, User } from "@/lib/types";
+import type { Category } from "@/lib/types";
 import AnnouncementBar from "@/components/AnnouncementBar/AnnouncementBar";
 import SearchSuggestions from "@/components/SearchSuggestions/SearchSuggestions";
+import AccountMenu from "./AccountMenu";
+import LanguageSwitcher from "./LanguageSwitcher";
 import StarrySky from "./StarrySky";
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
+import { useAnnouncements } from "./useAnnouncements";
+import { useHeaderSearch } from "./useHeaderSearch";
+import { useHeaderSession } from "./useHeaderSession";
 import styles from "./Header.module.css";
-
-// Dismissing the announcement bar hides it for the rest of the browser
-// session (not forever) — sessionStorage, not localStorage.
-const ANNOUNCEMENT_DISMISSED_KEY = "shopitech-announcement-dismissed";
 
 interface HeaderProps {
   cartCount?: number;
@@ -33,69 +27,16 @@ interface HeaderProps {
   variant?: "default" | "detail" | "cart";
 }
 
-const LANGUAGES = [
-  { code: "fr" as Locale, label: "FR", Flag: FranceFlag },
-  { code: "en" as Locale, label: "ENG", Flag: UkFlag },
-];
-
 export default function Header({ cartCount: cartCountProp = 0, variant = "default" }: HeaderProps) {
   const dict = useDictionary();
-  const lang = useLang();
-  const pathname = usePathname();
   const router = useLocaleRouter();
 
-  const [query, setQuery] = useState("");
-  const [searchExampleIndex, setSearchExampleIndex] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
-  const mobileSearchRef = useRef<HTMLInputElement>(null);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const searchWrapperRef = useRef<HTMLDivElement>(null);
-  const mobileSearchWrapperRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
-  const langWrapperRef = useRef<HTMLDivElement>(null);
-  const activeLanguage = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
-  const searchExamples = dict.header.searchExamples;
 
-  useEffect(() => {
-    if (searchFocused || query || searchExamples.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const interval = window.setInterval(() => {
-      setSearchExampleIndex((current) => (current + 1) % searchExamples.length);
-    }, 2400);
-
-    return () => window.clearInterval(interval);
-  }, [query, searchExamples.length, searchFocused]);
-
-  // Pages render this with a prop seeded from mock/server data (see e.g.
-  // CartPage's comments). Once a real session exists, the actual cart count
-  // is fetched here and kept in sync via the cartEvents pub/sub — cart
-  // mutations happen in components (ProductDetail, CartItems) that have no
-  // other relationship to Header, so a global event is simpler than
-  // threading a cart store through every page that renders Header.
-  const [cartCount, setCartCount] = useState(cartCountProp);
-  const [user, setUser] = useState<User | null>(null);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [announcementsDismissed, setAnnouncementsDismissed] = useState(false);
-
-  useEffect(() => {
-    const session = getSession();
-    if (!session) return;
-
-    setUser(session.user);
-
-    getCart(session.token)
-      .then((cart) => setCartCount(cart.items.length))
-      .catch(() => {});
-
-    return onCartUpdated(setCartCount);
-  }, []);
-
-  useEffect(() => {
-    getAnnouncements().then(setAnnouncements).catch(() => {});
-    setAnnouncementsDismissed(sessionStorage.getItem(ANNOUNCEMENT_DISMISSED_KEY) === "1");
-  }, []);
+  const search = useHeaderSearch();
+  const { user, cartCount, displayName, handleLogout } = useHeaderSession(cartCountProp);
+  const { announcements, announcementsDismissed, dismissAnnouncements } = useAnnouncements();
 
   // Was a fixed list of invented labels (Promotion/Best Seller/...) that
   // never linked anywhere and didn't match the shop's real categories (no
@@ -104,92 +45,6 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
   }, []);
-
-  function dismissAnnouncements() {
-    setAnnouncementsDismissed(true);
-    sessionStorage.setItem(ANNOUNCEMENT_DISMISSED_KEY, "1");
-  }
-
-  // authedFetch (lib/api.ts) already clears the stored session on any 401 —
-  // this just makes sure Header's own copy of that state (derived once on
-  // mount, above) doesn't keep showing the account name/dropdown as if
-  // nothing happened.
-  useEffect(() => {
-    return onSessionExpired(() => {
-      setUser(null);
-      setCartCount(0);
-    });
-  }, []);
-
-  function handleLogout() {
-    const session = getSession();
-    if (session) apiLogout(session.token);
-    clearSession();
-    setUser(null);
-    setCartCount(0);
-    notifyCartUpdated(0);
-    showToast(dict.session.loggedOut, "success");
-  }
-
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = query.trim();
-    if (!trimmed) return;
-    setSearchFocused(false);
-    router.push(`/recherche?q=${encodeURIComponent(trimmed)}`);
-  }
-
-  const userNameParts = user ? splitName(user.name) : null;
-  const displayName = userNameParts
-    ? userNameParts.prenom || userNameParts.nom || dict.header.myAccount
-    : dict.header.myAccount;
-
-  // Swaps only the leading /fr or /en segment of the current URL and
-  // remembers the choice in a cookie so the proxy (proxy.ts) redirects here
-  // next time too, instead of falling back to the browser's Accept-Language.
-  //
-  // A real full-page navigation (not the router's client-side push) on
-  // purpose: [lang] is the ROOT layout's own dynamic segment (it renders
-  // <html>/<body> and the anti-flash theme script — see app/[lang]/
-  // layout.tsx), so a soft navigation has to re-render that root layout in
-  // place rather than loading a fresh document. The theme-init script is a
-  // beforeInteractive one-shot — it only ever runs on a genuine page load —
-  // so on a soft nav it never reapplies [data-theme], and the page was
-  // silently falling back to the light theme on every language switch.
-  function switchLanguage(newLang: Locale) {
-    setLangOpen(false);
-    if (newLang === lang) return;
-    document.cookie = `shopitech-locale=${newLang}; path=/; max-age=31536000`;
-    const rest = pathname.startsWith(`/${lang}`) ? pathname.slice(`/${lang}`.length) : pathname;
-    window.location.href = `/${newLang}${rest || ""}`;
-  }
-
-  useEffect(() => {
-    if (!langOpen) return;
-
-    function handleClickOutside(e: MouseEvent) {
-      if (langWrapperRef.current && !langWrapperRef.current.contains(e.target as Node)) {
-        setLangOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [langOpen]);
-
-  useEffect(() => {
-    if (!searchFocused) return;
-
-    function handleClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      if (searchWrapperRef.current?.contains(target)) return;
-      if (mobileSearchWrapperRef.current?.contains(target)) return;
-      setSearchFocused(false);
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [searchFocused]);
 
   useEffect(() => {
     if (variant !== "detail") return;
@@ -219,12 +74,6 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
         <div className={styles.desktopSticky}>
           <div className={styles.mainRow}>
-            {/* Not needed for now — see the mobile menu button below too.
-            <button type="button" className={styles.menuButton} aria-label={dict.header.menu}>
-              <img src="/icon/header/hamburger.svg" alt="" className={styles.menuIcon} />
-            </button>
-            */}
-
             <LocaleLink href="/" aria-label={dict.header.catalogueTitle}>
               <img
                 src="/logo-shopitech-primaire/logoFichier 16version F.png"
@@ -233,113 +82,38 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               />
             </LocaleLink>
 
-            <div className={styles.searchWrapper} ref={searchWrapperRef}>
-              <form className={styles.searchForm} role="search" onSubmit={handleSearchSubmit}>
-                {!searchFocused && !query && (
+            <div className={styles.searchWrapper} ref={search.searchWrapperRef}>
+              <form className={styles.searchForm} role="search" onSubmit={search.handleSearchSubmit}>
+                {!search.searchFocused && !search.query && (
                   <SearchPrompt
                     phrase={dict.header.searchPlaceholder}
-                    example={searchExamples[searchExampleIndex]}
+                    example={search.searchExamples[search.searchExampleIndex]}
                     className={styles.desktopSearchPrompt}
                   />
                 )}
                 <input
                   type="search"
                   aria-label={dict.header.searchPlaceholder}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
+                  value={search.query}
+                  onChange={(e) => search.setQuery(e.target.value)}
+                  onFocus={() => search.setSearchFocused(true)}
                   className={styles.searchInput}
                 />
                 <button type="submit" className={styles.searchButton}>
                   {dict.header.searchButton}
                 </button>
               </form>
-              {searchFocused && <SearchSuggestions query={query} onSelect={() => setSearchFocused(false)} />}
+              {search.searchFocused && (
+                <SearchSuggestions query={search.query} onSelect={() => search.setSearchFocused(false)} />
+              )}
             </div>
 
             <div className={styles.actions}>
               <ThemeToggle className={styles.themeToggleDesktop} />
 
-              <div className={styles.langWrapper} ref={langWrapperRef}>
-                <button
-                  type="button"
-                  className={styles.langButton}
-                  onClick={() => setLangOpen((v) => !v)}
-                  aria-haspopup="listbox"
-                  aria-expanded={langOpen}
-                >
-                  <activeLanguage.Flag className={styles.langFlag} />
-                  <span>{activeLanguage.label}</span>
-                  <img
-                    src="/icon/product-detail/chevron-down.svg"
-                    alt=""
-                    className={`${styles.dropdownChevron} ${styles.chevronLight} ${langOpen ? styles.chevronOpen : ""}`}
-                  />
-                </button>
+              <LanguageSwitcher />
 
-                {langOpen && (
-                  <ul className={styles.langDropdown} role="listbox">
-                    {LANGUAGES.map((l) => (
-                      <li key={l.code}>
-                        <button
-                          type="button"
-                          className={styles.langOption}
-                          onClick={() => switchLanguage(l.code)}
-                        >
-                          <l.Flag className={styles.langFlag} />
-                          {l.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div className={styles.accountWrapper}>
-                <LocaleLink href="/compte" className={styles.accountButton} aria-haspopup="menu">
-                  <span className={styles.accountAvatar}>
-                    <img src="/icon/header/user.svg" alt="" className={styles.accountAvatarIcon} />
-                  </span>
-                  <span>{displayName}</span>
-                  <img
-                    src="/icon/product-detail/chevron-down.svg"
-                    alt=""
-                    className={`${styles.dropdownChevron} ${styles.chevronLight}`}
-                  />
-                </LocaleLink>
-
-                <ul className={styles.accountDropdown} role="menu">
-                  {user ? (
-                    <li>
-                      <button type="button" className={styles.accountMenuItem} onClick={handleLogout}>
-                        <LogoutIcon className={`${styles.accountMenuIcon} ${styles.accountMenuIconDanger}`} />
-                        {dict.header.logout}
-                      </button>
-                    </li>
-                  ) : (
-                    <>
-                      <li>
-                        <LocaleLink href="/connexion" className={styles.accountMenuItem}>
-                          <LoginIcon className={styles.accountMenuIcon} />
-                          {dict.header.login}
-                        </LocaleLink>
-                      </li>
-                      <li>
-                        <LocaleLink href="/inscription" className={styles.accountMenuItem}>
-                          <SignupIcon className={styles.accountMenuIcon} />
-                          {dict.header.signup}
-                        </LocaleLink>
-                      </li>
-                    </>
-                  )}
-                  <li>
-                    <LocaleLink href="/aide" className={styles.accountMenuItem}>
-                      <HelpIcon className={styles.accountMenuIcon} />
-                      {dict.header.helpCenter}
-                    </LocaleLink>
-                  </li>
-                </ul>
-              </div>
+              <AccountMenu user={user} displayName={displayName} onLogout={handleLogout} />
 
               <LocaleLink href="/cart" className={styles.cartButton} aria-label={dict.header.cart}>
                 <span className={styles.cartIconWrapper}>
@@ -444,27 +218,29 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 <ThemeToggle className={styles.themeToggleMobile} />
               </div>
 
-              <div className={styles.mobileSearchWrapper} ref={mobileSearchWrapperRef}>
-                <form className={styles.mobileSearchForm} role="search" onSubmit={handleSearchSubmit}>
+              <div className={styles.mobileSearchWrapper} ref={search.mobileSearchWrapperRef}>
+                <form className={styles.mobileSearchForm} role="search" onSubmit={search.handleSearchSubmit}>
                   <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchFormIcon} />
-                  {!searchFocused && !query && (
+                  {!search.searchFocused && !search.query && (
                     <SearchPrompt
                       phrase={dict.header.searchPlaceholder}
-                      example={searchExamples[searchExampleIndex]}
+                      example={search.searchExamples[search.searchExampleIndex]}
                       className={styles.mobileSearchPrompt}
                     />
                   )}
                   <input
-                    ref={mobileSearchRef}
+                    ref={search.mobileSearchRef}
                     type="search"
                     aria-label={dict.header.searchPlaceholder}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onFocus={() => setSearchFocused(true)}
+                    value={search.query}
+                    onChange={(e) => search.setQuery(e.target.value)}
+                    onFocus={() => search.setSearchFocused(true)}
                     className={styles.mobileSearchInput}
                   />
                 </form>
-                {searchFocused && <SearchSuggestions query={query} onSelect={() => setSearchFocused(false)} />}
+                {search.searchFocused && (
+                  <SearchSuggestions query={search.query} onSelect={() => search.setSearchFocused(false)} />
+                )}
               </div>
             </div>
           </>
@@ -493,95 +269,5 @@ function SearchPrompt({
       </span>
       <span>”</span>
     </span>
-  );
-}
-
-function FranceFlag({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20">
-      <clipPath id="flag-circle-fr">
-        <circle cx="10" cy="10" r="10" />
-      </clipPath>
-      <g clipPath="url(#flag-circle-fr)">
-        <rect width="20" height="20" fill="#ED2939" />
-        <rect width="13.3" height="20" fill="#FFFFFF" />
-        <rect width="6.7" height="20" fill="#002395" />
-      </g>
-    </svg>
-  );
-}
-
-function UkFlag({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20">
-      <clipPath id="flag-circle-uk">
-        <circle cx="10" cy="10" r="10" />
-      </clipPath>
-      <g clipPath="url(#flag-circle-uk)">
-        <rect width="20" height="20" fill="#00247D" />
-        <path d="M0 0L20 20M20 0L0 20" stroke="#FFFFFF" strokeWidth="4" />
-        <path d="M0 0L20 20M20 0L0 20" stroke="#CF142B" strokeWidth="1.5" />
-        <path d="M10 0V20M0 10H20" stroke="#FFFFFF" strokeWidth="6" />
-        <path d="M10 0V20M0 10H20" stroke="#CF142B" strokeWidth="3.5" />
-      </g>
-    </svg>
-  );
-}
-
-function LoginIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="none">
-      <path
-        d="M8 2H4.5A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18H8M13 14l4-4-4-4M17 10H7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function LogoutIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="none" style={{ transform: "scaleX(-1)" }}>
-      <path
-        d="M8 2H4.5A1.5 1.5 0 0 0 3 3.5v13A1.5 1.5 0 0 0 4.5 18H8M13 14l4-4-4-4M17 10H7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function SignupIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="none">
-      <path
-        d="M8 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2 18c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5M16 7v6M13 10h6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function HelpIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M7.8 7.8a2.2 2.2 0 1 1 3.3 1.9c-.7.4-1.1.8-1.1 1.6v.3"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="10" cy="14.2" r="0.9" fill="currentColor" />
-    </svg>
   );
 }
