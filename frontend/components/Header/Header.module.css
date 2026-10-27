@@ -475,6 +475,16 @@
   flex: 1;
 }
 
+/* .mobileDetailSticky's background is always light (see above — it has to
+   stay readable over a product photo regardless of theme), but .mobileTitle
+   normally tracks --color-text, which flips to near-white in dark mode —
+   invisible against this bar's own fixed-light background. Pinned to a
+   fixed dark color here specifically, since this bar doesn't follow the
+   theme either. */
+.mobileDetailSticky .mobileTitle {
+  color: #1a1a1a;
+}
+
 /* Catalogue header only (see .mobileCatalogueSticky) — the real logo, same
    "version F" (light-on-dark) file the always-black desktop .mainRow uses,
    since this sits on a fixed-dark sky regardless of theme too. */
