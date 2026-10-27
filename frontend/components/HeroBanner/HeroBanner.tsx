@@ -14,7 +14,7 @@ interface HeroBannerProps {
 }
 
 const AUTO_ADVANCE_MS = 6000;
-// Half of .slide's CSS transition-duration (see HeroBanner.module.css) —
+// Half of .slider's CSS transition-duration (see HeroBanner.module.css) —
 // content only swaps once fully faded out, so there's never a hard cut or a
 // flash of the banner's bare background between two slides. A crossfade
 // rather than a literal slide/swipe on purpose: a real horizontal swipe
@@ -27,7 +27,7 @@ const FADE_MS = 250;
 // image anymore — it swipes/autoplays between these, independently of the
 // outer banner carousel above (that one crossfades whole slides; this one
 // only swaps the photo, text/CTA stay put).
-const PRODUCT_IMAGES = ["/images/hero/product-camera.png", "/images/hero/blender.png"];
+const PRODUCT_IMAGES = ["/images/hero/product-camera.avif", "/images/hero/blender.avif"];
 const PRODUCT_IMAGE_AUTOPLAY_MS = 4000;
 const SWIPE_THRESHOLD_PX = 40;
 // Duration of each half of the "door" flip (outgoing image rotating to

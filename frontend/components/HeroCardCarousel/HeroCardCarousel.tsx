@@ -31,12 +31,12 @@ interface HeroCardCarouselProps {
 // (HeroBanner's wrapper) below 1024px and this component's own wrapper
 // above it, instead of either component touching the other's markup.
 const DEFAULT_CARDS = [
-  { id: "default-1", image: "/images/hero/card-welcome.jpg", alt: "Bienvenue chez Shopitech — 15% de cashback" },
-  { id: "default-2", image: "/images/hero/hero-blender.jpg", alt: "Blender Hisense" },
-  { id: "default-3", image: "/images/hero/hero-asus.jpg", alt: "ASUS ZenBook Pro" },
-  { id: "default-4", image: "/images/hero/hero-hp.jpg", alt: "HP Spectre X360" },
-  { id: "default-5", image: "/images/hero/hero-airpod.jpg", alt: "AirPods Pro " },
-  { id: "default-6", image:  "/images/hero/hero-souris.jpg", alt: "Souris Logitech" },
+  { id: "default-1", image: "/images/hero/card-welcome.avif", alt: "Bienvenue chez Shopitech — 15% de cashback" },
+  { id: "default-2", image: "/images/hero/hero-blender.avif", alt: "Blender Hisense" },
+  { id: "default-3", image: "/images/hero/hero-asus.avif", alt: "ASUS ZenBook Pro" },
+  { id: "default-4", image: "/images/hero/hero-hp.avif", alt: "HP Spectre X360" },
+  { id: "default-5", image: "/images/hero/hero-airpod.avif", alt: "AirPods Pro " },
+  { id: "default-6", image:  "/images/hero/hero-souris.avif", alt: "Souris Logitech" },
 ];
 
 export default function HeroCardCarousel({ banners }: HeroCardCarouselProps) {
