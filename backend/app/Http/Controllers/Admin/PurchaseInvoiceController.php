@@ -10,6 +10,7 @@ use App\Http\Resources\PurchaseInvoiceResource;
 use App\Models\PurchaseInvoice;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLine;
+use App\Services\ImageResizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -101,8 +102,8 @@ class PurchaseInvoiceController extends Controller
 
             $attachmentPath = null;
             if ($request->hasFile('attachment')) {
-                $attachmentPath = Storage::disk('public')->url(
-                    $request->file('attachment')->store('purchase-invoices', 'public')
+                $attachmentPath = Storage::disk(ImageResizer::defaultDisk())->url(
+                    $request->file('attachment')->store('purchase-invoices', ImageResizer::defaultDisk())
                 );
             }
 

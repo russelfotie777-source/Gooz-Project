@@ -17,6 +17,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public Media Disk
+    |--------------------------------------------------------------------------
+    |
+    | Deliberately separate from "default" above: Laravel's "local" disk
+    | (that default's own fallback) is private storage, not the web-
+    | accessible one — every admin upload controller (products, banners,
+    | categories, brands, app promo, purchase invoices) has always written
+    | to "public" specifically, regardless of whatever FILESYSTEM_DISK is
+    | set to elsewhere. This is that same choice, just made overridable:
+    | 'public' locally (storage/app/public, symlinked), 's3' in production
+    | once the R2/S3 credentials below are filled in.
+    |
+    */
+
+    'media_disk' => env('MEDIA_DISK', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

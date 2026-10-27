@@ -10,7 +10,6 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Services\ImageResizer;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductImageController extends Controller
 {
@@ -35,8 +34,8 @@ class ProductImageController extends Controller
 
         $image = $product->images()->create([
             'product_variant_id' => $request->validated('product_variant_id'),
-            'image_url' => Storage::disk('public')->url($detailPath),
-            'thumbnail_url' => Storage::disk('public')->url($thumbnailPath),
+            'image_url' => Storage::disk(ImageResizer::defaultDisk())->url($detailPath),
+            'thumbnail_url' => Storage::disk(ImageResizer::defaultDisk())->url($thumbnailPath),
             'is_primary' => $request->boolean('is_primary'),
             'alt_text' => $request->validated('alt_text'),
         ]);
@@ -61,10 +60,10 @@ class ProductImageController extends Controller
 
     public function destroy(ProductImage $image)
     {
-        Storage::disk('public')->delete(Str::after($image->image_url, '/storage/'));
+        Storage::disk(ImageResizer::defaultDisk())->delete(ImageResizer::pathFromUrl($image->image_url));
 
         if ($image->thumbnail_url) {
-            Storage::disk('public')->delete(Str::after($image->thumbnail_url, '/storage/'));
+            Storage::disk(ImageResizer::defaultDisk())->delete(ImageResizer::pathFromUrl($image->thumbnail_url));
         }
 
         $image->delete();

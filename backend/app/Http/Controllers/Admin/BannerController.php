@@ -10,7 +10,6 @@ use App\Models\Banner;
 use App\Services\ImageResizer;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class BannerController extends Controller
 {
@@ -34,7 +33,7 @@ class BannerController extends Controller
     {
         $data = $request->validated();
 
-        $data['image'] = Storage::disk('public')->url(
+        $data['image'] = Storage::disk(ImageResizer::defaultDisk())->url(
             $resizer->resizeAndStore($request->file('image'), 'banners', self::IMAGE_MAX_WIDTH)
         );
         $data['position'] = ((int) Banner::max('position')) + 1;
@@ -51,7 +50,7 @@ class BannerController extends Controller
         if ($request->hasFile('image')) {
             $this->deleteImageFile($banner);
 
-            $data['image'] = Storage::disk('public')->url(
+            $data['image'] = Storage::disk(ImageResizer::defaultDisk())->url(
                 $resizer->resizeAndStore($request->file('image'), 'banners', self::IMAGE_MAX_WIDTH)
             );
         } else {
@@ -77,7 +76,7 @@ class BannerController extends Controller
     private function deleteImageFile(Banner $banner): void
     {
         if ($banner->image) {
-            Storage::disk('public')->delete(Str::after($banner->image, '/storage/'));
+            Storage::disk(ImageResizer::defaultDisk())->delete(ImageResizer::pathFromUrl($banner->image));
         }
     }
 }

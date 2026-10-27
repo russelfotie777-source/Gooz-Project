@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class BrandController extends Controller
 {
@@ -38,7 +37,7 @@ class BrandController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('logo')) {
-            $data['logo'] = Storage::disk('public')->url(
+            $data['logo'] = Storage::disk(ImageResizer::defaultDisk())->url(
                 $resizer->resizeAndStore($request->file('logo'), 'brands', self::LOGO_MAX_WIDTH)
             );
         }
@@ -56,7 +55,7 @@ class BrandController extends Controller
         if ($request->hasFile('logo')) {
             $this->deleteLogoFile($brand);
 
-            $data['logo'] = Storage::disk('public')->url(
+            $data['logo'] = Storage::disk(ImageResizer::defaultDisk())->url(
                 $resizer->resizeAndStore($request->file('logo'), 'brands', self::LOGO_MAX_WIDTH)
             );
         } else {
@@ -84,7 +83,7 @@ class BrandController extends Controller
     private function deleteLogoFile(Brand $brand): void
     {
         if ($brand->logo) {
-            Storage::disk('public')->delete(Str::after($brand->logo, '/storage/'));
+            Storage::disk(ImageResizer::defaultDisk())->delete(ImageResizer::pathFromUrl($brand->logo));
         }
     }
 }

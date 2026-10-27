@@ -32,6 +32,12 @@ class ReencodeImages extends Command
     public function handle(ImageResizer $resizer): int
     {
         $dryRun = (bool) $this->option('dry-run');
+        // Deliberately still the local disk, not ImageResizer::defaultDisk():
+        // $disk->path() below (needed to hand a real filesystem path to
+        // Intervention's read()) only exists on the local adapter — S3/R2
+        // has no "local path" to give it. This command is for re-encoding
+        // whatever's still on local disk before/during a move to S3, not
+        // for touching files already migrated there.
         $disk = Storage::disk('public');
 
         ProductImage::query()->each(function (ProductImage $image) use ($resizer, $disk, $dryRun) {

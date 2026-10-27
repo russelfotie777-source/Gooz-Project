@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -38,7 +37,7 @@ class CategoryController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            $data['image'] = Storage::disk('public')->url(
+            $data['image'] = Storage::disk(ImageResizer::defaultDisk())->url(
                 $resizer->resizeAndStore($request->file('image'), 'categories', self::IMAGE_MAX_WIDTH)
             );
         }
@@ -56,7 +55,7 @@ class CategoryController extends Controller
         if ($request->hasFile('image')) {
             $this->deleteImageFile($category);
 
-            $data['image'] = Storage::disk('public')->url(
+            $data['image'] = Storage::disk(ImageResizer::defaultDisk())->url(
                 $resizer->resizeAndStore($request->file('image'), 'categories', self::IMAGE_MAX_WIDTH)
             );
         } else {
@@ -84,7 +83,7 @@ class CategoryController extends Controller
     private function deleteImageFile(Category $category): void
     {
         if ($category->image) {
-            Storage::disk('public')->delete(Str::after($category->image, '/storage/'));
+            Storage::disk(ImageResizer::defaultDisk())->delete(ImageResizer::pathFromUrl($category->image));
         }
     }
 }

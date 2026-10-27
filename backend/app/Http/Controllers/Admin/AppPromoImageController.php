@@ -10,7 +10,6 @@ use App\Models\AppPromoImage;
 use App\Services\ImageResizer;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class AppPromoImageController extends Controller
 {
@@ -29,7 +28,7 @@ class AppPromoImageController extends Controller
     {
         $data = $request->validated();
 
-        $data['image'] = Storage::disk('public')->url(
+        $data['image'] = Storage::disk(ImageResizer::defaultDisk())->url(
             $resizer->resizeAndStore($request->file('image'), 'app-promo', self::IMAGE_MAX_WIDTH)
         );
         $data['position'] = ((int) AppPromoImage::max('position')) + 1;
@@ -56,7 +55,7 @@ class AppPromoImageController extends Controller
 
     public function destroy(AppPromoImage $appPromoImage)
     {
-        Storage::disk('public')->delete(Str::after($appPromoImage->image, '/storage/'));
+        Storage::disk(ImageResizer::defaultDisk())->delete(ImageResizer::pathFromUrl($appPromoImage->image));
         $appPromoImage->delete();
 
         return response()->json(null, 204);

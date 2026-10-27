@@ -70,9 +70,16 @@ class ImageResizer
      * in size, just re-encoded) and stores it. Returns the stored path,
      * exactly like UploadedFile::store() would, so callers keep using
      * Storage::disk($disk)->url($path) as before.
+     *
+     * $disk defaults to whichever disk FILESYSTEM_DISK points at (local in
+     * dev, s3 in production — see config/filesystems.php) rather than a
+     * literal 'public', so switching storage backends is an env var
+     * change, not a code change.
      */
-    public function resizeAndStore(UploadedFile $file, string $dir, int $maxWidth, string $disk = 'public'): string
+    public function resizeAndStore(UploadedFile $file, string $dir, int $maxWidth, ?string $disk = null): string
     {
+        $disk ??= self::defaultDisk();
+
         $image = $this->decode($file);
         $image->scaleDown(width: $maxWidth);
         $encoded = $this->encode($image);
@@ -92,6 +99,29 @@ class ImageResizer
         Storage::disk($disk)->put($path, (string) $encoded);
 
         return $path;
+    }
+
+    public static function defaultDisk(): string
+    {
+        return config('filesystems.media_disk');
+    }
+
+    /**
+     * Reverses Storage::disk($disk)->url($path) — needed because deleting
+     * a stored file takes the relative path, but models only keep the full
+     * URL. Strips whichever prefix the configured disk actually generates
+     * (http://.../storage/ locally, the R2/S3 bucket's own public URL in
+     * production) instead of a literal '/storage/' that only ever matched
+     * the local disk and would silently fail to strip anything once a
+     * model's URL already points at S3 — leaving the whole URL to be
+     * passed as a "path" to delete(), which just deletes nothing.
+     */
+    public static function pathFromUrl(string $url, ?string $disk = null): string
+    {
+        $disk ??= self::defaultDisk();
+        $prefix = Storage::disk($disk)->url('');
+
+        return Str::startsWith($url, $prefix) ? Str::after($url, $prefix) : $url;
     }
 
     /**
