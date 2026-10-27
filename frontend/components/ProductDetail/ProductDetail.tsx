@@ -1,16 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import {
-  addCartItem,
-  ApiValidationError,
-  getCities,
-  getDeliveryEstimate,
-  getNeighborhoods,
-  submitReview,
-  trackProductView,
-} from "@/lib/api";
+import { addCartItem, ApiValidationError, trackProductView } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
 import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/WhatsAppButton";
@@ -23,7 +14,10 @@ import { productPath } from "@/lib/productUrl";
 import { getViewSessionToken, recordRecentlyViewed } from "@/lib/productView";
 import { localizedPath } from "@/lib/seo";
 import { SITE_URL } from "@/lib/siteUrl";
-import type { City, Neighborhood, Product, Review } from "@/lib/types";
+import type { Product, Review } from "@/lib/types";
+import DeliveryEstimator from "./DeliveryEstimator";
+import ProductGallery from "./ProductGallery";
+import ReviewForm from "./ReviewForm";
 import styles from "./ProductDetail.module.css";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder-product.svg";
@@ -34,15 +28,6 @@ const FEATURE_ICONS = [
   "/icon/product-detail/feature-support.png",
   "/icon/product-detail/feature-prime.svg",
 ];
-
-// rating maps each mood onto the backend's 1-5 scale (StoreReviewRequest).
-const MOOD_DEFS = [
-  { id: "very-dissatisfied", icon: "/icon/product-detail/mood-very-dissatisfied.svg", key: "veryDissatisfied", rating: 1 },
-  { id: "worried", icon: "/icon/product-detail/mood-worried.svg", key: "worried", rating: 2 },
-  { id: "content", icon: "/icon/product-detail/mood-content.svg", key: "content", rating: 3 },
-  { id: "calm", icon: "/icon/product-detail/mood-calm.svg", key: "calm", rating: 4 },
-  { id: "happy", icon: "/icon/product-detail/mood-happy.svg", key: "happy", rating: 5 },
-] as const;
 
 interface ProductDetailProps {
   product: Product;
@@ -59,7 +44,6 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
   const lang = useLang();
   const router = useLocaleRouter();
   const FEATURES = dict.product.features.map((f, i) => ({ ...f, icon: FEATURE_ICONS[i] }));
-  const MOODS = MOOD_DEFS.map((m) => ({ ...m, label: dict.product.moods[m.key] }));
   // Defaults to the cheapest variant (same as the price shown on the
   // catalogue card the shopper clicked through from), but — unlike before —
   // this is now just the initial pick: selectVariant lets them change it
@@ -74,42 +58,24 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
       ? selectedVariant.images
       : product.images.length > 0
         ? product.images
-        : [{ id: 0, image_url: PLACEHOLDER_IMAGE, is_primary: true, alt_text: null, product_variant_id: null }];
+        : [
+            {
+              id: 0,
+              image_url: PLACEHOLDER_IMAGE,
+              thumbnail_url: null,
+              is_primary: true,
+              alt_text: null,
+              product_variant_id: null,
+            },
+          ];
   // Show exactly however many photos this product/variant actually has —
   // no padding, no truncating. baseImages already falls back to a single
   // placeholder slot when there are none at all.
   const images = baseImages;
-  const [activeImage, setActiveImage] = useState(0);
-  // next/image needs a stable src per <Image> — imperatively mutating the
-  // DOM node's src (the old <img onError> pattern) fights React's own
-  // re-renders here, so failures are tracked in state instead, keyed by
-  // each image's own (real, backend) id.
-  const [failedImageIds, setFailedImageIds] = useState<Set<number>>(new Set());
-  const trackRef = useRef<HTMLDivElement>(null);
   const buyRowRef = useRef<HTMLDivElement>(null);
-  const [cities, setCities] = useState<City[]>([]);
-  const [allNeighborhoods, setAllNeighborhoods] = useState<Neighborhood[]>([]);
-  const [locationListsStatus, setLocationListsStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [cityId, setCityId] = useState("");
-  const [neighborhoodId, setNeighborhoodId] = useState("");
-  const [deliveryFee, setDeliveryFee] = useState<number | null>(null);
-  const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [pickup, setPickup] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<"details" | "specs" | "info" | null>(null);
-  const [mood, setMood] = useState<(typeof MOODS)[number]["id"] | null>(null);
-  const [comment, setComment] = useState("");
   const [addStatus, setAddStatus] = useState<"idle" | "adding" | "added" | "error">("idle");
   const [addMessage, setAddMessage] = useState<string | null>(null);
-  const [reviewStatus, setReviewStatus] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
-  const [reviewMessage, setReviewMessage] = useState<string | null>(null);
-  const [guestName, setGuestName] = useState("");
-  // Starts false (matches server render — getSession() reads localStorage,
-  // which doesn't exist during SSR) and is corrected right after mount, same
-  // fix as CheckoutContext's orderNumber: seeding this from getSession()
-  // directly in useState would make the very first client render disagree
-  // with the server-rendered HTML.
-  const [loggedIn, setLoggedIn] = useState(false);
-  useEffect(() => setLoggedIn(Boolean(getSession())), []);
 
   // Feeds "Récemment consultés" (this shopper's own history, localStorage)
   // and "Les clients ont aussi consulté" (cross-shopper correlation, see
@@ -210,97 +176,6 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
     }
   }
 
-  // Reviews work without an account on purpose — requiring a login here
-  // would just turn a visitor away instead of getting their feedback. The
-  // submit button was previously wired to nothing at all — this is what
-  // actually posts to ReviewController::store.
-  async function handleSubmitReview() {
-    if (!mood) {
-      setReviewStatus("error");
-      setReviewMessage(dict.product.ratingRequired);
-      return;
-    }
-
-    const session = getSession();
-    if (!session && !guestName.trim()) {
-      setReviewStatus("error");
-      setReviewMessage(dict.product.guestNameRequired);
-      return;
-    }
-
-    const rating = MOODS.find((m) => m.id === mood)?.rating ?? 3;
-
-    setReviewStatus("submitting");
-    setReviewMessage(null);
-    try {
-      await submitReview(
-        product.id,
-        { rating, comment: comment.trim() || undefined, guestName: session ? undefined : guestName.trim() },
-        session?.token ?? null
-      );
-      setReviewStatus("submitted");
-      setReviewMessage(dict.product.reviewSubmitted);
-      setMood(null);
-      setComment("");
-      setGuestName("");
-    } catch (err) {
-      setReviewStatus("error");
-      setReviewMessage(
-        err instanceof ApiValidationError
-          ? (Object.values(err.errors)[0]?.[0] ?? err.message)
-          : dict.product.genericError
-      );
-    }
-  }
-
-  // Fetched once, up front: the neighborhoods list stays tiny (a handful per
-  // city), so filtering client-side on city change avoids an extra network
-  // round-trip every time the user picks a city.
-  function loadLocationLists() {
-    setLocationListsStatus("loading");
-    Promise.all([getCities(), getNeighborhoods()])
-      .then(([citiesData, neighborhoodsData]) => {
-        setCities(citiesData);
-        setAllNeighborhoods(neighborhoodsData);
-        setLocationListsStatus("ready");
-      })
-      // An empty [] here used to be indistinguishable from "there really are
-      // no cities" — the shopper saw an empty dropdown either way, with no
-      // way to tell a real gap in the data from a failed fetch worth retrying.
-      .catch(() => setLocationListsStatus("error"));
-  }
-
-  useEffect(loadLocationLists, []);
-
-  useEffect(() => {
-    setNeighborhoodId("");
-    setDeliveryFee(null);
-    setDeliveryStatus("idle");
-  }, [cityId]);
-
-  const neighborhoods = cityId
-    ? allNeighborhoods.filter((n) => n.city_id === Number(cityId))
-    : [];
-
-  useEffect(() => {
-    if (!neighborhoodId) {
-      setDeliveryFee(null);
-      setDeliveryStatus("idle");
-      return;
-    }
-
-    setDeliveryStatus("loading");
-    getDeliveryEstimate(Number(neighborhoodId))
-      .then((estimate) => {
-        setDeliveryFee(estimate.delivery_fee);
-        setDeliveryStatus("idle");
-      })
-      .catch(() => {
-        setDeliveryFee(null);
-        setDeliveryStatus("error");
-      });
-  }, [neighborhoodId]);
-
   function toggleAccordion(name: "details" | "specs" | "info") {
     setOpenAccordion((current) => (current === name ? null : name));
   }
@@ -335,84 +210,10 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
     }
   }
 
-  function handleTrackScroll() {
-    const el = trackRef.current;
-    if (!el || el.clientWidth === 0) return;
-    setActiveImage(Math.round(el.scrollLeft / el.clientWidth));
-  }
-
-  function goToImage(index: number) {
-    const el = trackRef.current;
-    if (el) {
-      el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
-    }
-    setActiveImage(index);
-  }
-
-  // The gallery's contents just changed under it (see baseImages above) —
-  // jump back to the first photo instead of leaving activeImage pointing at
-  // whatever slide the shopper happened to be on for the previous variant.
-  useEffect(() => {
-    trackRef.current?.scrollTo({ left: 0 });
-    setActiveImage(0);
-    setFailedImageIds(new Set());
-  }, [selectedVariantId]);
-
   return (
     <div className={styles.wrapper}>
       <div className={styles.topRow}>
-        <div className={styles.gallery}>
-          <div className={styles.mainImageWrapper}>
-            <div className={styles.swipeTrack} ref={trackRef} onScroll={handleTrackScroll}>
-              {images.map((image) => (
-                <div className={styles.swipeSlide} key={image.id}>
-                  <Image
-                    src={failedImageIds.has(image.id) ? PLACEHOLDER_IMAGE : (image.image_url ?? PLACEHOLDER_IMAGE)}
-                    alt={image.alt_text || product.name}
-                    className={styles.mainImage}
-                    fill
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    priority={image.id === 0}
-                    onError={() => setFailedImageIds((prev) => new Set(prev).add(image.id))}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.dots}>
-              {images.map((image, index) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  className={`${styles.dot} ${index === activeImage ? styles.dotActive : ""}`}
-                  onClick={() => goToImage(index)}
-                  aria-label={dict.product.viewImage(index + 1)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.thumbnails}>
-            {images.map((image, index) => (
-              <button
-                key={image.id}
-                type="button"
-                className={`${styles.thumbnail} ${index === activeImage ? styles.thumbnailActive : ""}`}
-                onClick={() => goToImage(index)}
-                aria-label={dict.product.viewImage(index + 1)}
-              >
-                <Image
-                  src={failedImageIds.has(image.id) ? PLACEHOLDER_IMAGE : (image.image_url ?? PLACEHOLDER_IMAGE)}
-                  alt=""
-                  className={styles.thumbnailImage}
-                  fill
-                  sizes="90px"
-                  onError={() => setFailedImageIds((prev) => new Set(prev).add(image.id))}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
+        <ProductGallery images={images} productName={product.name} resetKey={selectedVariantId} />
 
         <div className={styles.info}>
           <h1 className={styles.name}>{product.name}</h1>
@@ -553,79 +354,7 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
               )}
             </div>
 
-            <div className={styles.deliveryBox}>
-              <p className={styles.deliveryPrompt}>
-                <img src="/icon/product-detail/location.svg" alt="" className={styles.locationIcon} />
-                {dict.product.deliveryPrompt}
-              </p>
-
-              {locationListsStatus === "error" && (
-                <p className={styles.locationListsError}>
-                  {dict.product.locationListsError}{" "}
-                  <button type="button" className={styles.locationListsRetry} onClick={loadLocationLists}>
-                    {dict.product.locationListsRetry}
-                  </button>
-                </p>
-              )}
-
-              <label className={styles.selectField}>
-                <select value={cityId} onChange={(e) => setCityId(e.target.value)} className={styles.select}>
-                  <option value="">{dict.product.selectCity}</option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <img src="/icon/product-detail/chevron-down.svg" alt="" className={styles.selectChevron} />
-              </label>
-
-              <label className={styles.selectField}>
-                <select
-                  value={neighborhoodId}
-                  onChange={(e) => setNeighborhoodId(e.target.value)}
-                  disabled={!cityId}
-                  className={styles.select}
-                >
-                  <option value="">{dict.product.selectNeighborhood}</option>
-                  {neighborhoods.map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.name}
-                    </option>
-                  ))}
-                </select>
-                <img src="/icon/product-detail/chevron-down.svg" alt="" className={styles.selectChevron} />
-              </label>
-
-              <div className={styles.deliveryCost}>
-                <span>{dict.product.cost}</span>
-                <span className={styles.deliveryCostValue}>
-                  {pickup
-                    ? formatPrice(0)
-                    : deliveryStatus === "loading"
-                      ? dict.product.calculating
-                      : deliveryStatus === "error"
-                        ? dict.product.unavailable
-                        : deliveryFee !== null
-                          ? formatPrice(deliveryFee)
-                          : dict.product.calculatedAtDelivery}
-                </span>
-              </div>
-
-              <div className={styles.orDivider}>
-                <span className={styles.orLine} />
-                <span>{dict.product.or}</span>
-                <span className={styles.orLine} />
-              </div>
-
-              <button
-                type="button"
-                className={`${styles.pickupButton} ${pickup ? styles.pickupButtonActive : ""}`}
-                onClick={() => setPickup((v) => !v)}
-              >
-                <span className={styles.pickupLabel}>{dict.product.pickupAtStore}</span>
-              </button>
-            </div>
+            <DeliveryEstimator />
           </div>
         </div>
       </div>
@@ -750,109 +479,7 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
         </div>
       </div>
 
-      <div className={styles.reviews}>
-        <h2 className={styles.reviewsTitle}>{dict.product.satisfactionTitle}</h2>
-        <div className={styles.moods}>
-          {MOODS.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              className={`${styles.moodButton} ${mood === m.id ? styles.moodButtonActive : ""}`}
-              onClick={() => {
-                setMood(m.id);
-                if (reviewStatus === "error") {
-                  setReviewStatus("idle");
-                  setReviewMessage(null);
-                }
-              }}
-              aria-pressed={mood === m.id}
-            >
-              <img src={m.icon} alt="" className={styles.moodIcon} />
-              <span className={styles.moodLabel}>{m.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <h2 className={styles.reviewsTitle}>
-          {dict.product.leaveComment} <span className={styles.optional}>{dict.product.optional}</span>
-        </h2>
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder={dict.product.commentPlaceholder}
-          className={styles.commentInput}
-        />
-
-        {!loggedIn && (
-          <>
-            <h2 className={styles.reviewsTitle}>{dict.product.yourName}</h2>
-            <input
-              type="text"
-              value={guestName}
-              onChange={(e) => {
-                setGuestName(e.target.value);
-                if (reviewStatus === "error") {
-                  setReviewStatus("idle");
-                  setReviewMessage(null);
-                }
-              }}
-              placeholder={dict.product.yourNamePlaceholder}
-              className={styles.nameInput}
-            />
-          </>
-        )}
-
-        <div className={styles.reviewActions}>
-          <button
-            type="button"
-            className={styles.cancelButton}
-            onClick={() => {
-              setMood(null);
-              setComment("");
-              setReviewStatus("idle");
-              setReviewMessage(null);
-            }}
-          >
-            {dict.product.cancel}
-          </button>
-          <button
-            type="button"
-            className={styles.submitButton}
-            disabled={reviewStatus === "submitting"}
-            onClick={handleSubmitReview}
-          >
-            {reviewStatus === "submitting" ? dict.product.submittingReview : dict.product.submit}
-          </button>
-        </div>
-
-        {reviewMessage && (
-          <p className={reviewStatus === "error" ? styles.reviewFeedbackError : styles.reviewFeedbackSuccess}>
-            {reviewMessage}
-          </p>
-        )}
-
-        <h2 className={styles.reviewsTitle}>{dict.product.reviewsListTitle(reviews.length)}</h2>
-        {reviews.length === 0 ? (
-          <p className={styles.noReviews}>{dict.product.noReviews}</p>
-        ) : (
-          <ul className={styles.reviewList}>
-            {reviews.map((review) => (
-              <li key={review.id} className={styles.reviewItem}>
-                <div className={styles.reviewItemHeader}>
-                  <span className={styles.reviewAuthor}>
-                    {review.user?.name ?? review.guest_name ?? dict.product.anonymousReviewer}
-                  </span>
-                  <span className={styles.reviewDate}>{new Date(review.created_at).toLocaleDateString("fr-FR")}</span>
-                </div>
-                <span className={styles.reviewMoodLabel}>
-                  {MOODS.find((m) => m.rating === review.rating)?.label ?? `${review.rating}/5`}
-                </span>
-                {review.comment && <p className={styles.reviewComment}>{review.comment}</p>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ReviewForm productId={product.id} reviews={reviews} />
     </div>
   );
 }
