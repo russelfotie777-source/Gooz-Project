@@ -49,8 +49,13 @@ export default function LanguageSwitcher() {
   function switchLanguage(newLang: Locale) {
     setLangOpen(false);
     if (newLang === lang) return;
+    // document/window are browser globals, not React-tracked values — this
+    // runs from a click handler, never during render. react-hooks/immutability
+    // flags any `x.y = z` it sees regardless of what x is; false positive here.
+    // eslint-disable-next-line react-hooks/immutability
     document.cookie = `shopitech-locale=${newLang}; path=/; max-age=31536000`;
     const rest = pathname.startsWith(`/${lang}`) ? pathname.slice(`/${lang}`.length) : pathname;
+    // eslint-disable-next-line react-hooks/immutability
     window.location.href = `/${newLang}${rest || ""}`;
   }
 

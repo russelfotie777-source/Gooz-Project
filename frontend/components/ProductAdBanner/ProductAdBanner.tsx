@@ -112,7 +112,6 @@ export default function ProductAdBanner({ banners }: ProductAdBannerProps) {
   useEffect(() => {
     if (dragging.current) return;
     settleTo(index);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
   useEffect(() => {

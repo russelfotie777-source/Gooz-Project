@@ -5,7 +5,6 @@ import BottomNav from "@/components/BottomNav/BottomNav";
 import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
-import type { Order } from "@/lib/types";
 import {
   computeOrderSubtotal,
   DELIVERY_METHOD_LABEL_KEYS,

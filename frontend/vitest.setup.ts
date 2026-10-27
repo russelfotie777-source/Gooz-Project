@@ -10,3 +10,21 @@ import { afterEach } from "vitest";
 afterEach(() => {
   cleanup();
 });
+
+// jsdom doesn't implement matchMedia at all — any component checking
+// prefers-reduced-motion/-color-scheme/breakpoints (BrandsSection,
+// AnnouncementBar, HeroBanner, ...) throws without this. Reports no match
+// and no-op listeners by default; tests that care about a specific
+// preference override window.matchMedia themselves for that one test.
+if (typeof window !== "undefined" && !window.matchMedia) {
+  window.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  });
+}

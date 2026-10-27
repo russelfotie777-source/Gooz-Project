@@ -33,7 +33,18 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
 
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const search = useHeaderSearch();
+  const {
+    query: searchQuery,
+    setQuery: setSearchQuery,
+    searchExamples,
+    searchExampleIndex,
+    searchFocused,
+    setSearchFocused,
+    mobileSearchRef,
+    searchWrapperRef,
+    mobileSearchWrapperRef,
+    handleSearchSubmit,
+  } = useHeaderSearch();
   const { user, cartCount, displayName, handleLogout } = useHeaderSession(cartCountProp);
   const { announcements, announcementsDismissed, dismissAnnouncements } = useAnnouncements();
 
@@ -69,29 +80,29 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
               />
             </LocaleLink>
 
-            <div className={styles.searchWrapper} ref={search.searchWrapperRef}>
-              <form className={styles.searchForm} role="search" onSubmit={search.handleSearchSubmit}>
-                {!search.searchFocused && !search.query && (
+            <div className={styles.searchWrapper} ref={searchWrapperRef}>
+              <form className={styles.searchForm} role="search" onSubmit={handleSearchSubmit}>
+                {!searchFocused && !searchQuery && (
                   <SearchPrompt
                     phrase={dict.header.searchPlaceholder}
-                    example={search.searchExamples[search.searchExampleIndex]}
+                    example={searchExamples[searchExampleIndex]}
                     className={styles.desktopSearchPrompt}
                   />
                 )}
                 <input
                   type="search"
                   aria-label={dict.header.searchPlaceholder}
-                  value={search.query}
-                  onChange={(e) => search.setQuery(e.target.value)}
-                  onFocus={() => search.setSearchFocused(true)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
                   className={styles.searchInput}
                 />
                 <button type="submit" className={styles.searchButton}>
                   {dict.header.searchButton}
                 </button>
               </form>
-              {search.searchFocused && (
-                <SearchSuggestions query={search.query} onSelect={() => search.setSearchFocused(false)} />
+              {searchFocused && (
+                <SearchSuggestions query={searchQuery} onSelect={() => setSearchFocused(false)} />
               )}
             </div>
 
@@ -205,28 +216,28 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 <ThemeToggle className={styles.themeToggleMobile} />
               </div>
 
-              <div className={styles.mobileSearchWrapper} ref={search.mobileSearchWrapperRef}>
-                <form className={styles.mobileSearchForm} role="search" onSubmit={search.handleSearchSubmit}>
+              <div className={styles.mobileSearchWrapper} ref={mobileSearchWrapperRef}>
+                <form className={styles.mobileSearchForm} role="search" onSubmit={handleSearchSubmit}>
                   <img src="/icon/header-mobile/search.svg" alt="" className={styles.mobileSearchFormIcon} />
-                  {!search.searchFocused && !search.query && (
+                  {!searchFocused && !searchQuery && (
                     <SearchPrompt
                       phrase={dict.header.searchPlaceholder}
-                      example={search.searchExamples[search.searchExampleIndex]}
+                      example={searchExamples[searchExampleIndex]}
                       className={styles.mobileSearchPrompt}
                     />
                   )}
                   <input
-                    ref={search.mobileSearchRef}
+                    ref={mobileSearchRef}
                     type="search"
                     aria-label={dict.header.searchPlaceholder}
-                    value={search.query}
-                    onChange={(e) => search.setQuery(e.target.value)}
-                    onFocus={() => search.setSearchFocused(true)}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setSearchFocused(true)}
                     className={styles.mobileSearchInput}
                   />
                 </form>
-                {search.searchFocused && (
-                  <SearchSuggestions query={search.query} onSelect={() => search.setSearchFocused(false)} />
+                {searchFocused && (
+                  <SearchSuggestions query={searchQuery} onSelect={() => setSearchFocused(false)} />
                 )}
               </div>
             </div>

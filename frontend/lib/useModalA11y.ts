@@ -27,6 +27,14 @@ export function useModalA11y(
   // on cleanup, back onto whatever triggered the modal) — yanking focus out
   // of the input the shopper was actively typing in.
   const onCloseRef = useRef(onClose);
+  // Deliberate "latest ref" sync during render, not a missed effect: the
+  // alternative (a useEffect/useLayoutEffect to update this) runs after
+  // render completes, reopening the exact staleness window the comment
+  // above exists to close — an Escape press handled between that render
+  // and the effect running would still call the previous onClose. React
+  // doesn't yet ship a stable primitive for "always-current ref, updated
+  // synchronously with render" (useEffectEvent is still experimental).
+  // eslint-disable-next-line react-hooks/refs
   onCloseRef.current = onClose;
 
   useEffect(() => {
@@ -64,6 +72,5 @@ export function useModalA11y(
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused.current?.focus();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, containerRef]);
 }

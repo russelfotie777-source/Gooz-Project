@@ -131,7 +131,6 @@ export default function ProductCard({
       setActiveImageIndex((i) => (i + 1) % images.length);
     }, 2500);
     return () => window.clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manuallySwipeable, images.length]);
 
   function handlePointerDown(e: React.PointerEvent<HTMLAnchorElement>) {

@@ -27,7 +27,6 @@ export default function CheckoutDesktopPage() {
     subtotal,
     cities,
     neighborhoods: allNeighborhoods,
-    warehouse,
     form,
     setForm,
     isAddressComplete,

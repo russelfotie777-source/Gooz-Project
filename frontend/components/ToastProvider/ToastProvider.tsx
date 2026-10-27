@@ -41,7 +41,6 @@ export default function ToastProvider() {
         clearSession();
         pushToast({ message: dict.session.expired, variant: "error" });
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [dict]
   );
 

@@ -37,6 +37,7 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
   const [checking, setChecking] = useState(true);
   const [checkFailed, setCheckFailed] = useState(false);
   const attemptsRef = useRef(0);
+  const [autoRetriesExhausted, setAutoRetriesExhausted] = useState(false);
   const { retry, retryingId, retryErrorId } = usePaymentRetry();
 
   async function check() {
@@ -60,6 +61,7 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
 
   function manualRetry() {
     attemptsRef.current = 0;
+    setAutoRetriesExhausted(false);
     check();
   }
 
@@ -75,7 +77,10 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
   useEffect(() => {
     if (checking || checkFailed || !order) return;
     if (order.payment.payment_status !== "en_attente") return;
-    if (attemptsRef.current >= MAX_AUTO_ATTEMPTS) return;
+    if (attemptsRef.current >= MAX_AUTO_ATTEMPTS) {
+      setAutoRetriesExhausted(true);
+      return;
+    }
 
     attemptsRef.current += 1;
     const timer = setTimeout(check, POLL_INTERVAL_MS);
@@ -129,8 +134,6 @@ export default function PaymentReturnPage({ reference }: PaymentReturnPageProps)
       </div>
     );
   }
-
-  const autoRetriesExhausted = attemptsRef.current >= MAX_AUTO_ATTEMPTS;
 
   return (
     <div className={styles.page}>

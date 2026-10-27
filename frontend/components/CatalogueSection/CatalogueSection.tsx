@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Brand, Category, Product } from "@/lib/types";
 import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
-import LocaleLink from "@/lib/i18n/LocaleLink";
 import Pagination from "@/components/Pagination/Pagination";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CatalogueSection.module.css";
@@ -123,6 +122,12 @@ export default function CatalogueSection({
     return () => {
       cancelled = true;
     };
+    // priceRange itself isn't a dependency on purpose: it's PRICE_RANGES.find(...)
+    // against priceRangeId, and PRICE_RANGES is a fresh array/object every render —
+    // depending on priceRange would re-run this effect on every render regardless of
+    // whether the selected range actually changed. priceRangeId already captures every
+    // case where priceRange's min/max can change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, activeCategoryId, priceRangeId, selectedBrandIds, selectedColors]);
 
   // Keeps ?page= in the address bar in sync with the current page — a

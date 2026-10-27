@@ -50,6 +50,12 @@ export default function CheckoutConfirmationVerified({ reference }: CheckoutConf
       });
   }
 
+  // router isn't a dependency on purpose: useLocaleRouter() returns a fresh
+  // wrapper object every render, but it only wraps next/navigation's stable
+  // router plus the current locale — and this route is app/[lang]/..., so a
+  // locale change remounts this component rather than leaving a stale
+  // closure in place.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(check, [reference]);
 
   if (status === "checking") {

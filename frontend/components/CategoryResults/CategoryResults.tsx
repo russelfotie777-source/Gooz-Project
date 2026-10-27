@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
-import LocaleLink from "@/lib/i18n/LocaleLink";
 import Pagination from "@/components/Pagination/Pagination";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import styles from "./CategoryResults.module.css";
