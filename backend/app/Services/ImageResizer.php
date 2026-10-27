@@ -47,7 +47,7 @@ class ImageResizer
     // every StoreXRequest, so there's only one place to get this right.
     public static function uploadRule(): ImageUploadRule
     {
-        return new ImageUploadRule();
+        return new ImageUploadRule;
     }
 
     public const LOSSY_MEDIA_TYPES = [
@@ -61,7 +61,7 @@ class ImageResizer
     {
         // GD is what's available on this environment; Imagick isn't
         // installed. Revisit if the target deploy server only has Imagick.
-        $this->manager = new ImageManager(new Driver());
+        $this->manager = new ImageManager(new Driver);
     }
 
     /**

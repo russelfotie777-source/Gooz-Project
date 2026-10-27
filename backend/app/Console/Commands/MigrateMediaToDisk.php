@@ -10,6 +10,7 @@ use App\Models\ProductImage;
 use App\Models\PurchaseInvoice;
 use App\Services\ImageResizer;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -79,8 +80,8 @@ class MigrateMediaToDisk extends Command
     private function migrateField(
         EloquentModel $model,
         string $column,
-        \Illuminate\Contracts\Filesystem\Filesystem $from,
-        \Illuminate\Contracts\Filesystem\Filesystem $to,
+        Filesystem $from,
+        Filesystem $to,
         bool $dryRun
     ): void {
         $url = $model->{$column};
