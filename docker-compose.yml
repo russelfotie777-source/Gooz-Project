@@ -109,6 +109,11 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${FRONTEND_PUBLIC_API_URL:-http://localhost:8001/api/v1}
         INTERNAL_API_URL: http://backend:8000/api/v1
+        # Baked into the build (NEXT_PUBLIC_* is inlined at build time, not
+        # read at runtime) — left unset, absolute links (sitemap, WhatsApp
+        # order message, ...) silently fall back to localhost, including in
+        # production. See frontend/.env.example.
+        NEXT_PUBLIC_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:3000}
     restart: unless-stopped
     depends_on:
       - backend
