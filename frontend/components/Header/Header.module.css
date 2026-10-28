@@ -177,7 +177,11 @@
 /* .mainRow is always var(--color-chrome-bg) (black) regardless of theme —
    see globals.css — so this icon stays fixed white rather than following
    --color-text like ThemeToggle's own default does. */
-.themeToggleDesktop {
+/* .actions prefix bumps specificity above ThemeToggle.module.css's own
+   .toggle rule (color: var(--color-text)) — same class-count specificity
+   across two different CSS module files resolves by build/import order,
+   not intent, so the fixed white here wasn't reliably winning. */
+.actions .themeToggleDesktop {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.14);
 }
@@ -395,14 +399,22 @@
 
 .categoriesBar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  gap: 12px;
+  gap: 28px;
   background: var(--color-chrome-bg);
   padding: 8px 24px;
   width: 100%;
   overflow-x: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
+  /* Keeps the horizontal scroll usable without showing the scrollbar track —
+     this row scrolls on drag/trackpad, it doesn't need a visible bar. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.categoriesBar::-webkit-scrollbar {
+  display: none;
 }
 
 .categoryButton {
@@ -475,14 +487,14 @@
   flex: 1;
 }
 
-/* .mobileDetailSticky's background is always light (see above — it has to
+/* .mobileDetailSticky's background is always orange (see above — it has to
    stay readable over a product photo regardless of theme), but .mobileTitle
-   normally tracks --color-text, which flips to near-white in dark mode —
-   invisible against this bar's own fixed-light background. Pinned to a
-   fixed dark color here specifically, since this bar doesn't follow the
-   theme either. */
+   normally tracks --color-text, which flips to near-white or near-black
+   depending on theme — low contrast against this bar's own fixed-orange
+   background either way. Pinned to white here specifically, since this bar
+   doesn't follow the theme either. */
 .mobileDetailSticky .mobileTitle {
-  color: #1a1a1a;
+  color: #ffffff;
 }
 
 /* Catalogue header only (see .mobileCatalogueSticky) — the real logo, same
@@ -496,8 +508,10 @@
 /* Fixed light icon + tint, not ThemeToggle's own themed defaults — same
    reasoning as .themeToggleDesktop below: this sits on a fixed-dark sky in
    both themes, so it can't follow var(--color-text) (which turns near-white
-   in dark mode and would vanish against a light toggle background). */
-.themeToggleMobile {
+   in dark mode and would vanish against a light toggle background).
+   .mobileTopRow prefix bumps specificity above ThemeToggle.module.css's own
+   .toggle rule — see the matching note on .themeToggleDesktop. */
+.mobileTopRow .themeToggleMobile {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.14);
 }
@@ -641,10 +655,10 @@
      photo happened to be underneath until the shopper scrolled. 0.55 still
      let that photo show through enough to be distracting — high enough now
      that nothing behind it is visible, blur is just a finishing touch. */
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 149, 0, 0.96);
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, var(--shadow-card);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, var(--shadow-card);
 }
 
 /* A translucent white streak would float over a dark page instead of
@@ -659,6 +673,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
+}
+
+/* Product-detail variant only — shrinks the bar a bit without touching the
+   cart variant's header, which shares .mobileDetailRow. */
+.mobileDetailSticky .mobileDetailRow {
+  padding: 6px 16px;
 }
 
 .mobileBackButton {
@@ -677,11 +697,24 @@
   height: 24px;
 }
 
+/* Product-detail variant only — the circular icon reads as too small at the
+   shared 24px size, so it (and the button/spacer that frame it, to keep the
+   centered title balanced) gets a dedicated bump here instead of changing
+   the cart variant's plain-arrow icon too. */
+.mobileDetailSticky .mobileBackIcon {
+  width: 36px;
+  height: 36px;
+}
+
+.mobileDetailSticky .mobileBackButton {
+  width: 36px;
+}
+
 /* Matches .mobileBackButton's width exactly — see the note where it's
    used (Header.tsx's "detail" variant row). */
 .mobileDetailSpacer {
-  flex: 0 0 24px;
-  width: 24px;
+  flex: 0 0 36px;
+  width: 36px;
 }
 
 .mobileInfoButton {

@@ -31,7 +31,7 @@ export default function NotificationsPage() {
           aria-label={dict.header.back}
           onClick={() => router.back()}
         >
-          <img src="/icon/product-detail/back.svg" alt="" className={styles.backIcon} />
+          <img src="/icon/product-detail/back-circle.svg" alt="" className={styles.backIcon} />
         </button>
         <h1 className={styles.title}>{dict.notifications.title}</h1>
         <span className={styles.spacer} aria-hidden />

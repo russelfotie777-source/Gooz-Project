@@ -155,7 +155,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 aria-label={dict.header.back}
                 onClick={() => router.back()}
               >
-                <img src="/icon/product-detail/back.svg" alt="" className={styles.mobileBackIcon} />
+                <img src="/icon/product-detail/back-circle.svg" alt="" className={styles.mobileBackIcon} />
               </button>
 
               <p className={styles.mobileTitle}>{dict.header.catalogueTitle}</p>
@@ -176,7 +176,7 @@ export default function Header({ cartCount: cartCountProp = 0, variant = "defaul
                 aria-label={dict.header.back}
                 onClick={() => router.back()}
               >
-                <img src="/icon/product-detail/back.svg" alt="" className={styles.mobileBackIcon} />
+                <img src="/icon/product-detail/back-circle.svg" alt="" className={styles.mobileBackIcon} />
               </button>
 
               <p className={styles.mobileTitle}>{dict.header.cartTitle}</p>
