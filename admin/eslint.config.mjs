@@ -13,6 +13,16 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Same reasoning as frontend/eslint.config.mjs: a deliberate pattern
+      // here too (resetting derived state — results, order, quantities —
+      // inside an effect when its guard condition isn't met), not a bug.
+      // Downgraded to warn so a real new issue still surfaces without
+      // failing CI on every push regardless of what it touches.
+      "react-hooks/set-state-in-effect": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

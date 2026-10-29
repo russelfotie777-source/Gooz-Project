@@ -22,13 +22,23 @@ jobs:
           extensions: mbstring, pdo_sqlite, gd, zip, bcmath
           coverage: none
 
+      # Before composer install, not after: its postAutoloadDump hook runs
+      # `artisan package:discover`, which boots the app and resolves every
+      # env() call — spatie/laravel-backup's own config validates its
+      # notification 'to' address eagerly at that point, and with no .env
+      # yet, MAIL_FROM_ADDRESS (its fallback) was null instead of
+      # .env.example's placeholder, failing composer install outright
+      # before a single test could run. Confirmed: this broke `composer
+      # install` on every CI run since the workflow was added, regardless
+      # of what a given commit touched.
+      - name: Prepare environment
+        run: cp .env.example .env
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Prepare environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate
+      - name: Generate app key
+        run: php artisan key:generate
 
       - name: Run tests
         run: composer test
