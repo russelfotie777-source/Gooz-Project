@@ -197,6 +197,29 @@ return [
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
 
+        // Separate from 'default' on purpose: queue:work's BRPOP sits in a
+        // genuine long blocking wait for the next job (config/queue.php's
+        // 'block_for' => null — wait indefinitely), not a stalled read.
+        // 'default'/'cache' above's read_write_timeout (fixing an unrelated
+        // bug — a slow-but-healthy Redis causing 30s PHP fatals on short
+        // request/response commands) would make Predis throw a
+        // TimeoutException every time BRPOP had nothing to return for 3s,
+        // which is every idle moment a worker spends waiting for work —
+        // confirmed live: queue:work crashed within seconds of starting
+        // once 'default' picked up that timeout. -1 here is Predis' own
+        // "block forever" default, restored explicitly so a future change
+        // to 'default' can't silently break this again.
+        'queue' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
+            'timeout' => env('REDIS_TIMEOUT', 2.0),
+            'read_write_timeout' => -1,
+        ],
+
     ],
 
 ];

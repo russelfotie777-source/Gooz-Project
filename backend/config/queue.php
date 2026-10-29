@@ -66,7 +66,11 @@ return [
 
         'redis' => [
             'driver' => 'redis',
-            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            // See config/database.php's redis.queue for why this isn't
+            // 'default' — that connection's read_write_timeout (a fix for a
+            // different bug) is incompatible with this driver's long
+            // blocking BRPOP wait.
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'queue'),
             'queue' => env('REDIS_QUEUE', 'default'),
             'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
             'block_for' => null,
