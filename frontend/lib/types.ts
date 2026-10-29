@@ -81,6 +81,13 @@ export interface User {
   // the account before a phone number is known — see socialLogin() /
   // CompletePhoneModal, which collects it as a follow-up step.
   phone: string | null;
+  // The Firebase-account identifier (sign-in mode "email") — null for
+  // phone+password accounts.
+  email: string | null;
+  // Optional, phone+password accounts only: lets "mot de passe oublié"
+  // (ForgotPasswordPhoneModal) send a reset link somewhere. See
+  // backend's AuthController::forgotPassword.
+  recovery_email: string | null;
   role: "customer" | "admin" | "delivery";
   is_active: boolean;
   created_at: string;

@@ -18,6 +18,7 @@ import { resolvePostLoginRedirect } from "@/lib/postLoginRedirect";
 import { currentTheme } from "@/lib/theme";
 import { useFocusOnError } from "@/lib/useFocusOnError";
 import ForgotPasswordModal from "./ForgotPasswordModal";
+import ForgotPasswordPhoneModal from "./ForgotPasswordPhoneModal";
 import styles from "./AuthDesktopPage.module.css";
 
 interface AuthDesktopPageProps {
@@ -38,6 +39,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [recoveryEmail, setRecoveryEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -110,7 +112,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
       const { user, token } =
         mode === "login"
           ? await login(phone, password, "Shopitech PWA (desktop)")
-          : await register(name, phone, password, confirmPassword);
+          : await register(name, phone, password, confirmPassword, recoveryEmail);
       saveSession({ user, token });
       notifyLogin();
       router.push(await resolvePostLoginRedirect(token));
@@ -229,19 +231,35 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
             )}
 
             {authMode === "phone" ? (
-              <label className={styles.field}>
-                <span className={styles.label}>
-                  <span className={styles.required}>*</span>{dict.auth.phoneNumber}
-                </span>
-                <input
-                  type="tel"
-                  required
-                  autoComplete="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className={styles.input}
-                />
-              </label>
+              <>
+                <label className={styles.field}>
+                  <span className={styles.label}>
+                    <span className={styles.required}>*</span>{dict.auth.phoneNumber}
+                  </span>
+                  <input
+                    type="tel"
+                    required
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={styles.input}
+                  />
+                </label>
+
+                {mode === "signup" && (
+                  <label className={styles.field}>
+                    <span className={styles.label}>{dict.auth.recoveryEmailLabel}</span>
+                    <input
+                      type="email"
+                      autoComplete="email"
+                      value={recoveryEmail}
+                      onChange={(e) => setRecoveryEmail(e.target.value)}
+                      className={styles.input}
+                    />
+                    <span className={styles.hint}>{dict.auth.recoveryEmailHint}</span>
+                  </label>
+                )}
+              </>
             ) : (
               <label className={styles.field}>
                 <span className={styles.label}>
@@ -313,7 +331,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
                 {dict.auth.rememberMe}
               </label>
 
-              {mode === "login" && authMode === "email" && (
+              {mode === "login" && (
                 <button type="button" className={styles.forgotButton} onClick={() => setForgotOpen(true)}>
                   {dict.auth.forgotPassword}
                   <img src="/icon/auth/arrow-forward.svg" alt="" className={styles.forgotArrow} />
@@ -378,7 +396,11 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
         </div>
       </div>
 
-      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} initialEmail={email} />
+      {authMode === "email" ? (
+        <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} initialEmail={email} />
+      ) : (
+        <ForgotPasswordPhoneModal open={forgotOpen} onClose={() => setForgotOpen(false)} initialPhone={phone} />
+      )}
     </div>
   );
 }

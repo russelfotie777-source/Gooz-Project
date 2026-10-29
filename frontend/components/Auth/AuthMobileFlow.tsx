@@ -17,6 +17,7 @@ import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { resolvePostLoginRedirect } from "@/lib/postLoginRedirect";
 import { useFocusOnError } from "@/lib/useFocusOnError";
 import ForgotPasswordModal from "./ForgotPasswordModal";
+import ForgotPasswordPhoneModal from "./ForgotPasswordPhoneModal";
 import styles from "./AuthMobileFlow.module.css";
 
 interface AuthMobileFlowProps {
@@ -46,6 +47,7 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupRecoveryEmail, setSignupRecoveryEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [showSignupPassword, setShowSignupPassword] = useState(false);
@@ -166,7 +168,13 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
         return;
       }
 
-      const { user, token } = await register(signupName, signupPhone, signupPassword, signupConfirmPassword);
+      const { user, token } = await register(
+        signupName,
+        signupPhone,
+        signupPassword,
+        signupConfirmPassword,
+        signupRecoveryEmail
+      );
       saveSession({ user, token });
       notifyLogin();
       router.push(await resolvePostLoginRedirect(token));
@@ -364,11 +372,9 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
                 </div>
               </label>
 
-              {authMode === "email" && (
-                <button type="button" className={styles.forgotLink} onClick={() => setForgotOpen(true)}>
-                  {dict.auth.forgotPassword}
-                </button>
-              )}
+              <button type="button" className={styles.forgotLink} onClick={() => setForgotOpen(true)}>
+                {dict.auth.forgotPassword}
+              </button>
 
               {loginError && (
                 <p ref={loginErrorRef} tabIndex={-1} className={styles.formError} role="alert">
@@ -429,19 +435,33 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
               </label>
 
               {authMode === "phone" ? (
-                <label className={styles.field}>
-                  <span className={styles.label}>
-                    <span className={styles.required}>*</span>{dict.auth.phoneNumber}
-                  </span>
-                  <input
-                    type="tel"
-                    required
-                    autoComplete="tel"
-                    value={signupPhone}
-                    onChange={(e) => setSignupPhone(e.target.value)}
-                    className={styles.input}
-                  />
-                </label>
+                <>
+                  <label className={styles.field}>
+                    <span className={styles.label}>
+                      <span className={styles.required}>*</span>{dict.auth.phoneNumber}
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      autoComplete="tel"
+                      value={signupPhone}
+                      onChange={(e) => setSignupPhone(e.target.value)}
+                      className={styles.input}
+                    />
+                  </label>
+
+                  <label className={styles.field}>
+                    <span className={styles.label}>{dict.auth.recoveryEmailLabel}</span>
+                    <input
+                      type="email"
+                      autoComplete="email"
+                      value={signupRecoveryEmail}
+                      onChange={(e) => setSignupRecoveryEmail(e.target.value)}
+                      className={styles.input}
+                    />
+                    <span className={styles.hint}>{dict.auth.recoveryEmailHint}</span>
+                  </label>
+                </>
               ) : (
                 <label className={styles.field}>
                   <span className={styles.label}>
@@ -525,7 +545,11 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
         </div>
       </section>
 
-      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} initialEmail={loginEmail} />
+      {authMode === "email" ? (
+        <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} initialEmail={loginEmail} />
+      ) : (
+        <ForgotPasswordPhoneModal open={forgotOpen} onClose={() => setForgotOpen(false)} initialPhone={loginPhone} />
+      )}
     </div>
   );
 }

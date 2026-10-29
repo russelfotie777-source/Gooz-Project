@@ -414,6 +414,18 @@ const en: Dictionary = {
     forgotPasswordSubmit: "Send link",
     forgotPasswordSending: "Sending...",
     forgotPasswordSuccess: "If an account exists for that email, a reset link was just sent to it.",
+    recoveryEmailLabel: "Recovery email (optional)",
+    recoveryEmailHint: "Lets you reset your password if you forget it. Without one, it can't be recovered.",
+    forgotPasswordPhoneInstructions:
+      "Enter your phone number — if a recovery email is on file for this account, a reset link will be sent to it.",
+    forgotPasswordPhoneSuccess:
+      "If that phone number is linked to an account with a recovery email, a reset link was just sent to it.",
+    resetPasswordTitle: "Choose a new password",
+    resetPasswordSubmit: "Reset password",
+    resetPasswordSuccessTitle: "Password reset",
+    resetPasswordSuccessText: "Your password has been changed successfully. You can now sign in.",
+    resetPasswordInvalidLinkTitle: "Invalid link",
+    resetPasswordInvalidLinkText: "This reset link is incomplete or invalid. Request a new one.",
     backToLogin: "Back to login",
     login: "Login",
     signup: "Sign up",
@@ -637,6 +649,8 @@ const en: Dictionary = {
     saving: "Saving...",
     genericError: "Something went wrong. Please try again.",
     updateSuccess: "Profile updated.",
+    recoveryEmailLabel: "Recovery email (optional)",
+    recoveryEmailHint: "Lets you reset your password if you forget it.",
   },
   completePhone: {
     title: "Add your phone number",

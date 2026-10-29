@@ -54,9 +54,13 @@ services:
       - db
       - redis
     environment:
+      APP_NAME: ${APP_NAME:-Shopitech}
       APP_ENV: ${APP_ENV:-local}
       APP_KEY: ${APP_KEY}
       APP_URL: ${BACKEND_URL:-http://localhost:8001}
+      # Used by ResetPasswordNotification to link back into the frontend —
+      # keep this in sync with NEXT_PUBLIC_SITE_URL below.
+      FRONTEND_URL: ${FRONTEND_SITE_URL:-http://localhost:3000}
       DB_CONNECTION: mysql
       # "db"/"redis" are this compose file's service names above, not real
       # hostnames — Docker's internal DNS resolves them for every

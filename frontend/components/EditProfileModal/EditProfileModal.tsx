@@ -19,12 +19,12 @@ interface EditProfileModalProps {
 
 // Shared by ProfileLoggedIn (mobile) and ProfileDesktop: the pencil icon next
 // to the user's name/phone used to be a dead button — wired here to the real
-// PUT /me endpoint (name + phone only, since the Users table has no email
-// column). Styled after DeleteAccountModal's overlay/modal pattern.
+// PUT /me endpoint. Styled after DeleteAccountModal's overlay/modal pattern.
 export default function EditProfileModal({ open, user, onClose, onUpdated }: EditProfileModalProps) {
   const dict = useDictionary();
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone ?? "");
+  const [recoveryEmail, setRecoveryEmail] = useState(user.recovery_email ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -41,6 +41,7 @@ export default function EditProfileModal({ open, user, onClose, onUpdated }: Edi
     if (submitting) return;
     setName(user.name);
     setPhone(user.phone ?? "");
+    setRecoveryEmail(user.recovery_email ?? "");
     setError(null);
     onClose();
   }
@@ -53,7 +54,11 @@ export default function EditProfileModal({ open, user, onClose, onUpdated }: Edi
     setSubmitting(true);
     setError(null);
     try {
-      const updated = await updateProfile(session.token, { name: name.trim(), phone: phone.trim() });
+      const updated = await updateProfile(session.token, {
+        name: name.trim(),
+        phone: phone.trim(),
+        recovery_email: recoveryEmail.trim() || null,
+      });
       onUpdated(updated);
       onClose();
       showToast(dict.editProfile.updateSuccess, "success");
@@ -102,6 +107,23 @@ export default function EditProfileModal({ open, user, onClose, onUpdated }: Edi
               className={styles.input}
             />
           </label>
+
+          {/* Only meaningful for a phone+password account — a Firebase
+              account's password lives in Firebase, not this backend, so
+              there's nothing for AuthController::forgotPassword to reset
+              for it (see ForgotPasswordPhoneModal). */}
+          {!user.email && (
+            <label className={styles.field}>
+              <span className={styles.label}>{dict.editProfile.recoveryEmailLabel}</span>
+              <input
+                type="email"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                className={styles.input}
+              />
+              <span className={styles.hint}>{dict.editProfile.recoveryEmailHint}</span>
+            </label>
+          )}
 
           {error && (
             <p ref={errorRef} tabIndex={-1} className={styles.error} role="alert">

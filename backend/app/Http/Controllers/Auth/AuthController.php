@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\DeleteAccountRequest;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\SocialAuthRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
@@ -16,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -37,6 +40,7 @@ class AuthController extends Controller
                 'name' => $request->validated('name'),
                 'phone' => $request->validated('phone'),
                 'password' => Hash::make($request->validated('password')),
+                'recovery_email' => $request->validated('recovery_email'),
             ]);
         } catch (QueryException $e) {
             throw ValidationException::withMessages([
@@ -170,9 +174,51 @@ class AuthController extends Controller
         $user->forceFill([
             'name' => $request->validated('name'),
             'phone' => $request->validated('phone'),
+            'recovery_email' => $request->validated('recovery_email'),
         ])->save();
 
         return new UserResource($user);
+    }
+
+    // Deliberately identical response whether `phone` doesn't exist, belongs
+    // to a Firebase account, or has no recovery_email on file — telling any
+    // of those apart would let this endpoint be used to probe which phone
+    // numbers have accounts (same reasoning as login() above). Nothing is
+    // actually sent in any of those cases; Password::sendResetLink() is
+    // only reached once a recovery_email is confirmed to exist.
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $user = User::where('phone', $request->validated('phone'))->first();
+
+        if ($user && $user->recovery_email) {
+            Password::sendResetLink(['phone' => $user->phone]);
+        }
+
+        return response()->json([
+            'message' => 'Si ce numéro est associé à un compte avec un email de récupération, un lien de réinitialisation vient d\'y être envoyé.',
+        ]);
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $status = Password::reset(
+            $request->only('phone', 'token', 'password', 'password_confirmation'),
+            function (User $user, string $password) {
+                $user->forceFill(['password' => Hash::make($password)])->save();
+                // Matches destroy()'s own reasoning: a reset password should
+                // invalidate every session a possible attacker (the reason
+                // for the reset in the first place) might already hold.
+                $user->tokens()->delete();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'token' => ['Ce lien de réinitialisation est invalide ou a expiré.'],
+            ]);
+        }
+
+        return response()->json(['message' => 'Mot de passe réinitialisé avec succès.']);
     }
 
     public function destroy(DeleteAccountRequest $request): JsonResponse

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -12,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'phone', 'email', 'password', 'firebase_uid', 'auth_provider'])]
+#[Fillable(['name', 'phone', 'email', 'recovery_email', 'password', 'firebase_uid', 'auth_provider'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -121,5 +122,47 @@ class User extends Authenticatable
     public function favorites(): HasMany
     {
         return $this->hasMany(Favorite::class)->latest();
+    }
+
+    /**
+     * Laravel's password-reset broker (Password::sendResetLink/reset) uses
+     * this to decide both where to email the reset link and which column
+     * the reset_tokens row is keyed on. `email` is the Firebase-account
+     * identifier (see the class docblock on the recovery_email migration);
+     * for a phone+password account the only meaningful recovery contact is
+     * recovery_email, so this overrides the trait's default ($this->email).
+     */
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->recovery_email ?? '';
+    }
+
+    /**
+     * Default Illuminate\Auth\Notifications\ResetPassword builds a link to
+     * a Laravel route this app doesn't have (the frontend is a separate
+     * Next.js app) — send the app's own notification instead, which links
+     * to NEXT_PUBLIC_SITE_URL's /reinitialiser-mot-de-passe page.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token, $this->phone));
+    }
+
+    /**
+     * Notifiable's own default routes every mail notification through
+     * `email` — the Firebase-account column, null for every phone+password
+     * account this notification actually targets. Route this one specific
+     * notification through recovery_email instead; everything else keeps
+     * the default `email` routing.
+     *
+     * @return array<int, string>|string
+     */
+    public function routeNotificationForMail(object $notification): array|string
+    {
+        if ($notification instanceof ResetPasswordNotification) {
+            return $this->recovery_email ?? [];
+        }
+
+        return $this->email ?? [];
     }
 }

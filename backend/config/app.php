@@ -54,6 +54,12 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // The customer-facing Next.js app's own origin (its NEXT_PUBLIC_SITE_URL)
+    // — distinct from 'url' above, which is this backend's own address.
+    // Needed wherever the backend has to build a link INTO the frontend
+    // itself, e.g. the password-reset email (ResetPasswordNotification).
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

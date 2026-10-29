@@ -146,7 +146,7 @@ async function fetchOrThrow(input: string, init?: RequestInit): Promise<Response
   }
 }
 
-async function postAuth(path: string, payload: object): Promise<AuthResponse> {
+async function postAuth<T = AuthResponse>(path: string, payload: object): Promise<T> {
   const res = await fetchOrThrow(`${API_BASE_URL}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -169,11 +169,37 @@ export async function register(
   name: string,
   phone: string,
   password: string,
-  passwordConfirmation: string
+  passwordConfirmation: string,
+  recoveryEmail?: string
 ): Promise<AuthResponse> {
   return postAuth("/register", {
     name,
     phone,
+    password,
+    password_confirmation: passwordConfirmation,
+    recovery_email: recoveryEmail || undefined,
+  });
+}
+
+// "mot de passe oublié" for phone+password accounts (see
+// ForgotPasswordPhoneModal) — distinct from ForgotPasswordModal's Firebase
+// sendPasswordResetEmail, which only applies to email-mode accounts.
+// Deliberately generic response either way (see AuthController::
+// forgotPassword) — never throws on an unknown phone or a missing recovery
+// email, so the caller always shows the same "check your email" message.
+export async function requestPasswordReset(phone: string): Promise<{ message: string }> {
+  return postAuth<{ message: string }>("/forgot-password", { phone });
+}
+
+export async function confirmPasswordReset(
+  phone: string,
+  token: string,
+  password: string,
+  passwordConfirmation: string
+): Promise<{ message: string }> {
+  return postAuth<{ message: string }>("/reset-password", {
+    phone,
+    token,
     password,
     password_confirmation: passwordConfirmation,
   });
@@ -209,6 +235,7 @@ export async function getMe(token: string): Promise<User> {
 export type ProfilePayload = {
   name: string;
   phone: string;
+  recovery_email?: string | null;
 };
 
 export async function updateProfile(token: string, payload: ProfilePayload): Promise<User> {

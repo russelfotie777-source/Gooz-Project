@@ -423,6 +423,18 @@ const fr = {
     forgotPasswordSubmit: "Envoyer le lien",
     forgotPasswordSending: "Envoi...",
     forgotPasswordSuccess: "Si un compte existe avec cet email, un lien de réinitialisation vient de lui être envoyé.",
+    recoveryEmailLabel: "Email de récupération (optionnel)",
+    recoveryEmailHint: "Permet de réinitialiser votre mot de passe en cas d'oubli. Sans lui, impossible de le récupérer.",
+    forgotPasswordPhoneInstructions:
+      "Entrez votre numéro de téléphone — si un email de récupération est associé à ce compte, un lien de réinitialisation y sera envoyé.",
+    forgotPasswordPhoneSuccess:
+      "Si ce numéro est associé à un compte avec un email de récupération, un lien de réinitialisation vient de lui être envoyé.",
+    resetPasswordTitle: "Choisissez un nouveau mot de passe",
+    resetPasswordSubmit: "Réinitialiser le mot de passe",
+    resetPasswordSuccessTitle: "Mot de passe réinitialisé",
+    resetPasswordSuccessText: "Votre mot de passe a été changé avec succès. Vous pouvez maintenant vous connecter.",
+    resetPasswordInvalidLinkTitle: "Lien invalide",
+    resetPasswordInvalidLinkText: "Ce lien de réinitialisation est incomplet ou invalide. Demandez-en un nouveau.",
     backToLogin: "Retour à la connexion",
     login: "Se connecter",
     signup: "S'inscrire",
@@ -646,6 +658,8 @@ const fr = {
     saving: "Enregistrement...",
     genericError: "Une erreur est survenue. Réessayez.",
     updateSuccess: "Profil mis à jour.",
+    recoveryEmailLabel: "Email de récupération (optionnel)",
+    recoveryEmailHint: "Permet de réinitialiser votre mot de passe en cas d'oubli.",
   },
   completePhone: {
     title: "Ajoutez votre numéro",

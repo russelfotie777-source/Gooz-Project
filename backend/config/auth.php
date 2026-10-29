@@ -96,7 +96,12 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
+            // Minutes — kept short on purpose: a forgotten-password link
+            // sitting unused in an inbox for an hour is a bigger window for
+            // someone else with access to that inbox than this flow needs.
+            // ResetPasswordNotification's own copy ("Ce lien expire dans ...
+            // minutes") must stay in sync with this value.
+            'expire' => 5,
             'throttle' => 60,
         ],
     ],

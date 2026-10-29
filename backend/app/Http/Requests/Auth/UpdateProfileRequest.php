@@ -22,6 +22,12 @@ class UpdateProfileRequest extends FormRequest
                 'regex:/^\+?[0-9]{8,15}$/',
                 Rule::unique('users', 'phone')->ignore($this->user()->id),
             ],
+            'recovery_email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('users', 'recovery_email')->ignore($this->user()->id),
+            ],
         ];
     }
 }
