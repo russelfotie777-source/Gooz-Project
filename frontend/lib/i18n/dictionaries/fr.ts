@@ -653,6 +653,10 @@ const fr = {
     updateSuccess: "Profil mis à jour.",
     recoveryEmailLabel: "Email de récupération (optionnel)",
     recoveryEmailHint: "Permet de réinitialiser votre mot de passe en cas d'oubli.",
+    changePhoto: "Changer la photo de profil",
+    removePhoto: "Supprimer la photo",
+    avatarTooLarge: "L'image est trop lourde (4 Mo maximum).",
+    avatarUpdateSuccess: "Photo de profil mise à jour.",
   },
   completePhone: {
     title: "Ajoutez votre numéro",

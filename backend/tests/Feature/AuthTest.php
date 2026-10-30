@@ -5,9 +5,12 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
 use App\Services\FirebaseIdTokenVerifier;
+use App\Services\ImageResizer;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 
@@ -190,6 +193,60 @@ class AuthTest extends TestCase
 
         $response->assertOk()->assertJsonPath('data.name', 'Nouveau Nom');
         $this->assertDatabaseHas('users', ['id' => $user->id, 'name' => 'Nouveau Nom', 'phone' => '670000006']);
+    }
+
+    public function test_a_user_can_upload_an_avatar_which_is_resized_and_stored(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $file = UploadedFile::fake()->image('me.jpg', 1200, 1200);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->post('/api/v1/me/avatar', ['avatar' => $file]);
+
+        $response->assertOk();
+        $user->refresh();
+        $this->assertNotNull($user->avatar);
+        Storage::disk('public')->assertExists(ImageResizer::pathFromUrl($user->avatar, 'public'));
+        $this->assertSame($user->avatar, $response->json('data.avatar'));
+    }
+
+    public function test_uploading_a_new_avatar_deletes_the_previous_file(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        Storage::disk('public')->put('avatars/old.jpg', 'fake-content');
+        $user->forceFill(['avatar' => Storage::disk('public')->url('avatars/old.jpg')])->save();
+
+        $this->actingAs($user, 'sanctum')
+            ->post('/api/v1/me/avatar', ['avatar' => UploadedFile::fake()->image('new.jpg', 400, 400)])
+            ->assertOk();
+
+        Storage::disk('public')->assertMissing('avatars/old.jpg');
+    }
+
+    public function test_a_user_can_remove_their_avatar(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        Storage::disk('public')->put('avatars/mine.jpg', 'fake-content');
+        $user->forceFill(['avatar' => Storage::disk('public')->url('avatars/mine.jpg')])->save();
+
+        $response = $this->actingAs($user, 'sanctum')->deleteJson('/api/v1/me/avatar');
+
+        $response->assertOk()->assertJsonPath('data.avatar', null);
+        Storage::disk('public')->assertMissing('avatars/mine.jpg');
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'avatar' => null]);
+    }
+
+    public function test_avatar_upload_rejects_a_non_image_file(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')
+            ->post('/api/v1/me/avatar', ['avatar' => UploadedFile::fake()->create('not-an-image.pdf', 100)])
+            ->assertUnprocessable();
     }
 
     public function test_social_auth_creates_a_new_account_on_first_sign_in(): void

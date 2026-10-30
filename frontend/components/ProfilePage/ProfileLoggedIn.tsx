@@ -74,7 +74,7 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage, onPr
     <>
       <div className={styles.userCard}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon/profile/avatar-photo.png" alt="" className={styles.avatarPhoto} />
+        <img src={user.avatar ?? "/icon/profile/avatar-photo.png"} alt="" className={styles.avatarPhoto} />
         <div className={styles.userInfo}>
           <p className={styles.userName}>{user.name}</p>
           <p className={styles.userEmail}>{user.phone}</p>

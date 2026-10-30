@@ -91,6 +91,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/me', [AuthController::class, 'updateProfile']);
         Route::delete('/me', [AuthController::class, 'destroy']);
+        Route::post('/me/avatar', [AuthController::class, 'updateAvatar']);
+        Route::delete('/me/avatar', [AuthController::class, 'deleteAvatar']);
 
         Route::get('/cart', [CartController::class, 'index']);
         Route::post('/cart/items', [CartController::class, 'addItem']);

@@ -644,6 +644,10 @@ const en: Dictionary = {
     updateSuccess: "Profile updated.",
     recoveryEmailLabel: "Recovery email (optional)",
     recoveryEmailHint: "Lets you reset your password if you forget it.",
+    changePhoto: "Change profile photo",
+    removePhoto: "Remove photo",
+    avatarTooLarge: "This image is too large (4MB maximum).",
+    avatarUpdateSuccess: "Profile photo updated.",
   },
   completePhone: {
     title: "Add your phone number",

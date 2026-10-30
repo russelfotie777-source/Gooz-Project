@@ -88,6 +88,9 @@ export interface User {
   // (ForgotPasswordPhoneModal) send a reset link somewhere. See
   // backend's AuthController::forgotPassword.
   recovery_email: string | null;
+  // Full URL to the uploaded photo, or null to show the app's default
+  // placeholder avatar — see AuthController::updateAvatar/deleteAvatar.
+  avatar: string | null;
   role: "customer" | "admin" | "delivery";
   is_active: boolean;
   created_at: string;

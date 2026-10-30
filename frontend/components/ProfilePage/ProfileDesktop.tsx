@@ -100,7 +100,7 @@ export default function ProfileDesktop() {
               <>
                 <div className={styles.sidebarUser}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/icon/profile/avatar-photo.png" alt="" className={styles.sidebarAvatar} />
+                  <img src={user.avatar ?? "/icon/profile/avatar-photo.png"} alt="" className={styles.sidebarAvatar} />
                   <div>
                     <p className={styles.sidebarUserName}>{user.name}</p>
                     <p className={styles.sidebarUserPhone}>{user.phone}</p>
@@ -179,7 +179,7 @@ export default function ProfileDesktop() {
               <>
                 <div className={styles.overviewCard}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/icon/profile/avatar-photo.png" alt="" className={styles.overviewAvatar} />
+                  <img src={user.avatar ?? "/icon/profile/avatar-photo.png"} alt="" className={styles.overviewAvatar} />
                   <div className={styles.overviewInfo}>
                     <p className={styles.overviewName}>{user.name}</p>
                     <p className={styles.overviewPhone}>{user.phone}</p>

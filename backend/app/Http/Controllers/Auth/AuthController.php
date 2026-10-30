@@ -9,16 +9,19 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\SocialAuthRequest;
+use App\Http\Requests\Auth\UpdateAvatarRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\FirebaseIdTokenVerifier;
+use App\Services\ImageResizer;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -178,6 +181,42 @@ class AuthController extends Controller
         ])->save();
 
         return new UserResource($user);
+    }
+
+    // Small (shown as a circular thumbnail everywhere it appears) — no need
+    // for Brand::logo's 600px headroom.
+    private const AVATAR_MAX_WIDTH = 400;
+
+    public function updateAvatar(UpdateAvatarRequest $request, ImageResizer $resizer): UserResource
+    {
+        $user = $request->user();
+
+        $this->deleteAvatarFile($user);
+
+        $user->forceFill([
+            'avatar' => Storage::disk(ImageResizer::defaultDisk())->url(
+                $resizer->resizeAndStore($request->file('avatar'), 'avatars', self::AVATAR_MAX_WIDTH)
+            ),
+        ])->save();
+
+        return new UserResource($user);
+    }
+
+    public function deleteAvatar(Request $request): UserResource
+    {
+        $user = $request->user();
+
+        $this->deleteAvatarFile($user);
+        $user->forceFill(['avatar' => null])->save();
+
+        return new UserResource($user);
+    }
+
+    private function deleteAvatarFile(User $user): void
+    {
+        if ($user->avatar) {
+            Storage::disk(ImageResizer::defaultDisk())->delete(ImageResizer::pathFromUrl($user->avatar));
+        }
     }
 
     // Deliberately identical response whether `phone` doesn't exist, belongs

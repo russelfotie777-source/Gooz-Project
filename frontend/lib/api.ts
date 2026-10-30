@@ -246,6 +246,21 @@ export async function updateProfile(token: string, payload: ProfilePayload): Pro
   return data;
 }
 
+export async function uploadAvatar(token: string, file: File): Promise<User> {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  const { data } = await authedFetch<ApiResource<User>>("/me/avatar", token, {
+    method: "POST",
+    body: formData,
+  });
+  return data;
+}
+
+export async function removeAvatar(token: string): Promise<User> {
+  const { data } = await authedFetch<ApiResource<User>>("/me/avatar", token, { method: "DELETE" });
+  return data;
+}
+
 // Irreversible: anonymizes the account server-side and revokes every token
 // (see AuthController::destroy) — requires the current password as a final
 // identity check, so a stolen/left-open session alone can't trigger it.
@@ -487,12 +502,16 @@ export async function getDeliveryEstimate(
 // token explicitly rather than reading it from storage here, so this module
 // stays free of any localStorage/session dependency (lib/auth.ts owns that).
 async function authedFetch<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
+  // FormData (avatar upload) must NOT get an explicit Content-Type — the
+  // browser sets its own, including the multipart boundary. Forcing
+  // application/json here would silently break the upload server-side.
+  const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
   const res = await fetchOrThrow(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...(init.body && !isFormData ? { "Content-Type": "application/json" } : {}),
       ...init.headers,
     },
     cache: "no-store",
