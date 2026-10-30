@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { BrandForm } from "@/components/brand-form";
 
 type Brand = {
@@ -18,9 +19,9 @@ type Brand = {
 };
 
 export default function EditBrandPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const brandId = Number(params.id);
+  const goBack = useGoBack("/dashboard/marques");
 
   const [brand, setBrand] = useState<Brand | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +39,7 @@ export default function EditBrandPage() {
     try {
       formData.append("_method", "PUT");
       await apiFetch(`/brands/${brandId}`, { method: "POST", body: formData });
-      router.push("/dashboard/marques");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -71,7 +72,7 @@ export default function EditBrandPage() {
           submitting={submitting}
           error={error}
           submitLabel="Enregistrer"
-          onCancel={() => router.push("/dashboard/marques")}
+          onCancel={goBack}
           onSubmit={handleSubmit}
         />
       )}

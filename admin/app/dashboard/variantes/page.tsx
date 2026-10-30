@@ -16,6 +16,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 import { Toast } from "@/components/toast";
 import { formatXAF } from "@/lib/format";
 
@@ -32,7 +33,7 @@ export default function VariantesPage() {
   const router = useRouter();
   const [variants, setVariants] = useState<Variant[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Variant>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ title: string; message: string } | null>(null);

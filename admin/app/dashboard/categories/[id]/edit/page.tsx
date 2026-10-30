@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { CategoryForm } from "@/components/category-form";
 
 type Category = {
@@ -16,9 +17,9 @@ type Category = {
 };
 
 export default function EditCategoryPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const categoryId = Number(params.id);
+  const goBack = useGoBack("/dashboard/categories");
 
   const [category, setCategory] = useState<Category | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -36,7 +37,7 @@ export default function EditCategoryPage() {
     try {
       formData.append("_method", "PUT");
       await apiFetch(`/categories/${categoryId}`, { method: "POST", body: formData });
-      router.push("/dashboard/categories");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -67,7 +68,7 @@ export default function EditCategoryPage() {
           submitting={submitting}
           error={error}
           submitLabel="Enregistrer"
-          onCancel={() => router.push("/dashboard/categories")}
+          onCancel={goBack}
           onSubmit={handleSubmit}
         />
       )}

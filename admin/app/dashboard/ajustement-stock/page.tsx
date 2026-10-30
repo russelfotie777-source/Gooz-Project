@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 import { formatDate } from "@/lib/format";
 
 type WarehouseOption = { id: number; name: string };
@@ -31,7 +32,7 @@ export default function AjustementStockPage() {
   const router = useRouter();
   const [adjustments, setAdjustments] = useState<Adjustment[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Adjustment>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);

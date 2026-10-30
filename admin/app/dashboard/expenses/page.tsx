@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Plus, XCircle } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 import { formatAmount, formatDate as formatDateTime } from "@/lib/format";
 
 type Expense = {
@@ -32,7 +33,7 @@ export default function ExpensesPage() {
   const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Expense>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);

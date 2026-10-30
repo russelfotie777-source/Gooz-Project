@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { formatDate as formatDateTime } from "@/lib/format";
 
 type Line = {
@@ -39,8 +40,8 @@ function formatDate(iso: string): string {
 
 export default function CommandeAchatDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const orderId = Number(params.id);
+  const goBack = useGoBack("/dashboard/commandes-achat");
 
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +133,7 @@ export default function CommandeAchatDetailPage() {
       </div>
 
       <button
-        onClick={() => router.push("/dashboard/commandes-achat")}
+        onClick={goBack}
         className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5"
       >
         Retour à la liste

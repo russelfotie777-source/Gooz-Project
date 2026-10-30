@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { HomepageSectionForm, HomepageSectionFormValues } from "@/components/homepage-section-form";
 
 type SectionDetail = {
@@ -37,9 +38,9 @@ type SectionDetail = {
 };
 
 export default function EditHomepageSectionPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const sectionId = Number(params.id);
+  const goBack = useGoBack("/dashboard/homepage-sections");
 
   const [section, setSection] = useState<SectionDetail | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -56,7 +57,7 @@ export default function EditHomepageSectionPage() {
     setSubmitting(true);
     try {
       await apiFetch(`/admin/homepage-sections/${sectionId}`, { method: "PUT", body: JSON.stringify(values) });
-      router.push("/dashboard/homepage-sections");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -114,7 +115,7 @@ export default function EditHomepageSectionPage() {
           submitting={submitting}
           error={error}
           submitLabel="Enregistrer"
-          onCancel={() => router.push("/dashboard/homepage-sections")}
+          onCancel={goBack}
           onSubmit={handleSubmit}
         />
       )}

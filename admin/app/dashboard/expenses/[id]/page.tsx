@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, XCircle } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { formatDate as formatDateTime } from "@/lib/format";
 
 type Expense = {
@@ -51,8 +52,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function ExpenseDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const expenseId = Number(params.id);
+  const goBack = useGoBack("/dashboard/expenses");
 
   const [expense, setExpense] = useState<Expense | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +145,7 @@ export default function ExpenseDetailPage() {
           </button>
         )}
         <button
-          onClick={() => router.push("/dashboard/expenses")}
+          onClick={goBack}
           className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5"
         >
           Retour à la liste

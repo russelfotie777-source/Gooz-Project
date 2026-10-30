@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 
 type CityOption = { id: number; name: string };
 
@@ -21,7 +22,7 @@ export default function QuartiersLivraisonPage() {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Neighborhood>["meta"] | null>(null);
   const [cities, setCities] = useState<CityOption[]>([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [search, setSearch] = useState("");
   const [cityId, setCityId] = useState("");
   const [error, setError] = useState<string | null>(null);

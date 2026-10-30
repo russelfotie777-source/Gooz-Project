@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Trash2 } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 
 type Account = {
   id: number;
@@ -27,8 +28,8 @@ const TYPE_OPTIONS = [
 
 export default function EditComptePage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const accountId = Number(params.id);
+  const goBack = useGoBack("/dashboard/comptes");
 
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -59,7 +60,7 @@ export default function EditComptePage() {
         method: "PUT",
         body: JSON.stringify({ code, name, type, is_active: isActive }),
       });
-      router.push("/dashboard/comptes");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -71,7 +72,7 @@ export default function EditComptePage() {
     if (!confirm("Supprimer ce compte ?")) return;
     try {
       await apiFetch(`/admin/accounts/${accountId}`, { method: "DELETE" });
-      router.push("/dashboard/comptes");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la suppression.");
     }
@@ -159,7 +160,7 @@ export default function EditComptePage() {
           </button>
           <button
             type="button"
-            onClick={() => router.push("/dashboard/comptes")}
+            onClick={goBack}
             className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5"
           >
             Annuler

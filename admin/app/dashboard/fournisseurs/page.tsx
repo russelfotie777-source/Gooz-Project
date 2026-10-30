@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 
 type Supplier = {
   id: number;
@@ -18,7 +19,7 @@ export default function FournisseursPage() {
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Supplier>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);

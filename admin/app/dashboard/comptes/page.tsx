@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 
 type Account = {
   id: number;
@@ -36,7 +37,7 @@ export default function ComptesPage() {
   const router = useRouter();
   const [accounts, setAccounts] = useState<Account[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Account>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [type, setType] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);

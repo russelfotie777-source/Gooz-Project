@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { ProductForm, ProductOption, ProductSpecificationValue } from "@/components/product-form";
 
 type Product = {
@@ -22,9 +23,9 @@ type Product = {
 };
 
 export default function EditProductPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const productId = Number(params.id);
+  const goBack = useGoBack("/dashboard/produits");
 
   const [product, setProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<ProductOption[]>([]);
@@ -49,7 +50,7 @@ export default function EditProductPage() {
     setSubmitting(true);
     try {
       await apiFetch(`/products/${productId}`, { method: "PUT", body: JSON.stringify(payload) });
-      router.push("/dashboard/produits");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -88,7 +89,7 @@ export default function EditProductPage() {
           submitting={submitting}
           error={error}
           submitLabel="Enregistrer"
-          onCancel={() => router.push("/dashboard/produits")}
+          onCancel={goBack}
           onSubmit={handleSubmit}
         />
       )}

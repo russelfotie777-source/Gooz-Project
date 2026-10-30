@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 import { Toast } from "@/components/toast";
 
 type Product = {
@@ -28,7 +29,7 @@ export default function ProduitsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Product>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ title: string; message: string } | null>(null);

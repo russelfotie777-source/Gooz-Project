@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 
 type Section = {
   id: number;
@@ -45,7 +46,7 @@ export default function HomepageSectionsPage() {
   const router = useRouter();
   const [sections, setSections] = useState<Section[] | null>(null);
   const [meta, setMeta] = useState<Paginated<Section>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);

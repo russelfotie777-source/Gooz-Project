@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { NeighborhoodForm, CityOption } from "@/components/neighborhood-form";
 
 type Neighborhood = {
@@ -16,9 +17,9 @@ type Neighborhood = {
 };
 
 export default function EditNeighborhoodPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const neighborhoodId = Number(params.id);
+  const goBack = useGoBack("/dashboard/quartiers-livraison");
 
   const [neighborhood, setNeighborhood] = useState<Neighborhood | null>(null);
   const [cities, setCities] = useState<CityOption[]>([]);
@@ -39,7 +40,7 @@ export default function EditNeighborhoodPage() {
     setSubmitting(true);
     try {
       await apiFetch(`/admin/neighborhoods/${neighborhoodId}`, { method: "PUT", body: JSON.stringify(values) });
-      router.push("/dashboard/quartiers-livraison");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -73,7 +74,7 @@ export default function EditNeighborhoodPage() {
           submitting={submitting}
           error={error}
           submitLabel="Enregistrer"
-          onCancel={() => router.push("/dashboard/quartiers-livraison")}
+          onCancel={goBack}
           onSubmit={handleSubmit}
         />
       )}

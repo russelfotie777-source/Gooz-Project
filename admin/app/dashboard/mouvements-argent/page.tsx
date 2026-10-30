@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye, Lock, Unlock } from "lucide-react";
 import { apiFetch, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 import { formatAmount } from "@/lib/format";
 
 type MoneyMovement = {
@@ -27,7 +28,7 @@ const CHANNEL_LABELS: Record<string, string> = {
 export default function MouvementsArgentPage() {
   const [movements, setMovements] = useState<MoneyMovement[] | null>(null);
   const [meta, setMeta] = useState<Paginated<MoneyMovement>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [direction, setDirection] = useState("");
   const [error, setError] = useState<string | null>(null);
 

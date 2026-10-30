@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { SupplierForm } from "@/components/supplier-form";
 
 type Supplier = {
@@ -22,9 +23,9 @@ type Supplier = {
 };
 
 export default function EditSupplierPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const supplierId = Number(params.id);
+  const goBack = useGoBack("/dashboard/fournisseurs");
 
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -41,7 +42,7 @@ export default function EditSupplierPage() {
     setSubmitting(true);
     try {
       await apiFetch(`/admin/suppliers/${supplierId}`, { method: "PUT", body: JSON.stringify(values) });
-      router.push("/dashboard/fournisseurs");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -80,7 +81,7 @@ export default function EditSupplierPage() {
           submitting={submitting}
           error={error}
           submitLabel="Enregistrer"
-          onCancel={() => router.push("/dashboard/fournisseurs")}
+          onCancel={goBack}
           onSubmit={handleSubmit}
         />
       )}

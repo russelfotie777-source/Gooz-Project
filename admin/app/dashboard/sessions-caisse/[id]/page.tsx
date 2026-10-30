@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { formatAmount as formatAmountWithCurrency, formatDate as formatDateTime } from "@/lib/format";
 
 type CashSession = {
@@ -57,7 +58,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function SessionCaisseDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
+  const goBack = useGoBack("/dashboard/sessions-caisse");
   const sessionId = Number(params.id);
 
   const [session, setSession] = useState<CashSession | null>(null);
@@ -181,7 +182,7 @@ export default function SessionCaisseDetailPage() {
       )}
 
       <button
-        onClick={() => router.push("/dashboard/sessions-caisse")}
+        onClick={goBack}
         className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5"
       >
         Retour à la liste

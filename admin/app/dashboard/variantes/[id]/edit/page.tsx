@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight, ImageOff, Star, Trash2, UploadCloud } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { VariantForm } from "@/components/variant-form";
 
 type VariantImage = { id: number; image_url: string; is_primary: boolean; alt_text: string | null };
@@ -28,9 +29,9 @@ type Variant = {
 };
 
 export default function EditVariantPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const variantId = Number(params.id);
+  const goBack = useGoBack("/dashboard/variantes");
 
   const [variant, setVariant] = useState<Variant | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -55,7 +56,7 @@ export default function EditVariantPage() {
     setSubmitting(true);
     try {
       await apiFetch(`/variants/${variantId}`, { method: "PUT", body: JSON.stringify(payload) });
-      router.push("/dashboard/variantes");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -139,7 +140,7 @@ export default function EditVariantPage() {
             submitting={submitting}
             error={null}
             submitLabel="Enregistrer"
-            onCancel={() => router.push("/dashboard/variantes")}
+            onCancel={goBack}
             onSubmit={handleSubmit}
           />
 

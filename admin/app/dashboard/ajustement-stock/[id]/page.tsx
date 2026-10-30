@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Trash2 } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { formatDate as formatDateTime } from "@/lib/format";
 
 type Line = {
@@ -59,8 +60,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function AjustementStockDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const adjustmentId = Number(params.id);
+  const goBack = useGoBack("/dashboard/ajustement-stock");
 
   const [adjustment, setAdjustment] = useState<Adjustment | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +98,7 @@ export default function AjustementStockDetailPage() {
     setBusy(true);
     try {
       await apiFetch(`/admin/stock-adjustments/${adjustmentId}`, { method: "DELETE" });
-      router.push("/dashboard/ajustement-stock");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la suppression.");
       setBusy(false);

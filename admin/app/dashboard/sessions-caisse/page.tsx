@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Eye, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { apiFetch, ApiError, Paginated } from "@/lib/api";
+import { usePageParam } from "@/lib/usePageParam";
 import { formatAmount as formatAmountWithCurrency, formatDate } from "@/lib/format";
 
 type CashSession = {
@@ -29,7 +30,7 @@ export default function SessionsCaissePage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<CashSession[] | null>(null);
   const [meta, setMeta] = useState<Paginated<CashSession>["meta"] | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePageParam();
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);

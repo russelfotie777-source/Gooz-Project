@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useGoBack } from "@/lib/useGoBack";
 import { CouponForm } from "@/components/coupon-form";
 
 type Coupon = {
@@ -20,9 +21,9 @@ type Coupon = {
 };
 
 export default function EditCouponPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const couponId = Number(params.id);
+  const goBack = useGoBack("/dashboard/coupons");
 
   const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,7 +40,7 @@ export default function EditCouponPage() {
     setSubmitting(true);
     try {
       await apiFetch(`/admin/coupons/${couponId}`, { method: "PUT", body: JSON.stringify(values) });
-      router.push("/dashboard/coupons");
+      goBack();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Échec de la mise à jour.");
     } finally {
@@ -76,7 +77,7 @@ export default function EditCouponPage() {
           submitting={submitting}
           error={error}
           submitLabel="Enregistrer"
-          onCancel={() => router.push("/dashboard/coupons")}
+          onCancel={goBack}
           onSubmit={handleSubmit}
         />
       )}
