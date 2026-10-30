@@ -7,14 +7,7 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import type { Review } from "@/lib/types";
 import styles from "./ProductDetail.module.css";
 
-// rating maps each mood onto the backend's 1-5 scale (StoreReviewRequest).
-const MOOD_DEFS = [
-  { id: "very-dissatisfied", icon: "/icon/product-detail/mood-very-dissatisfied.svg", key: "veryDissatisfied", rating: 1 },
-  { id: "worried", icon: "/icon/product-detail/mood-worried.svg", key: "worried", rating: 2 },
-  { id: "content", icon: "/icon/product-detail/mood-content.svg", key: "content", rating: 3 },
-  { id: "calm", icon: "/icon/product-detail/mood-calm.svg", key: "calm", rating: 4 },
-  { id: "happy", icon: "/icon/product-detail/mood-happy.svg", key: "happy", rating: 5 },
-] as const;
+const STAR_RATINGS = [1, 2, 3, 4, 5] as const;
 
 interface ReviewFormProps {
   productId: number;
@@ -24,8 +17,8 @@ interface ReviewFormProps {
 
 export default function ReviewForm({ productId, reviews }: ReviewFormProps) {
   const dict = useDictionary();
-  const MOODS = MOOD_DEFS.map((m) => ({ ...m, label: dict.product.moods[m.key] }));
-  const [mood, setMood] = useState<(typeof MOODS)[number]["id"] | null>(null);
+  const [rating, setRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
   const [reviewMessage, setReviewMessage] = useState<string | null>(null);
@@ -43,7 +36,7 @@ export default function ReviewForm({ productId, reviews }: ReviewFormProps) {
   // submit button was previously wired to nothing at all — this is what
   // actually posts to ReviewController::store.
   async function handleSubmitReview() {
-    if (!mood) {
+    if (!rating) {
       setReviewStatus("error");
       setReviewMessage(dict.product.ratingRequired);
       return;
@@ -56,8 +49,6 @@ export default function ReviewForm({ productId, reviews }: ReviewFormProps) {
       return;
     }
 
-    const rating = MOODS.find((m) => m.id === mood)?.rating ?? 3;
-
     setReviewStatus("submitting");
     setReviewMessage(null);
     try {
@@ -68,7 +59,7 @@ export default function ReviewForm({ productId, reviews }: ReviewFormProps) {
       );
       setReviewStatus("submitted");
       setReviewMessage(dict.product.reviewSubmitted);
-      setMood(null);
+      setRating(null);
       setComment("");
       setGuestName("");
     } catch (err) {
@@ -84,23 +75,29 @@ export default function ReviewForm({ productId, reviews }: ReviewFormProps) {
   return (
     <div className={styles.reviews}>
       <h2 className={styles.reviewsTitle}>{dict.product.satisfactionTitle}</h2>
-      <div className={styles.moods}>
-        {MOODS.map((m) => (
+      <div className={styles.starPicker} onMouseLeave={() => setHoverRating(null)} role="radiogroup" aria-label={dict.product.satisfactionTitle}>
+        {STAR_RATINGS.map((value) => (
           <button
-            key={m.id}
+            key={value}
             type="button"
-            className={`${styles.moodButton} ${mood === m.id ? styles.moodButtonActive : ""}`}
+            className={styles.starButton}
             onClick={() => {
-              setMood(m.id);
+              setRating(value);
               if (reviewStatus === "error") {
                 setReviewStatus("idle");
                 setReviewMessage(null);
               }
             }}
-            aria-pressed={mood === m.id}
+            onMouseEnter={() => setHoverRating(value)}
+            role="radio"
+            aria-checked={rating === value}
+            aria-label={String(value)}
           >
-            <img src={m.icon} alt="" className={styles.moodIcon} />
-            <span className={styles.moodLabel}>{m.label}</span>
+            <img
+              src="/icon/product-detail/star.svg"
+              alt=""
+              className={`${styles.starPickerIcon} ${value <= (hoverRating ?? rating ?? 0) ? styles.starPickerIconFilled : ""}`}
+            />
           </button>
         ))}
       </div>
@@ -139,7 +136,7 @@ export default function ReviewForm({ productId, reviews }: ReviewFormProps) {
           type="button"
           className={styles.cancelButton}
           onClick={() => {
-            setMood(null);
+            setRating(null);
             setComment("");
             setReviewStatus("idle");
             setReviewMessage(null);
@@ -176,8 +173,15 @@ export default function ReviewForm({ productId, reviews }: ReviewFormProps) {
                 </span>
                 <span className={styles.reviewDate}>{new Date(review.created_at).toLocaleDateString("fr-FR")}</span>
               </div>
-              <span className={styles.reviewMoodLabel}>
-                {MOODS.find((m) => m.rating === review.rating)?.label ?? `${review.rating}/5`}
+              <span className={styles.reviewMoodLabel} aria-label={`${review.rating}/5`}>
+                {STAR_RATINGS.map((value) => (
+                  <img
+                    key={value}
+                    src="/icon/product-detail/star.svg"
+                    alt=""
+                    className={`${styles.reviewStarIcon} ${value <= review.rating ? styles.starPickerIconFilled : ""}`}
+                  />
+                ))}
               </span>
               {review.comment && <p className={styles.reviewComment}>{review.comment}</p>}
             </li>

@@ -167,13 +167,6 @@ const en: Dictionary = {
         text: "Your loyalty is rewarded with excellence.",
       },
     ],
-    moods: {
-      veryDissatisfied: "Disappointed",
-      worried: "Not convinced",
-      content: "Okay",
-      calm: "Good",
-      happy: "Very good",
-    },
     viewImage: (n: number) => `View image ${n}`,
     productRating: "Product rating",
     inStock: "In Stock",

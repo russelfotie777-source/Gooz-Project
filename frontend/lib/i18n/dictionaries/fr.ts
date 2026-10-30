@@ -172,13 +172,6 @@ const fr = {
         text: "Votre fidélité est récompensée par l'excellence.",
       },
     ],
-    moods: {
-      veryDissatisfied: "Déçu",
-      worried: "Pas convaincu",
-      content: "Correct",
-      calm: "Bien",
-      happy: "Très bien",
-    },
     viewImage: (n: number) => `Voir l'image ${n}`,
     productRating: "Note du produit",
     inStock: "En Stock",

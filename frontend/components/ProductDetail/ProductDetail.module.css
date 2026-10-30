@@ -749,91 +749,25 @@
   color: var(--color-text-muted);
 }
 
-.moods {
+.starPicker {
   display: flex;
   gap: 6px;
-  flex-wrap: nowrap;
 }
 
-.moodButton {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 6px 2px;
-  /* var(--color-text-muted) matches this exact rgba(0,0,0,0.5) in light mode
-     — kept identical there, but this needs a border with real visual weight
-     (not the subtler var(--color-border) used for card outlines), which
-     text-muted's dark-mode value still gives. */
-  border: 0.5px solid var(--color-text-muted);
-  border-radius: var(--radius-sm);
-  flex: 1;
-  min-width: 0;
-  transition: border-color 0.4s ease;
+.starButton {
+  padding: 4px;
+  line-height: 0;
 }
 
-.moodButton::before,
-.moodButton::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  top: 100%;
-  width: 150px;
-  height: 150px;
-  background: var(--color-accent-strong);
-  transform: translateX(-50%);
-  transition: top 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+.starPickerIcon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.25;
+  transition: opacity 0.2s ease;
 }
 
-.moodButton::before {
-  border-radius: 45%;
-  opacity: 0.5;
-  animation: pickupWaveSpin 7s linear infinite;
-}
-
-.moodButton::after {
-  border-radius: 47%;
-  opacity: 0.85;
-  animation: pickupWaveSpin 5s linear infinite reverse;
-}
-
-.moodIcon,
-.moodLabel {
-  position: relative;
-  z-index: 1;
-}
-
-.moodButtonActive {
-  border-color: var(--color-accent-strong);
-}
-
-.moodButtonActive::before {
-  top: -8px;
-}
-
-.moodButtonActive::after {
-  top: -14px;
-}
-
-.moodButtonActive .moodLabel {
-  color: var(--color-white);
-}
-
-.moodIcon {
-  width: 22px;
-  height: 22px;
-}
-
-.moodLabel {
-  font-family: var(--font-body);
-  font-size: 9px;
-  color: var(--color-text-muted);
-  text-align: center;
+.starPickerIconFilled {
+  opacity: 1;
 }
 
 .commentInput {
@@ -964,10 +898,21 @@
 }
 
 .reviewMoodLabel {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 12px;
-  color: var(--color-accent-strong);
+  display: flex;
+  gap: 2px;
+}
+
+.reviewStarIcon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.25;
+}
+
+/* Two-class selector so this reliably beats .reviewStarIcon's opacity
+   regardless of declaration order — .starPickerIconFilled alone is a
+   single-class selector of equal specificity and would lose that fight. */
+.reviewStarIcon.starPickerIconFilled {
+  opacity: 1;
 }
 
 .reviewComment {
@@ -1162,9 +1107,5 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-  }
-
-  .moods {
-    flex-wrap: nowrap;
   }
 }
