@@ -1,23 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { apiFetch, ApiError, Paginated } from "@/lib/api";
-import { VariantForm, ProductOption } from "@/components/variant-form";
+import { apiFetch, ApiError } from "@/lib/api";
+import { VariantForm } from "@/components/variant-form";
 
 export default function CreateVariantPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<ProductOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    apiFetch<Paginated<ProductOption>>("/admin/products?per_page=100")
-      .then((res) => setProducts(res.data))
-      .catch(() => {});
-  }, []);
 
   async function handleSubmit(payload: Record<string, unknown>) {
     setError(null);
@@ -49,7 +42,6 @@ export default function CreateVariantPage() {
       <h1 className="mb-6 text-2xl font-bold">Créer une variante</h1>
 
       <VariantForm
-        products={products}
         submitting={submitting}
         error={error}
         submitLabel="Créer"

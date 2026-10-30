@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronRight, ImageOff, Star, Trash2, UploadCloud } from "lucide-react";
-import { apiFetch, ApiError, Paginated } from "@/lib/api";
-import { VariantForm, ProductOption } from "@/components/variant-form";
+import { apiFetch, ApiError } from "@/lib/api";
+import { VariantForm } from "@/components/variant-form";
 
 type VariantImage = { id: number; image_url: string; is_primary: boolean; alt_text: string | null };
 
 type Variant = {
   id: number;
   product_id: number;
+  product_name: string | null;
   name: string | null;
   size: string | null;
   color: string | null;
@@ -32,7 +33,6 @@ export default function EditVariantPage() {
   const variantId = Number(params.id);
 
   const [variant, setVariant] = useState<Variant | null>(null);
-  const [products, setProducts] = useState<ProductOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -47,9 +47,6 @@ export default function EditVariantPage() {
 
   useEffect(() => {
     load();
-    apiFetch<Paginated<ProductOption>>("/admin/products?per_page=100")
-      .then((res) => setProducts(res.data))
-      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantId]);
 
@@ -124,9 +121,9 @@ export default function EditVariantPage() {
       {variant && (
         <>
           <VariantForm
-            products={products}
             initial={{
               product_id: String(variant.product_id),
+              product_name: variant.product_name ?? "",
               name: variant.name ?? "",
               size: variant.size ?? "",
               color: variant.color ?? "",

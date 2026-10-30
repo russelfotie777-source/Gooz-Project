@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 export type ProductOption = { id: number; name: string };
 
 export type VariantFormValues = {
   product_id: string;
+  product_name: string;
   name: string;
   size: string;
   color: string;
@@ -41,7 +43,6 @@ const inputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/30 focus:border-brand-orange/60";
 
 export function VariantForm({
-  products,
   initial,
   submitting,
   error,
@@ -49,7 +50,6 @@ export function VariantForm({
   onCancel,
   onSubmit,
 }: {
-  products: ProductOption[];
   initial?: Partial<VariantFormValues>;
   submitting: boolean;
   error: string | null;
@@ -58,6 +58,9 @@ export function VariantForm({
   onSubmit: (payload: Record<string, unknown>) => void;
 }) {
   const [productId, setProductId] = useState(initial?.product_id ?? "");
+  const [productName, setProductName] = useState(initial?.product_name ?? "");
+  const [productSearch, setProductSearch] = useState("");
+  const [productResults, setProductResults] = useState<ProductOption[]>([]);
   const [name, setName] = useState(initial?.name ?? "");
   const [size, setSize] = useState(initial?.size ?? "");
   const [color, setColor] = useState(initial?.color ?? "");
@@ -69,6 +72,25 @@ export function VariantForm({
   const [costPrice, setCostPrice] = useState(initial?.cost_price ?? "");
   const [taxRate, setTaxRate] = useState(initial?.tax_rate ?? "");
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
+
+  // Was a plain <select> populated from a single `/admin/products?per_page=100`
+  // fetch — in production, with more than 100 products, the catalog is
+  // bigger than that first page: whichever product a given variant actually
+  // belongs to is often just not IN that list at all, so editing a variant
+  // showed the dropdown as empty and searching inside it (the browser's own
+  // native type-ahead, filtering only those 100 loaded options) never found
+  // it either. Same search-as-you-type combobox already used by
+  // BannerForm's product picker, which queries the server instead of a
+  // capped local list.
+  useEffect(() => {
+    if (!productSearch) return;
+    const timeout = setTimeout(() => {
+      apiFetch<{ data: ProductOption[] }>(`/admin/products?q=${encodeURIComponent(productSearch)}&per_page=8`)
+        .then((res) => setProductResults(res.data))
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [productSearch]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,20 +116,39 @@ export function VariantForm({
         <h2 className="mb-5 text-sm font-semibold text-white/70">Détails de la variante</h2>
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div>
+          <div className="relative">
             <label className="mb-1.5 block text-sm text-white/70">
               Produit<span className="text-red-400">*</span>
             </label>
-            <select required value={productId} onChange={(e) => setProductId(e.target.value)} className={inputClass}>
-              <option value="" className="bg-[#12141c]">
-                Sélectionnez une option
-              </option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id} className="bg-[#12141c]">
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <input
+              required={!productId}
+              value={productId ? productName : productSearch}
+              onChange={(e) => {
+                setProductId("");
+                setProductSearch(e.target.value);
+              }}
+              placeholder="Rechercher un produit..."
+              className={inputClass}
+            />
+            {!productId && productSearch && productResults.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full rounded-lg border border-white/10 bg-[#12141c] p-1.5 shadow-2xl">
+                {productResults.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setProductId(String(p.id));
+                      setProductName(p.name);
+                      setProductSearch("");
+                      setProductResults([]);
+                    }}
+                    className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-white/70 hover:bg-white/5 hover:text-white"
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
