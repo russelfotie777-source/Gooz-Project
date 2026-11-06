@@ -118,6 +118,15 @@ services:
         # order message, ...) silently fall back to localhost, including in
         # production. See frontend/.env.example.
         NEXT_PUBLIC_SITE_URL: ${FRONTEND_SITE_URL:-http://localhost:3000}
+        # Same build-time-only trap — must match the backend's MEDIA_DISK=s3
+        # AWS_URL exactly (the R2/S3 bucket's own public URL). Left unset,
+        # next/image's remotePatterns never allow-lists that bucket's host,
+        # and every product/variant/banner/category/brand image served from
+        # it 400s at /_next/image with "url parameter is not allowed" — the
+        # raw image_url is still correct in the page's own HTML/data, so
+        # this is easy to miss without opening devtools. See
+        # frontend/next.config.ts and frontend/.env.example.
+        NEXT_PUBLIC_MEDIA_URL: ${FRONTEND_MEDIA_URL:-}
     restart: unless-stopped
     depends_on:
       - backend
