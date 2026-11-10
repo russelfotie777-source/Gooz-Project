@@ -7,25 +7,41 @@ import BottomNav from "@/components/BottomNav/BottomNav";
 import CartItems from "@/components/CartItems/CartItems";
 import { getCart, isUnauthorized } from "@/lib/api";
 import { getSession } from "@/lib/auth";
+import { hydrateGuestCart } from "@/lib/guestCart";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
-import LocaleLink from "@/lib/i18n/LocaleLink";
 import type { Cart } from "@/lib/types";
 import styles from "./CartPage.module.css";
 
-// Figma: desktop node 1666:1213, mobile node 538:336. The Laravel /cart
-// endpoints require an authenticated user (API.md §4), so this is a client
-// component reading the session token from localStorage — a logged-out
-// visitor sees a prompt to sign in instead of cart contents.
+// Figma: desktop node 1666:1213, mobile node 538:336. The real /cart
+// endpoints require an authenticated user (API.md §4), but a guest still
+// has a real cart to show here — see lib/guestCart.ts — so this only needs
+// a token for the handful of things that genuinely require an account
+// (mutating the server cart, coupons); the account itself is still only
+// required at checkout (CheckoutContext, untouched by this).
 export default function CartPage() {
   const dict = useDictionary();
-  const [status, setStatus] = useState<"loading" | "loggedOut" | "error" | "ready">("loading");
+  const [status, setStatus] = useState<"loading" | "guest" | "error" | "ready">("loading");
   const [cart, setCart] = useState<Cart | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
+  function loadGuest() {
+    setToken(null);
+    hydrateGuestCart()
+      .then((c) => {
+        setCart(c);
+        setStatus("guest");
+      })
+      .catch(() => {
+        setCart({ id: 0, items: [], total: 0 });
+        setStatus("guest");
+      });
+  }
 
   function load() {
     const session = getSession();
     if (!session) {
-      setStatus("loggedOut");
+      setStatus("loading");
+      loadGuest();
       return;
     }
 
@@ -36,11 +52,11 @@ export default function CartPage() {
         setCart(c);
         setStatus("ready");
       })
-      // A 401 means the token really is dead — anything else (offline,
-      // backend down, a 500) is not the same thing as "not logged in", and
-      // telling an authenticated shopper to log back in when the real
-      // problem is a network blip just loses them.
-      .catch((err) => setStatus(isUnauthorized(err) ? "loggedOut" : "error"));
+      // A 401 means the token really is dead — fall back to the guest cart
+      // rather than a login prompt, same as never having logged in at all.
+      // Anything else (offline, backend down, a 500) is a technical
+      // failure, not the same thing, and shouldn't be treated like one.
+      .catch((err) => (isUnauthorized(err) ? loadGuest() : setStatus("error")));
   }
 
   useEffect(load, []);
@@ -57,15 +73,6 @@ export default function CartPage() {
 
         {status === "loading" && <p className={styles.message}>{dict.cart.loading}</p>}
 
-        {status === "loggedOut" && (
-          <div className={styles.message}>
-            <p>{dict.cart.loginPrompt}</p>
-            <LocaleLink href="/connexion" className={styles.loginLink}>
-              {dict.cart.login}
-            </LocaleLink>
-          </div>
-        )}
-
         {status === "error" && (
           <div className={styles.message}>
             <p>{dict.cart.loadError}</p>
@@ -75,7 +82,7 @@ export default function CartPage() {
           </div>
         )}
 
-        {status === "ready" && cart && token && (
+        {(status === "ready" || status === "guest") && cart && (
           <CartItems initialItems={cart.items} initialTotal={cart.total} token={token} />
         )}
       </main>

@@ -4,6 +4,7 @@ import { addCartItem } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
 import { loadFavoriteIds, onFavoritesUpdated, toggleFavorite } from "@/lib/favoritesStore";
+import { addGuestCartItem } from "@/lib/guestCart";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
@@ -208,9 +209,9 @@ export default function ProductCard({
   const discount = discountPercent(displayVariant);
 
   // No `onAddToCart` override is used anywhere in the app today — this is
-  // the real add-to-cart action (API.md §4 cart routes require auth, hence
-  // the guest -> /connexion redirect) — but the prop stays so a future
-  // caller can still special-case it (e.g. a quick-view modal).
+  // the real add-to-cart action — but the prop stays so a future caller can
+  // still special-case it (e.g. a quick-view modal). A guest still gets a
+  // real cart (lib/guestCart.ts), merged into their account on login.
   async function handleAddToCart() {
     if (onAddToCart) {
       onAddToCart(product);
@@ -219,14 +220,9 @@ export default function ProductCard({
 
     const session = getSession();
     if (!session) {
-      savePendingCartIntent({
-        type: "add-to-cart",
-        productId: product.id,
-        variantId: displayVariant?.id,
-        quantity: 1,
-        returnPath: window.location.pathname,
-      });
-      router.push("/connexion");
+      addGuestCartItem(product.id, displayVariant?.id, 1);
+      setCartStatus("added");
+      window.setTimeout(() => setCartStatus("idle"), 2000);
       return;
     }
 

@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { addCartItem, ApiValidationError, trackProductView } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
+import { addGuestCartItem } from "@/lib/guestCart";
 import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/WhatsAppButton";
 import { useDictionary, useLang } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
-import { savePendingCartIntent } from "@/lib/pendingCartIntent";
 import { formatPrice, getDisplayVariant } from "@/lib/pricing";
 import { productPath } from "@/lib/productUrl";
 import { getViewSessionToken, recordRecentlyViewed } from "@/lib/productView";
@@ -134,22 +134,23 @@ export default function ProductDetail({ product, reviews }: ProductDetailProps) 
     )
   )}`;
 
-  // Cart routes require auth (API.md §4) — a guest is sent to sign in rather
-  // than silently failing. Used by both buttons in .buyRow: the icon-only
-  // one just adds and stays on the page, "Acheter (maintenant)" adds then
-  // takes the shopper straight to their cart.
+  // Cart routes require auth (API.md §4) for a real account, but a guest
+  // still gets a real cart — see lib/guestCart.ts — merged into their
+  // account on login instead of being turned away here. Used by both
+  // buttons in .buyRow: the icon-only one just adds and stays on the page,
+  // "Acheter (maintenant)" adds then takes the shopper straight to their
+  // cart.
   async function handleAddToCart(goToCart: boolean) {
     const session = getSession();
     if (!session) {
-      savePendingCartIntent({
-        type: "add-to-cart",
-        productId: product.id,
-        variantId: selectedVariant?.id,
-        quantity: 1,
-        goToCart,
-        returnPath: window.location.pathname,
-      });
-      router.push("/connexion");
+      addGuestCartItem(product.id, selectedVariant?.id, 1);
+      if (goToCart) {
+        router.push("/cart");
+        return;
+      }
+      setAddStatus("added");
+      setAddMessage(dict.product.addedToCartMessage);
+      window.setTimeout(() => setAddStatus("idle"), 1800);
       return;
     }
 

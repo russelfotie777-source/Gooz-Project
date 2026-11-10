@@ -6,6 +6,7 @@ import { ApiValidationError, removeCartItem, updateCartItem, validateCoupon } fr
 import { WhatsAppIcon, WHATSAPP_NUMBER } from "@/components/WhatsAppButton/WhatsAppButton";
 import { notifyCartUpdated } from "@/lib/cartEvents";
 import { persistCouponCode, readPersistedCouponCode } from "@/lib/coupon";
+import { hydrateGuestCart, removeGuestCartItem, updateGuestCartItemQuantity } from "@/lib/guestCart";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { formatPrice } from "@/lib/pricing";
@@ -18,7 +19,10 @@ const PLACEHOLDER_IMAGE = "/images/placeholder-product.svg";
 interface CartItemsProps {
   initialItems: CartItemLine[];
   initialTotal: number;
-  token: string;
+  /** null for a guest — their cart lives in lib/guestCart.ts (localStorage)
+   *  instead of the server, since cart routes require auth. Coupons stay
+   *  account-only (disabled below) since /coupons/validate does too. */
+  token: string | null;
 }
 
 export default function CartItems({ initialItems, initialTotal, token }: CartItemsProps) {
@@ -45,7 +49,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
 
   async function applyCoupon() {
     const trimmed = coupon.trim();
-    if (!trimmed) return;
+    if (!trimmed || !token) return;
 
     setCouponStatus("checking");
     setCouponError(null);
@@ -67,18 +71,23 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
     }
   }
 
-  async function updateQuantity(id: number, delta: number) {
-    const current = items.find((item) => item.id === id);
-    if (!current) return;
-    const quantity = Math.max(1, current.quantity + delta);
-    if (quantity === current.quantity) return;
+  async function updateQuantity(item: CartItemLine, delta: number) {
+    const quantity = Math.max(1, item.quantity + delta);
+    if (quantity === item.quantity) return;
 
-    setPendingId(id);
+    setPendingId(item.id);
     try {
-      const cart = await updateCartItem(token, id, quantity);
-      setItems(cart.items);
-      setSubtotal(cart.total);
-      notifyCartUpdated(cart.items.length);
+      if (token) {
+        const cart = await updateCartItem(token, item.id, quantity);
+        setItems(cart.items);
+        setSubtotal(cart.total);
+        notifyCartUpdated(cart.items.length);
+      } else {
+        updateGuestCartItemQuantity(item.product.id, item.variant?.id ?? null, quantity);
+        const cart = await hydrateGuestCart();
+        setItems(cart.items);
+        setSubtotal(cart.total);
+      }
     } catch (err) {
       showToast(
         err instanceof ApiValidationError
@@ -91,14 +100,21 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
     }
   }
 
-  async function removeItem(id: number) {
-    setPendingId(id);
+  async function removeItem(item: CartItemLine) {
+    setPendingId(item.id);
     try {
-      await removeCartItem(token, id);
-      const remaining = items.filter((item) => item.id !== id);
-      setItems(remaining);
-      setSubtotal(remaining.reduce((sum, item) => sum + item.line_total, 0));
-      notifyCartUpdated(remaining.length);
+      if (token) {
+        await removeCartItem(token, item.id);
+        const remaining = items.filter((i) => i.id !== item.id);
+        setItems(remaining);
+        setSubtotal(remaining.reduce((sum, i) => sum + i.line_total, 0));
+        notifyCartUpdated(remaining.length);
+      } else {
+        removeGuestCartItem(item.product.id, item.variant?.id ?? null);
+        const cart = await hydrateGuestCart();
+        setItems(cart.items);
+        setSubtotal(cart.total);
+      }
     } catch {
       showToast(dict.cart.removeError, "error");
     } finally {
@@ -188,7 +204,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
                         type="button"
                         className={styles.confirmYes}
                         disabled={isPending}
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item)}
                       >
                         {dict.cart.confirmDeleteYes}
                       </button>
@@ -220,7 +236,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
                           className={styles.quantityButtonMinus}
                           aria-label={dict.cart.decreaseQty}
                           disabled={isPending}
-                          onClick={() => updateQuantity(item.id, -1)}
+                          onClick={() => updateQuantity(item, -1)}
                         >
                           <img src="/icon/cart/remove.svg" alt="" className={styles.quantityIconMobile} />
                           <img src="/icon/cart/remove-white.svg" alt="" className={styles.quantityIconDesktop} />
@@ -231,7 +247,7 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
                           className={styles.quantityButtonPlus}
                           aria-label={dict.cart.increaseQty}
                           disabled={isPending || atStockCap}
-                          onClick={() => updateQuantity(item.id, 1)}
+                          onClick={() => updateQuantity(item, 1)}
                         >
                           <img src="/icon/cart/add.svg" alt="" className={styles.quantityIconMobile} />
                           <img src="/icon/cart/add-white.svg" alt="" className={styles.quantityIconDesktop} />
@@ -287,44 +303,48 @@ export default function CartItems({ initialItems, initialTotal, token }: CartIte
           <span className={styles.summaryRowValue}>{formatPrice(total)}</span>
         </div>
 
-        <div className={styles.couponSection}>
-          <button
-            type="button"
-            className={styles.couponToggle}
-            onClick={() => setCouponOpen((v) => !v)}
-            aria-expanded={couponOpen}
-          >
-            <span>{dict.cart.couponQuestion}</span>
-            <img
-              src="/icon/cart/coupon-chevron.svg"
-              alt=""
-              className={`${styles.couponChevron} ${couponOpen ? styles.couponChevronOpen : ""}`}
-            />
-          </button>
-
-          {couponOpen && (
-            <div className={styles.couponForm}>
-              <input
-                type="text"
-                value={coupon}
-                onChange={(e) => handleCouponChange(e.target.value)}
-                placeholder={dict.cart.couponPlaceholder}
-                className={styles.couponInput}
+        {/* /coupons/validate requires an account like every other cart
+            route — a guest has nothing to apply this against yet. */}
+        {token && (
+          <div className={styles.couponSection}>
+            <button
+              type="button"
+              className={styles.couponToggle}
+              onClick={() => setCouponOpen((v) => !v)}
+              aria-expanded={couponOpen}
+            >
+              <span>{dict.cart.couponQuestion}</span>
+              <img
+                src="/icon/cart/coupon-chevron.svg"
+                alt=""
+                className={`${styles.couponChevron} ${couponOpen ? styles.couponChevronOpen : ""}`}
               />
-              <button
-                type="button"
-                className={styles.couponApply}
-                onClick={applyCoupon}
-                disabled={!coupon.trim() || couponStatus === "checking"}
-              >
-                {couponStatus === "checking" ? dict.cart.couponChecking : dict.cart.applyCoupon}
-                <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
-              </button>
-            </div>
-          )}
-          {couponStatus === "applied" && <p className={styles.couponSuccess}>{dict.cart.couponApplied}</p>}
-          {couponStatus === "invalid" && couponError && <p className={styles.error}>{couponError}</p>}
-        </div>
+            </button>
+
+            {couponOpen && (
+              <div className={styles.couponForm}>
+                <input
+                  type="text"
+                  value={coupon}
+                  onChange={(e) => handleCouponChange(e.target.value)}
+                  placeholder={dict.cart.couponPlaceholder}
+                  className={styles.couponInput}
+                />
+                <button
+                  type="button"
+                  className={styles.couponApply}
+                  onClick={applyCoupon}
+                  disabled={!coupon.trim() || couponStatus === "checking"}
+                >
+                  {couponStatus === "checking" ? dict.cart.couponChecking : dict.cart.applyCoupon}
+                  <img src="/icon/cart/coupon-check.svg" alt="" className={styles.couponApplyIcon} />
+                </button>
+              </div>
+            )}
+            {couponStatus === "applied" && <p className={styles.couponSuccess}>{dict.cart.couponApplied}</p>}
+            {couponStatus === "invalid" && couponError && <p className={styles.error}>{couponError}</p>}
+          </div>
+        )}
 
         <LocaleLink href="/checkout" className={styles.checkoutButton}>
           {dict.cart.placeOrder}

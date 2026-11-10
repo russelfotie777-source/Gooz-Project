@@ -1,21 +1,16 @@
-// When a guest tries to add something to their cart or favorites, they get
-// sent to /connexion (cart routes require auth — see ProductCard/
-// ProductDetail's handleAddToCart) — but used to just lose that action
-// entirely: after logging in they landed on /compte with an empty cart and
-// had to go find the product again. This stashes what they were trying to
-// do (sessionStorage, not localStorage — it's only relevant to this one
-// visit) so the auth pages can replay it once login succeeds and send the
-// shopper back to where they actually were, see resolvePostLoginRedirect.
+// When a guest taps the wishlist heart, they get sent to /connexion
+// (favorites require auth; adding to the cart itself doesn't anymore — see
+// lib/guestCart.ts) — but used to just lose that action entirely: after
+// logging in they landed on /compte and had to go find the product again.
+// This stashes what they were trying to do (sessionStorage, not
+// localStorage — it's only relevant to this one visit) so the auth pages
+// can replay it once login succeeds and send the shopper back to where
+// they actually were, see resolvePostLoginRedirect.
 const STORAGE_KEY = "shopitech-pending-cart-intent";
 
 export interface PendingCartIntent {
-  type: "add-to-cart" | "toggle-wishlist";
+  type: "toggle-wishlist";
   productId: number;
-  variantId?: number;
-  quantity?: number;
-  /** add-to-cart only: "Acheter maintenant" should still land the shopper on
-   *  /cart after login, not back on the product page. */
-  goToCart?: boolean;
   /** Full, already locale-prefixed path to return to otherwise. */
   returnPath: string;
 }
