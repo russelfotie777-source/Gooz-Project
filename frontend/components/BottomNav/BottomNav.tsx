@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, ViewTransition } from "react";
 import { usePathname } from "next/navigation";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import { useCartCount } from "@/lib/useCartCount";
 import styles from "./BottomNav.module.css";
 
 // Ignores sub-10px jitter (momentum scrolling fires a lot of tiny-delta
@@ -45,6 +46,7 @@ export default function BottomNav({ active }: BottomNavProps) {
   const dict = useDictionary();
   const pathname = usePathname();
   const resolvedActive = active ?? deriveActiveFromPathname(pathname);
+  const cartCount = useCartCount();
 
   // Scrolling down hides the bar (more room to read), scrolling back up
   // brings it straight back — the direction is relative to the last point
@@ -172,7 +174,15 @@ export default function BottomNav({ active }: BottomNavProps) {
                 aria-label={slot.label}
                 aria-current={index === activeIndex ? "page" : undefined}
               >
-                <img src={slot.icon} alt="" className={styles.icon} />
+                <span className={styles.iconWrapper}>
+                  <img src={slot.icon} alt="" className={styles.icon} />
+                  {slot.key === "cart" && cartCount > 0 && (
+                    <span className={styles.cartBadge}>
+                      <img src="/icon/header/cart-badge.svg" alt="" className={styles.cartBadgeBg} />
+                      <span className={styles.cartBadgeCount}>{cartCount}</span>
+                    </span>
+                  )}
+                </span>
               </LocaleLink>
             </ViewTransition>
           ))}
@@ -186,7 +196,15 @@ export default function BottomNav({ active }: BottomNavProps) {
             aria-label={activeSlot.label}
             aria-current="page"
           >
-            <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
+            <span className={styles.iconWrapper}>
+              <img src={activeSlot.activeIcon} alt="" className={styles.homeIcon} />
+              {activeSlot.key === "cart" && cartCount > 0 && (
+                <span className={styles.cartBadge}>
+                  <img src="/icon/header/cart-badge.svg" alt="" className={styles.cartBadgeBg} />
+                  <span className={styles.cartBadgeCount}>{cartCount}</span>
+                </span>
+              )}
+            </span>
           </LocaleLink>
         </ViewTransition>
       </div>

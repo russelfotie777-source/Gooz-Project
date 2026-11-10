@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCart, logout as apiLogout } from "@/lib/api";
+import { logout as apiLogout } from "@/lib/api";
 import { clearSession, getSession } from "@/lib/auth";
-import { notifyCartUpdated, onCartUpdated } from "@/lib/cartEvents";
+import { notifyCartUpdated } from "@/lib/cartEvents";
+import { useCartCount } from "@/lib/useCartCount";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { splitName } from "@/lib/name";
 import { onSessionExpired } from "@/lib/sessionEvents";
@@ -13,12 +14,11 @@ import type { User } from "@/lib/types";
 // Owns the account/cart-badge state together since they share one
 // lifecycle: both come from the same session fetch on mount, both reset
 // together on logout and on a session expiring mid-visit (401 from
-// authedFetch — see lib/sessionEvents). cartCount is also kept live via
-// cartEvents, since cart mutations happen in components (ProductDetail,
-// CartItems) that have no other relationship to Header.
+// authedFetch — see lib/sessionEvents). cartCount itself is useCartCount
+// (shared with BottomNav's mobile badge).
 export function useHeaderSession(cartCountProp: number) {
   const dict = useDictionary();
-  const [cartCount, setCartCount] = useState(cartCountProp);
+  const cartCount = useCartCount(cartCountProp);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -26,12 +26,6 @@ export function useHeaderSession(cartCountProp: number) {
     if (!session) return;
 
     setUser(session.user);
-
-    getCart(session.token)
-      .then((cart) => setCartCount(cart.items.length))
-      .catch(() => {});
-
-    return onCartUpdated(setCartCount);
   }, []);
 
   // authedFetch (lib/api.ts) already clears the stored session on any 401 —
@@ -41,7 +35,6 @@ export function useHeaderSession(cartCountProp: number) {
   useEffect(() => {
     return onSessionExpired(() => {
       setUser(null);
-      setCartCount(0);
     });
   }, []);
 
@@ -50,7 +43,6 @@ export function useHeaderSession(cartCountProp: number) {
     if (session) apiLogout(session.token);
     clearSession();
     setUser(null);
-    setCartCount(0);
     notifyCartUpdated(0);
     showToast(dict.session.loggedOut, "success");
   }
