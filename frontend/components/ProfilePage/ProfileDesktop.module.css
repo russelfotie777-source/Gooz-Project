@@ -241,10 +241,16 @@
   display: flex;
   align-items: center;
   gap: 18px;
+  width: 100%;
   background: var(--color-elevated);
+  border: none;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   padding: 22px 26px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 .overviewAvatar {

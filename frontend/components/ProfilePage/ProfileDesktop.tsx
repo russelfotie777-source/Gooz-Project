@@ -177,22 +177,22 @@ export default function ProfileDesktop() {
           <section className={styles.content}>
             {user ? (
               <>
-                <div className={styles.overviewCard}>
+                <button
+                  type="button"
+                  className={styles.overviewCard}
+                  aria-label={dict.profile.editProfile}
+                  onClick={() => setEditModalOpen(true)}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={user.avatar ?? "/icon/profile/avatar-photo.png"} alt="" className={styles.overviewAvatar} />
                   <div className={styles.overviewInfo}>
                     <p className={styles.overviewName}>{user.name}</p>
                     <p className={styles.overviewPhone}>{user.phone}</p>
                   </div>
-                  <button
-                    type="button"
-                    className={styles.editButton}
-                    aria-label={dict.profile.editProfile}
-                    onClick={() => setEditModalOpen(true)}
-                  >
+                  <span className={styles.editButton}>
                     <img src="/icon/profile/person-edit.svg" alt="" className={styles.editIcon} />
-                  </button>
-                </div>
+                  </span>
+                </button>
 
                 <div className={styles.tilesGrid}>
                   {TILES.map((tile) => {

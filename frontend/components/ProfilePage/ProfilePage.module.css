@@ -48,10 +48,16 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  width: 100%;
   background: var(--color-elevated);
+  border: none;
   border-radius: 20px;
   box-shadow: var(--shadow-card);
   padding: 16px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 .avatarPhoto {

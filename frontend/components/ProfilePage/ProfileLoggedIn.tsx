@@ -72,22 +72,22 @@ export default function ProfileLoggedIn({ user, onLogout, onToggleLanguage, onPr
 
   return (
     <>
-      <div className={styles.userCard}>
+      <button
+        type="button"
+        className={styles.userCard}
+        aria-label={dict.profile.editProfile}
+        onClick={() => setEditModalOpen(true)}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={user.avatar ?? "/icon/profile/avatar-photo.png"} alt="" className={styles.avatarPhoto} />
         <div className={styles.userInfo}>
           <p className={styles.userName}>{user.name}</p>
           <p className={styles.userEmail}>{user.phone}</p>
         </div>
-        <button
-          type="button"
-          className={styles.editButton}
-          aria-label={dict.profile.editProfile}
-          onClick={() => setEditModalOpen(true)}
-        >
+        <span className={styles.editButton}>
           <img src="/icon/profile/person-edit.svg" alt="" className={styles.editIcon} />
-        </button>
-      </div>
+        </span>
+      </button>
 
       <div className={styles.card}>
         {ACCOUNT_ROWS.map((row, index) => {
