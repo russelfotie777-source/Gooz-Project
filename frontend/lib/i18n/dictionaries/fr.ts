@@ -452,7 +452,6 @@ const fr = {
   },
   profile: {
     title: "Profil",
-    theme: "Thème",
     editProfile: "Modifier le profil",
     loggedOutName: "Utilisateur",
     notConnected: "Non connecté",

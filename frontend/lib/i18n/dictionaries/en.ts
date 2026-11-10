@@ -443,7 +443,6 @@ const en: Dictionary = {
   },
   profile: {
     title: "Profile",
-    theme: "Theme",
     editProfile: "Edit profile",
     loggedOutName: "User",
     notConnected: "Not signed in",

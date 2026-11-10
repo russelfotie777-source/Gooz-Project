@@ -21,20 +21,6 @@
   margin: 0;
 }
 
-.themeButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.themeIcon {
-  width: 24px;
-  height: 24px;
-}
-
 .main {
   display: flex;
   flex-direction: column;
