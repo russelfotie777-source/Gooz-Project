@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   ApiValidationError,
   type CheckoutPayload,
+  getAddresses,
   getCart,
   getCities,
   getDeliveryEstimate,
@@ -19,7 +20,20 @@ import { persistCouponCode, readPersistedCouponCode } from "@/lib/coupon";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { splitName } from "@/lib/name";
 import { showToast } from "@/lib/toast";
-import type { ApiPaymentMethod, CartItemLine, City, Neighborhood, Warehouse } from "@/lib/types";
+import type { Address, ApiPaymentMethod, CartItemLine, City, Neighborhood, Warehouse } from "@/lib/types";
+
+// Loose match on purpose: Address.ville/quartier are free text (the
+// Adresses page has its own form, unconnected to the City/Neighborhood
+// lookup tables checkout needs for delivery-fee pricing — see
+// applySavedAddress below), so "Douala" and "douala " need to match the
+// same City even though they're not byte-identical.
+function normalizeForMatch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .toLowerCase();
+}
 
 export interface CheckoutFormData {
   nom: string;
@@ -58,6 +72,16 @@ interface CheckoutContextValue {
   warehouse: Warehouse | null;
   form: CheckoutFormData;
   setForm: (patch: Partial<CheckoutFormData>) => void;
+  /** The shopper's saved address book (/adresses) — the default one (or the
+   *  first, if none is marked default) is applied automatically once on
+   *  load; this list lets the UI offer the others too. Empty for a
+   *  first-time buyer, same as before this existed. */
+  savedAddresses: Address[];
+  /** Fills form from one of savedAddresses — ville/quartier are matched by
+   *  name against cities/neighborhoods (see normalizeForMatch); a saved
+   *  address whose city/quartier text doesn't match any known one still
+   *  fills the rest (name/phone/street), just not those two selects. */
+  applySavedAddress: (addressId: number) => void;
   isAddressComplete: boolean;
   deliveryMethod: DeliveryMethod | null;
   setDeliveryMethod: (method: DeliveryMethod) => void;
@@ -119,6 +143,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
   const [cities, setCities] = useState<City[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [warehouse, setWarehouse] = useState<Warehouse | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [form, setFormState] = useState<CheckoutFormData>(EMPTY_FORM);
   const [deliveryMethod, setDeliveryMethodState] = useState<DeliveryMethod | null>(null);
   const [deliveryFee, setDeliveryFee] = useState(0);
@@ -154,22 +179,42 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
     const { prenom, nom } = splitName(session.user.name);
     setForm({ prenom, nom, telephone: session.user.phone ?? "" });
 
-    Promise.all([getCart(session.token), getCities(), getNeighborhoods(), getWarehouses()])
-      .then(([cart, citiesData, neighborhoodsData, warehousesData]) => {
+    Promise.all([
+      getCart(session.token),
+      getCities(),
+      getNeighborhoods(),
+      getWarehouses(),
+      getAddresses(session.token),
+    ])
+      .then(([cart, citiesData, neighborhoodsData, warehousesData, addressesData]) => {
         setItems(cart.items);
         setCities(citiesData);
         setNeighborhoods(neighborhoodsData);
         setWarehouse(warehousesData.find((w) => w.is_active) ?? warehousesData[0] ?? null);
+        setSavedAddresses(addressesData);
         setCartStatus(cart.items.length === 0 ? "empty" : "ready");
+
+        // Only on this first load, before the shopper has had a chance to
+        // type anything — applyAddressFields below is also reachable later
+        // (applySavedAddress) to switch to a different saved address.
+        const defaultAddress = addressesData.find((a) => a.is_default) ?? addressesData[0] ?? null;
+        if (defaultAddress) applyAddressFields(defaultAddress, citiesData, neighborhoodsData);
       })
-      // Of these four calls, only getCart is authenticated — so a 401 here
-      // can only mean the session really is dead. Anything else (offline,
-      // the backend being down, a 500 from any of the public endpoints) is
-      // a technical failure, not a logged-out shopper, and shouldn't be
-      // treated like one mid-checkout.
+      // Of these five calls, only getCart and getAddresses are
+      // authenticated (same token either way) — so a 401 here can only mean
+      // the session really is dead. Anything else (offline, the backend
+      // being down, a 500 from any of the public endpoints) is a technical
+      // failure, not a logged-out shopper, and shouldn't be treated like
+      // one mid-checkout.
       .catch((err) => setCartStatus(isUnauthorized(err) ? "loggedOut" : "error"));
   }
 
+  // loadCart calls applyAddressFields, a plain function (not useCallback)
+  // redeclared every render — exhaustive-deps wants it listed, but it only
+  // reads its own params, never anything from this render's closure, so
+  // there's nothing to actually go stale. Run-once-on-mount is the intent
+  // either way.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(loadCart, []);
 
   useEffect(() => {
@@ -181,6 +226,31 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
 
   function setForm(patch: Partial<CheckoutFormData>) {
     setFormState((current) => ({ ...current, ...patch }));
+  }
+
+  function applyAddressFields(address: Address, citiesList: City[], neighborhoodsList: Neighborhood[]) {
+    const { prenom, nom } = splitName(address.recipient_name);
+    const city = citiesList.find((c) => normalizeForMatch(c.name) === normalizeForMatch(address.ville));
+    const neighborhood =
+      city && address.quartier
+        ? neighborhoodsList.find(
+            (n) => n.city_id === city.id && normalizeForMatch(n.name) === normalizeForMatch(address.quartier!)
+          )
+        : undefined;
+
+    setForm({
+      nom,
+      prenom,
+      telephone: address.recipient_phone,
+      adresse: address.address_line ?? "",
+      cityId: city ? String(city.id) : "",
+      neighborhoodId: neighborhood ? String(neighborhood.id) : "",
+    });
+  }
+
+  function applySavedAddress(addressId: number) {
+    const address = savedAddresses.find((a) => a.id === addressId);
+    if (address) applyAddressFields(address, cities, neighborhoods);
   }
 
   function setDeliveryMethod(method: DeliveryMethod) {
@@ -331,6 +401,8 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
       cities,
       neighborhoods,
       warehouse,
+      savedAddresses,
+      applySavedAddress,
       form,
       setForm,
       isAddressComplete,
@@ -359,6 +431,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
       cities,
       neighborhoods,
       warehouse,
+      savedAddresses,
       form,
       isAddressComplete,
       deliveryMethod,

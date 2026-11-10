@@ -9,7 +9,15 @@ import styles from "./CheckoutAddressStep.module.css";
 export default function CheckoutAddressStep() {
   const dict = useDictionary();
   const router = useLocaleRouter();
-  const { form, setForm, isAddressComplete, cities, neighborhoods: allNeighborhoods } = useCheckout();
+  const {
+    form,
+    setForm,
+    isAddressComplete,
+    cities,
+    neighborhoods: allNeighborhoods,
+    savedAddresses,
+    applySavedAddress,
+  } = useCheckout();
 
   const neighborhoods = form.cityId
     ? allNeighborhoods.filter((n) => n.city_id === Number(form.cityId))
@@ -24,6 +32,30 @@ export default function CheckoutAddressStep() {
     >
       <div className={styles.card}>
         <h1 className={styles.title}>{dict.checkout.addressTitle}</h1>
+
+        {savedAddresses.length > 0 && (
+          <div className={styles.savedAddresses}>
+            <p className={styles.savedAddressesLabel}>{dict.checkout.savedAddressesLabel}</p>
+            <div className={styles.savedAddressList}>
+              {savedAddresses.map((address) => (
+                <button
+                  key={address.id}
+                  type="button"
+                  className={styles.savedAddressChip}
+                  onClick={() => applySavedAddress(address.id)}
+                >
+                  <span className={styles.savedAddressChipLabel}>
+                    {address.label || address.ville}
+                    {address.is_default ? ` · ${dict.checkout.savedAddressDefaultBadge}` : ""}
+                  </span>
+                  <span className={styles.savedAddressChipDetail}>
+                    {[address.address_line, address.quartier, address.ville].filter(Boolean).join(", ")}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <label className={styles.field}>
           <span className={styles.label}>

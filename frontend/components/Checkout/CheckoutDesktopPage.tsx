@@ -27,6 +27,8 @@ export default function CheckoutDesktopPage() {
     subtotal,
     cities,
     neighborhoods: allNeighborhoods,
+    savedAddresses,
+    applySavedAddress,
     form,
     setForm,
     isAddressComplete,
@@ -194,6 +196,32 @@ export default function CheckoutDesktopPage() {
               {activeStep === 1 && (
                 <div className={styles.stepBody}>
                   <div className={styles.formGrid}>
+                    {savedAddresses.length > 0 && (
+                      <div className={styles.savedAddresses}>
+                        <p className={styles.savedAddressesLabel}>{dict.checkout.savedAddressesLabel}</p>
+                        <div className={styles.savedAddressList}>
+                          {savedAddresses.map((address) => (
+                            <button
+                              key={address.id}
+                              type="button"
+                              className={styles.savedAddressChip}
+                              onClick={() => applySavedAddress(address.id)}
+                            >
+                              <span className={styles.savedAddressChipLabel}>
+                                {address.label || address.ville}
+                                {address.is_default ? ` · ${dict.checkout.savedAddressDefaultBadge}` : ""}
+                              </span>
+                              <span className={styles.savedAddressChipDetail}>
+                                {[address.address_line, address.quartier, address.ville]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <label className={styles.field}>
                       <span className={styles.label}>
                         <span className={styles.required}>*</span>{dict.checkout.nom}
