@@ -282,6 +282,7 @@ Transforme le panier actif en commande. Deux modes, exclusifs, contrôlés par `
 {
   "delivery_method": "livraison",
   "shipping_address": "Rue de la Joie, Bonamoussadi, Douala",
+  "delivery_note": "Portail bleu, 2e étage",
   "shipping_phone": "699123456",
   "shipping_latitude": 4.0800,
   "shipping_longitude": 9.7500,
@@ -307,8 +308,9 @@ Champs communs :
 - `coupon_code` : optionnel.
 
 Champs conditionnels :
-- Si `delivery_method = livraison` : `shipping_address`, `shipping_latitude`, `shipping_longitude` deviennent **obligatoires** (`422` sinon, avec le détail par champ).
+- Si `delivery_method = livraison` : `shipping_latitude`, `shipping_longitude` deviennent **obligatoires** (`422` sinon, avec le détail par champ). `shipping_address` reste optionnel (beaucoup de rues ne sont pas nommées dans la zone de livraison ; quartier/ville suffisent déjà au calcul des frais).
 - Si `delivery_method = retrait` : `warehouse_id` devient **obligatoire**, doit référencer un entrepôt actif existant.
+- `delivery_note` : toujours optionnel (max 500 caractères) — indication libre pour le livreur (étage, repère, couleur du portail...), quel que soit le mode.
 
 `422` si le panier est vide, si le code promo est invalide/expiré/épuisé, ou si le stock est devenu insuffisant entre l'ajout au panier et le checkout (race condition gérée : la vérification est refaite et verrouillée en base au moment du checkout, pas seulement à l'ajout au panier).
 
@@ -335,6 +337,7 @@ Détail d'une commande. `403` si elle n'appartient pas à l'utilisateur connect�
   "delivery_fees": 1204,
   "delivery_method": "livraison",
   "shipping_address": "...",
+  "delivery_note": "...",
   "shipping_phone": "...",
   "shipping_latitude": 4.08,
   "shipping_longitude": 9.75,

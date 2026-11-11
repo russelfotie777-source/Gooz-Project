@@ -685,6 +685,7 @@ export type CheckoutPayload =
       shipping_latitude: number;
       shipping_longitude: number;
       payment_method: ApiPaymentMethod;
+      delivery_note?: string;
       coupon_code?: string;
     }
   | {
@@ -692,6 +693,7 @@ export type CheckoutPayload =
       warehouse_id: number;
       shipping_phone: string;
       payment_method: ApiPaymentMethod;
+      delivery_note?: string;
       coupon_code?: string;
     };
 

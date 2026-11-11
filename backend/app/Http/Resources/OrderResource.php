@@ -19,6 +19,7 @@ class OrderResource extends JsonResource
             'delivery_fees' => $this->delivery_fees,
             'delivery_method' => $this->delivery_method,
             'shipping_address' => $this->shipping_address,
+            'delivery_note' => $this->delivery_note,
             'shipping_phone' => $this->shipping_phone,
             'shipping_latitude' => $this->shipping_latitude,
             'shipping_longitude' => $this->shipping_longitude,

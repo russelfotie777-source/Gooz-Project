@@ -20,7 +20,14 @@ class CheckoutRequest extends FormRequest
             'payment_method' => ['required', Rule::in(['carte', 'mobile_money', 'paypal', 'espèces'])],
             'coupon_code' => ['nullable', 'string', 'max:50'],
 
-            'shipping_address' => ['required_if:delivery_method,livraison', 'nullable', 'string'],
+            // Not required_if: unlike quartier/ville (needed for the delivery
+            // fee calculation below), the free-text street address is just a
+            // courtesy detail for the delivery rider — plenty of streets in
+            // this catalogue's delivery area aren't named/numbered, so
+            // forcing shoppers to fill in something here only pushed them to
+            // type a meaningless placeholder.
+            'shipping_address' => ['nullable', 'string', 'max:500'],
+            'delivery_note' => ['nullable', 'string', 'max:500'],
             'shipping_latitude' => ['required_if:delivery_method,livraison', 'nullable', 'numeric', 'between:-90,90'],
             'shipping_longitude' => ['required_if:delivery_method,livraison', 'nullable', 'numeric', 'between:-180,180'],
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
+import { isValidEmail, isValidPhone } from "@/lib/checkoutValidation";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { formatPrice } from "@/lib/pricing";
@@ -224,31 +225,15 @@ export default function CheckoutDesktopPage() {
 
                     <label className={styles.field}>
                       <span className={styles.label}>
-                        <span className={styles.required}>*</span>{dict.checkout.nom}
+                        <span className={styles.required}>*</span>{dict.checkout.fullNameLabel}
                       </span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
                         <input
                           type="text"
-                          value={form.nom}
-                          onChange={(e) => setForm({ nom: e.target.value })}
-                          placeholder={dict.checkout.namePlaceholder}
-                          className={styles.input}
-                        />
-                      </div>
-                    </label>
-
-                    <label className={styles.field}>
-                      <span className={styles.label}>
-                        <span className={styles.required}>*</span>{dict.checkout.prenom}
-                      </span>
-                      <div className={styles.inputBox}>
-                        <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
-                        <input
-                          type="text"
-                          value={form.prenom}
-                          onChange={(e) => setForm({ prenom: e.target.value })}
-                          placeholder={dict.checkout.surnamePlaceholder}
+                          value={form.nomComplet}
+                          onChange={(e) => setForm({ nomComplet: e.target.value })}
+                          placeholder={dict.checkout.fullNamePlaceholder}
                           className={styles.input}
                         />
                       </div>
@@ -268,6 +253,9 @@ export default function CheckoutDesktopPage() {
                           className={styles.input}
                         />
                       </div>
+                      {form.telephone.trim() !== "" && !isValidPhone(form.telephone) && (
+                        <p className={styles.fieldHint}>{dict.checkout.phoneInvalidHint}</p>
+                      )}
                     </label>
 
                     <label className={styles.field}>
@@ -282,6 +270,9 @@ export default function CheckoutDesktopPage() {
                           className={styles.input}
                         />
                       </div>
+                      {form.email.trim() !== "" && !isValidEmail(form.email) && (
+                        <p className={styles.fieldHint}>{dict.checkout.emailInvalidHint}</p>
+                      )}
                     </label>
 
                     <label className={styles.field}>
@@ -328,9 +319,7 @@ export default function CheckoutDesktopPage() {
                     </label>
 
                     <label className={styles.field}>
-                      <span className={styles.label}>
-                        <span className={styles.required}>*</span>{dict.checkout.addressLabel}
-                      </span>
+                      <span className={styles.label}>{dict.checkout.addressOptionalLabel}</span>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
                         <input
@@ -342,13 +331,36 @@ export default function CheckoutDesktopPage() {
                         />
                       </div>
                     </label>
+
+                    <label className={styles.field}>
+                      <span className={styles.label}>{dict.checkout.deliveryNoteLabel}</span>
+                      <div className={styles.inputBox}>
+                        <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
+                        <input
+                          type="text"
+                          value={form.instructions}
+                          onChange={(e) => setForm({ instructions: e.target.value })}
+                          placeholder={dict.checkout.deliveryNotePlaceholder}
+                          className={styles.input}
+                        />
+                      </div>
+                    </label>
                   </div>
 
                   <p className={styles.subheading}>{dict.checkout.otherInfoOptional}</p>
 
                   <div className={styles.formGrid}>
                     <label className={styles.field}>
-                      <span className={styles.label}>{dict.checkout.whatsappContactLabel}</span>
+                      <div className={styles.fieldHeader}>
+                        <span className={styles.label}>{dict.checkout.whatsappContactLabel}</span>
+                        <button
+                          type="button"
+                          className={styles.sameAsPhoneButton}
+                          onClick={() => setForm({ whatsapp: form.telephone })}
+                        >
+                          {dict.checkout.sameAsPhoneButton}
+                        </button>
+                      </div>
                       <div className={styles.inputBox}>
                         <img src="/icon/checkout/field-whatsapp.svg" alt="" className={styles.inputIcon} />
                         <input
@@ -393,9 +405,7 @@ export default function CheckoutDesktopPage() {
 
               {step1Done && activeStep !== 1 && (
                 <div className={styles.stepSummary}>
-                  <span>
-                    {form.nom} {form.prenom}
-                  </span>
+                  <span>{form.nomComplet}</span>
                   <span>
                     {cityName}
                     {neighborhoodName ? `, ${neighborhoodName}` : ""}

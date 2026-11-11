@@ -47,6 +47,7 @@ type Order = {
   delivery_method: string;
   coupon_code: string | null;
   shipping_address: string | null;
+  delivery_note: string | null;
   shipping_phone: string;
   warehouse: { id: number; name: string } | null;
   user: { id: number; name: string; phone: string } | null;
@@ -230,6 +231,7 @@ export default function OrderDetailPage() {
             <span className="capitalize">{order.delivery_method}</span>
           </Field>
           <Field label="Adresse de livraison">{order.shipping_address ?? "Retrait en entrepôt"}</Field>
+          <Field label="Instructions pour le livreur">{order.delivery_note ?? "—"}</Field>
           <Field label="Entrepôt">{order.warehouse?.name ?? "—"}</Field>
           <Field label="Code promo">{order.coupon_code ?? "Non disponible"}</Field>
         </div>

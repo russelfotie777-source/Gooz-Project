@@ -21,6 +21,7 @@ class Order extends Model
         'delivery_method',
         'warehouse_id',
         'shipping_address',
+        'delivery_note',
         'shipping_phone',
         'shipping_latitude',
         'shipping_longitude',

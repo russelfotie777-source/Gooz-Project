@@ -121,6 +121,7 @@ class CheckoutController extends Controller
                 'warehouse_id' => $warehouseId,
                 'delivery_fees' => $deliveryFee,
                 'shipping_address' => $request->validated('shipping_address'),
+                'delivery_note' => $request->validated('delivery_note'),
                 'shipping_phone' => $request->validated('shipping_phone'),
                 'shipping_latitude' => $request->validated('shipping_latitude'),
                 'shipping_longitude' => $request->validated('shipping_longitude'),

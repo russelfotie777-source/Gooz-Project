@@ -15,10 +15,10 @@ import {
   validateCoupon as apiValidateCoupon,
 } from "@/lib/api";
 import { getSession } from "@/lib/auth";
+import { normalizePhone, isValidEmail, isValidPhone } from "@/lib/checkoutValidation";
 import { notifyCartUpdated } from "@/lib/cartEvents";
 import { persistCouponCode, readPersistedCouponCode } from "@/lib/coupon";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
-import { splitName } from "@/lib/name";
 import { showToast } from "@/lib/toast";
 import type { Address, ApiPaymentMethod, CartItemLine, City, Neighborhood, Warehouse } from "@/lib/types";
 
@@ -36,12 +36,12 @@ function normalizeForMatch(value: string): string {
 }
 
 export interface CheckoutFormData {
-  nom: string;
-  prenom: string;
+  nomComplet: string;
   telephone: string;
   whatsapp: string;
   email: string;
   adresse: string;
+  instructions: string;
   cityId: string;
   neighborhoodId: string;
 }
@@ -51,12 +51,12 @@ export type PaymentMethod = "cash" | "online";
 export type CartStatus = "loading" | "loggedOut" | "empty" | "ready" | "error";
 
 const EMPTY_FORM: CheckoutFormData = {
-  nom: "",
-  prenom: "",
+  nomComplet: "",
   telephone: "",
   whatsapp: "",
   email: "",
   adresse: "",
+  instructions: "",
   cityId: "",
   neighborhoodId: "",
 };
@@ -176,8 +176,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
 
     // Prefill from the logged-in user's own profile. Only runs once on
     // mount, so it never clobbers anything the shopper has since typed.
-    const { prenom, nom } = splitName(session.user.name);
-    setForm({ prenom, nom, telephone: session.user.phone ?? "" });
+    setForm({ nomComplet: session.user.name, telephone: session.user.phone ?? "" });
 
     Promise.all([
       getCart(session.token),
@@ -229,7 +228,6 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
   }
 
   function applyAddressFields(address: Address, citiesList: City[], neighborhoodsList: Neighborhood[]) {
-    const { prenom, nom } = splitName(address.recipient_name);
     const city = citiesList.find((c) => normalizeForMatch(c.name) === normalizeForMatch(address.ville));
     const neighborhood =
       city && address.quartier
@@ -239,8 +237,7 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
         : undefined;
 
     setForm({
-      nom,
-      prenom,
+      nomComplet: address.recipient_name,
       telephone: address.recipient_phone,
       adresse: address.address_line ?? "",
       cityId: city ? String(city.id) : "",
@@ -332,6 +329,9 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
     try {
       let payload: CheckoutPayload;
 
+      const normalizedPhone = normalizePhone(form.telephone);
+      const deliveryNote = form.instructions.trim();
+
       if (deliveryMethod === "domicile") {
         const neighborhood = neighborhoods.find((n) => String(n.id) === form.neighborhoodId);
         const city = cities.find((c) => String(c.id) === form.cityId);
@@ -340,10 +340,11 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
         payload = {
           delivery_method: "livraison",
           shipping_address: [form.adresse, neighborhood.name, city?.name].filter(Boolean).join(", "),
-          shipping_phone: form.telephone,
+          shipping_phone: normalizedPhone,
           shipping_latitude: neighborhood.latitude,
           shipping_longitude: neighborhood.longitude,
           payment_method: apiPaymentMethod,
+          ...(deliveryNote ? { delivery_note: deliveryNote } : {}),
           ...(coupon.trim() ? { coupon_code: coupon.trim() } : {}),
         };
       } else {
@@ -352,8 +353,9 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
         payload = {
           delivery_method: "retrait",
           warehouse_id: warehouse.id,
-          shipping_phone: form.telephone,
+          shipping_phone: normalizedPhone,
           payment_method: apiPaymentMethod,
+          ...(deliveryNote ? { delivery_note: deliveryNote } : {}),
           ...(coupon.trim() ? { coupon_code: coupon.trim() } : {}),
         };
       }
@@ -383,13 +385,20 @@ export function CheckoutProvider({ children }: { children: React.ReactNode }) {
   const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
   const total = Math.max(0, subtotal - discountAmount) + (deliveryMethod === "domicile" ? deliveryFee : 0);
 
+  // adresse is deliberately not required here — see CheckoutRequest's own
+  // comment on shipping_address: plenty of streets in the delivery area
+  // aren't named/numbered, and ville/quartier already carry the delivery-fee
+  // calculation. email/whatsapp are optional by design; when filled in,
+  // though, a malformed value is worse than an empty one (a bounced
+  // confirmation, a WhatsApp number nobody can actually reach), so those
+  // still block continuing until fixed.
   const isAddressComplete = Boolean(
-    form.nom.trim() &&
-      form.prenom.trim() &&
+    form.nomComplet.trim() &&
       form.telephone.trim() &&
-      form.adresse.trim() &&
+      isValidPhone(form.telephone) &&
       form.cityId &&
-      form.neighborhoodId
+      form.neighborhoodId &&
+      (!form.email.trim() || isValidEmail(form.email))
   );
 
   const value = useMemo<CheckoutContextValue>(

@@ -1,5 +1,6 @@
 "use client";
 
+import { isValidEmail, isValidPhone } from "@/lib/checkoutValidation";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import CheckoutMobileShell from "./CheckoutMobileShell";
@@ -59,31 +60,15 @@ export default function CheckoutAddressStep() {
 
         <label className={styles.field}>
           <span className={styles.label}>
-            <span className={styles.required}>*</span>{dict.checkout.nom}
+            <span className={styles.required}>*</span>{dict.checkout.fullNameLabel}
           </span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
             <input
               type="text"
-              value={form.nom}
-              onChange={(e) => setForm({ nom: e.target.value })}
-              placeholder={dict.checkout.namePlaceholder}
-              className={styles.input}
-            />
-          </div>
-        </label>
-
-        <label className={styles.field}>
-          <span className={styles.label}>
-            <span className={styles.required}>*</span>{dict.checkout.prenom}
-          </span>
-          <div className={styles.inputBox}>
-            <img src="/icon/checkout/field-user.svg" alt="" className={styles.inputIcon} />
-            <input
-              type="text"
-              value={form.prenom}
-              onChange={(e) => setForm({ prenom: e.target.value })}
-              placeholder={dict.checkout.surnamePlaceholder}
+              value={form.nomComplet}
+              onChange={(e) => setForm({ nomComplet: e.target.value })}
+              placeholder={dict.checkout.fullNamePlaceholder}
               className={styles.input}
             />
           </div>
@@ -103,10 +88,22 @@ export default function CheckoutAddressStep() {
               className={styles.input}
             />
           </div>
+          {form.telephone.trim() !== "" && !isValidPhone(form.telephone) && (
+            <p className={styles.fieldHint}>{dict.checkout.phoneInvalidHint}</p>
+          )}
         </label>
 
         <label className={styles.field}>
-          <span className={styles.label}>{dict.checkout.whatsappLabel}</span>
+          <div className={styles.fieldHeader}>
+            <span className={styles.label}>{dict.checkout.whatsappLabel}</span>
+            <button
+              type="button"
+              className={styles.sameAsPhoneButton}
+              onClick={() => setForm({ whatsapp: form.telephone })}
+            >
+              {dict.checkout.sameAsPhoneButton}
+            </button>
+          </div>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-whatsapp.svg" alt="" className={styles.inputIcon} />
             <input
@@ -131,12 +128,13 @@ export default function CheckoutAddressStep() {
               className={styles.input}
             />
           </div>
+          {form.email.trim() !== "" && !isValidEmail(form.email) && (
+            <p className={styles.fieldHint}>{dict.checkout.emailInvalidHint}</p>
+          )}
         </label>
 
         <label className={styles.field}>
-          <span className={styles.label}>
-            <span className={styles.required}>*</span>{dict.checkout.addressLabel}
-          </span>
+          <span className={styles.label}>{dict.checkout.addressOptionalLabel}</span>
           <div className={styles.inputBox}>
             <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
             <input
@@ -144,6 +142,20 @@ export default function CheckoutAddressStep() {
               value={form.adresse}
               onChange={(e) => setForm({ adresse: e.target.value })}
               placeholder={dict.checkout.addressPlaceholder}
+              className={styles.input}
+            />
+          </div>
+        </label>
+
+        <label className={styles.field}>
+          <span className={styles.label}>{dict.checkout.deliveryNoteLabel}</span>
+          <div className={styles.inputBox}>
+            <img src="/icon/checkout/field-address.svg" alt="" className={styles.inputIcon} />
+            <input
+              type="text"
+              value={form.instructions}
+              onChange={(e) => setForm({ instructions: e.target.value })}
+              placeholder={dict.checkout.deliveryNotePlaceholder}
               className={styles.input}
             />
           </div>
