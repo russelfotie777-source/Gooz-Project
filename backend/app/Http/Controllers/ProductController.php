@@ -83,6 +83,29 @@ class ProductController extends Controller
         return ProductResource::collection($query->paginate($perPage));
     }
 
+    // Words this short/common carry no search intent on their own (e.g. "de"
+    // in "testeur de camera") but still literally appear as a substring in
+    // plenty of unrelated product names ("baie de brassage"), so letting
+    // them participate in the OR-based "loose" tier below surfaced
+    // completely unrelated products whenever the real keywords matched
+    // nothing. Filtered out before matching; kept only as a last resort if
+    // every word in the query happens to be one of these.
+    private const STOPWORDS = [
+        'de', 'du', 'des', 'la', 'le', 'les', 'un', 'une', 'et', 'ou', 'pour',
+        'avec', 'dans', 'sur', 'par', 'au', 'aux', 'en', 'est', 'ce', 'ces',
+        'the', 'a', 'an', 'of', 'for', 'and', 'or', 'in', 'on', 'with', 'by', 'to',
+    ];
+
+    private function significantWords(array $words): array
+    {
+        $filtered = array_values(array_filter(
+            $words,
+            fn (string $word) => ! in_array(mb_strtolower($word), self::STOPWORDS, true)
+        ));
+
+        return $filtered === [] ? $words : $filtered;
+    }
+
     /**
      * Tiered so a typo or a reordered/partial query still surfaces
      * something instead of an empty results page — the old behaviour was a
@@ -109,6 +132,8 @@ class ProductController extends Controller
             return $query;
         }
 
+        $words = $this->significantWords($words);
+
         $matchField = function (Builder $q, string $word) {
             $q->where('name', 'like', "%{$word}%")->orWhere('reference', 'like', "%{$word}%");
         };
@@ -133,20 +158,24 @@ class ProductController extends Controller
             return $loose;
         }
 
-        return $this->fuzzySearch($query, $search);
+        return $this->fuzzySearch($query, $words);
     }
 
-    // similar_text()'s percent is symmetric-ish but order-sensitive enough
-    // that comparing against the raw query (not per-word) works fine for
-    // short product names. 500 candidates keeps this bounded regardless of
-    // catalogue size — only reached when tiers 1 and 2 above found nothing.
+    // Levenshtein-based ratio, not similar_text(): similar_text() rewards
+    // any shared letters regardless of position, so e.g. "camera" vs
+    // "armoire" (both contain a/r/m/e) scored 46% — well above the old 40%
+    // threshold — despite having nothing to do with each other. Edit
+    // distance only scores high when one word is genuinely a near-miss
+    // typo of the other, which is the actual case this tier exists for.
+    // 500 candidates keeps this bounded regardless of catalogue size — only
+    // reached when tiers 1 and 2 above found nothing.
     private const FUZZY_CANDIDATE_LIMIT = 500;
 
-    private const FUZZY_MIN_PERCENT = 40.0;
+    private const FUZZY_MIN_PERCENT = 60.0;
 
-    private function fuzzySearch(Builder $query, string $search): Builder
+    private function fuzzySearch(Builder $query, array $words): Builder
     {
-        $queryWords = preg_split('/\s+/', mb_strtolower($search), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $queryWords = array_map('mb_strtolower', $words);
 
         $matchingIds = $query->clone()
             ->limit(self::FUZZY_CANDIDATE_LIMIT)
@@ -162,8 +191,7 @@ class ProductController extends Controller
                 $best = 0.0;
                 foreach ($queryWords as $queryWord) {
                     foreach ($nameWords as $nameWord) {
-                        similar_text($queryWord, $nameWord, $percent);
-                        $best = max($best, $percent);
+                        $best = max($best, $this->levenshteinPercent($queryWord, $nameWord));
                     }
                 }
 
@@ -188,6 +216,44 @@ class ProductController extends Controller
         // decide and is effectively a no-op.
         return $query->whereIn('id', $matchingIds)
             ->orderByRaw('FIELD(id, '.$matchingIds->implode(',').')');
+    }
+
+    // PHP's levenshtein() only compares bytes, which miscounts any accented
+    // character (é, à, ê, …) in a UTF-8 string as several — this product
+    // catalogue is in French, so that's not an edge case. mb_str_split
+    // compares actual characters instead.
+    private function levenshteinPercent(string $a, string $b): float
+    {
+        $a = mb_str_split($a);
+        $b = mb_str_split($b);
+        $lenA = count($a);
+        $lenB = count($b);
+        $maxLen = max($lenA, $lenB);
+
+        if ($maxLen === 0) {
+            return 100.0;
+        }
+
+        $previousRow = range(0, $lenB);
+
+        for ($i = 1; $i <= $lenA; $i++) {
+            $currentRow = [$i];
+
+            for ($j = 1; $j <= $lenB; $j++) {
+                $cost = $a[$i - 1] === $b[$j - 1] ? 0 : 1;
+                $currentRow[$j] = min(
+                    $previousRow[$j] + 1,
+                    $currentRow[$j - 1] + 1,
+                    $previousRow[$j - 1] + $cost
+                );
+            }
+
+            $previousRow = $currentRow;
+        }
+
+        $distance = $previousRow[$lenB];
+
+        return (1 - $distance / $maxLen) * 100;
     }
 
     /**
