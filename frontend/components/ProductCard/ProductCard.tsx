@@ -125,14 +125,35 @@ export default function ProductCard({
   // Multiple photos still get shown here, just as an automatic slideshow
   // instead of something the shopper can grab — see the effect below.
   const manuallySwipeable = swipeable;
+  const cardRef = useRef<HTMLElement>(null);
+  // Only the card the shopper is actually looking at should auto-advance —
+  // without this, every card in a horizontally-scrolling carousel (most of
+  // them off-screen) cycled its images at once, which is both pointless
+  // work and visually noisy if a slide-in animation ever reveals several at
+  // the same time. 0.6 reliably picks out the one card scroll-snap has
+  // settled on (260px wide, nearly the full width of a phone screen) while
+  // a neighbor just peeking in at the edge stays below it.
+  const [isActiveInViewport, setIsActiveInViewport] = useState(false);
 
   useEffect(() => {
     if (manuallySwipeable || images.length <= 1) return;
+    const node = cardRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(([entry]) => setIsActiveInViewport(entry.isIntersecting), {
+      threshold: 0.6,
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [manuallySwipeable, images.length]);
+
+  useEffect(() => {
+    if (manuallySwipeable || images.length <= 1 || !isActiveInViewport) return;
     const id = window.setInterval(() => {
       setActiveImageIndex((i) => (i + 1) % images.length);
     }, 2500);
     return () => window.clearInterval(id);
-  }, [manuallySwipeable, images.length]);
+  }, [manuallySwipeable, images.length, isActiveInViewport]);
 
   function handlePointerDown(e: React.PointerEvent<HTMLAnchorElement>) {
     if (!manuallySwipeable) return;
@@ -267,7 +288,7 @@ export default function ProductCard({
   }
 
   return (
-    <article className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
+    <article ref={cardRef} className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
       <div className={styles.imageWrapper}>
         {/* Swipeable like noon.com's catalogue cards — see the pointer
             handlers above for why this is hand-rolled from pointer events
