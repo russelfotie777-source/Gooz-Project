@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ProductView;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -460,7 +461,21 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        $product->delete();
+        try {
+            $product->delete();
+        } catch (QueryException $e) {
+            // SQLSTATE 23000 here is the inventory_ledgers/stock_adjustment_lines
+            // RESTRICT foreign key — any product with real stock history (virtually
+            // every product actually sold/received) can't be hard-deleted by design.
+            // The "Désactiver" toggle (is_active) is the intended way to retire it.
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'Ce produit a un historique de stock (ventes, réceptions, ajustements) et ne peut pas être supprimé. Désactivez-le à la place pour le retirer du catalogue.',
+                ], 409);
+            }
+
+            throw $e;
+        }
 
         return response()->json(null, 204);
     }

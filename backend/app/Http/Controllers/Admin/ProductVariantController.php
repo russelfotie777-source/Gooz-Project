@@ -8,6 +8,7 @@ use App\Http\Requests\ProductVariant\UpdateProductVariantRequest;
 use App\Http\Resources\ProductVariantResource;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -52,7 +53,21 @@ class ProductVariantController extends Controller
 
     public function destroy(ProductVariant $variant)
     {
-        $variant->delete();
+        try {
+            $variant->delete();
+        } catch (QueryException $e) {
+            // SQLSTATE 23000 here is the inventory_ledgers/stock_adjustment_lines
+            // RESTRICT foreign key — any variant with real stock history (virtually
+            // every variant actually sold/received) can't be hard-deleted by design.
+            // The "Désactiver" toggle (is_active) is the intended way to retire it.
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'Cette variante a un historique de stock (ventes, réceptions, ajustements) et ne peut pas être supprimée. Désactivez-la à la place pour la retirer du catalogue.',
+                ], 409);
+            }
+
+            throw $e;
+        }
 
         return response()->json(null, 204);
     }
