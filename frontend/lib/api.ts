@@ -56,6 +56,16 @@ export function resolveMediaUrl(path: string): string {
   return `${API_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+// Large decorative site assets (hero/home/promo images) live on the same R2
+// bucket as user-uploaded media, under a "static/" prefix, instead of being
+// bundled into the app under public/images/ — keeps the repo and build
+// small. NEXT_PUBLIC_MEDIA_URL is already a required env var for this
+// project (see .env.example — the backend defaults to MEDIA_DISK=s3).
+export function staticAssetUrl(path: string): string {
+  const relative = path.startsWith("/") ? path.slice(1) : path;
+  return `${process.env.NEXT_PUBLIC_MEDIA_URL}/static/${relative}`;
+}
+
 interface ApiCollection<T> {
   data: T[];
 }

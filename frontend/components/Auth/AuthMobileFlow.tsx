@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ApiValidationError, login, register, socialLogin } from "@/lib/api";
+import { ApiValidationError, login, register, socialLogin, staticAssetUrl } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
 import { notifyLogin } from "@/lib/authEvents";
 import {
@@ -265,7 +265,7 @@ export default function AuthMobileFlow({ initialMode }: AuthMobileFlowProps) {
           its bottom edge peeking at the top, matching the Figma source
           (same asset, just cropped differently per screen). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/images/auth/water-distributor.png" alt="" className={styles.welcomeImage} />
+      <img src={staticAssetUrl("auth/water-distributor.png")} alt="" className={styles.welcomeImage} />
 
       <section className={styles.welcomeSlide}>
         <h1 className={styles.welcomeHeadline}>

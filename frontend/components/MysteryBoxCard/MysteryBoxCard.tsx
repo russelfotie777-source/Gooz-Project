@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { staticAssetUrl } from "@/lib/api";
 import { fireConfetti } from "@/lib/confetti";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
@@ -133,7 +134,7 @@ export default function MysteryBoxCard({ product }: MysteryBoxCardProps) {
 
         <img
           ref={boxRef}
-          src="/images/hero/misteri_box.png"
+          src={staticAssetUrl("hero/misteri_box.png")}
           alt=""
           draggable={false}
           className={styles.box}

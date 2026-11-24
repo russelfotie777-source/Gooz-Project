@@ -1,3 +1,4 @@
+import { staticAssetUrl } from "@/lib/api";
 import styles from "./PromoBanner.module.css";
 
 // Figma desktop node 907:1490 (real ad creative). The mobile frame's
@@ -6,7 +7,7 @@ import styles from "./PromoBanner.module.css";
 export default function PromoBanner() {
   return (
     <div className={styles.wrapper}>
-      <img src="/images/promo/camon-banner.png" alt="Publicité CAMON Slim" className={styles.image} />
+      <img src={staticAssetUrl("promo/camon-banner.png")} alt="Publicité CAMON Slim" className={styles.image} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { resolveMediaUrl } from "@/lib/api";
+import { resolveMediaUrl, staticAssetUrl } from "@/lib/api";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { productPath } from "@/lib/productUrl";
 import type { Banner } from "@/lib/types";
@@ -31,12 +31,12 @@ interface HeroCardCarouselProps {
 // (HeroBanner's wrapper) below 1024px and this component's own wrapper
 // above it, instead of either component touching the other's markup.
 const DEFAULT_CARDS = [
-  { id: "default-1", image: "/images/hero/card-welcome.avif", alt: "Bienvenue chez Shopitech — 15% de cashback" },
-  { id: "default-2", image: "/images/hero/hero-blender.avif", alt: "Blender Hisense" },
-  { id: "default-3", image: "/images/hero/hero-asus.avif", alt: "ASUS ZenBook Pro" },
-  { id: "default-4", image: "/images/hero/hero-hp.avif", alt: "HP Spectre X360" },
-  { id: "default-5", image: "/images/hero/hero-airpod.avif", alt: "AirPods Pro " },
-  { id: "default-6", image:  "/images/hero/hero-souris.avif", alt: "Souris Logitech" },
+  { id: "default-1", image: staticAssetUrl("hero/card-welcome.avif"), alt: "Bienvenue chez Shopitech — 15% de cashback" },
+  { id: "default-2", image: staticAssetUrl("hero/hero-blender.avif"), alt: "Blender Hisense" },
+  { id: "default-3", image: staticAssetUrl("hero/hero-asus.avif"), alt: "ASUS ZenBook Pro" },
+  { id: "default-4", image: staticAssetUrl("hero/hero-hp.avif"), alt: "HP Spectre X360" },
+  { id: "default-5", image: staticAssetUrl("hero/hero-airpod.avif"), alt: "AirPods Pro " },
+  { id: "default-6", image: staticAssetUrl("hero/hero-souris.avif"), alt: "Souris Logitech" },
 ];
 
 export default function HeroCardCarousel({ banners }: HeroCardCarouselProps) {

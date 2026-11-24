@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { resolveMediaUrl } from "@/lib/api";
+import { resolveMediaUrl, staticAssetUrl } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { productPath } from "@/lib/productUrl";
@@ -27,7 +27,7 @@ const FADE_MS = 250;
 // image anymore — it swipes/autoplays between these, independently of the
 // outer banner carousel above (that one crossfades whole slides; this one
 // only swaps the photo, text/CTA stay put).
-const PRODUCT_IMAGES = ["/images/hero/product-camera.avif", "/images/hero/blender.avif"];
+const PRODUCT_IMAGES = [staticAssetUrl("hero/product-camera.avif"), staticAssetUrl("hero/blender.avif")];
 const PRODUCT_IMAGE_AUTOPLAY_MS = 4000;
 const SWIPE_THRESHOLD_PX = 40;
 // Duration of each half of the "door" flip (outgoing image rotating to

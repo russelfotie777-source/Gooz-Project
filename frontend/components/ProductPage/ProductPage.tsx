@@ -4,6 +4,7 @@ import ProductAdBanner from "@/components/ProductAdBanner/ProductAdBanner";
 import ProductDetail from "@/components/ProductDetail/ProductDetail";
 import ProductSection from "@/components/ProductSection/ProductSection";
 import RecentlyViewedSection from "@/components/RecentlyViewedSection/RecentlyViewedSection";
+import { staticAssetUrl } from "@/lib/api";
 import type { Banner, Product, Review } from "@/lib/types";
 import styles from "./ProductPage.module.css";
 
@@ -46,7 +47,7 @@ export default function ProductPage({
             <ProductAdBanner banners={adBanners} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/images/product/ad-banner.jpg" alt="" className={styles.adBannerImage} />
+            <img src={staticAssetUrl("product/ad-banner.jpg")} alt="" className={styles.adBannerImage} />
           )}
         </div>
 

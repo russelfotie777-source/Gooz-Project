@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApiValidationError, login, register, socialLogin } from "@/lib/api";
+import { ApiValidationError, login, register, socialLogin, staticAssetUrl } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
 import { notifyLogin } from "@/lib/authEvents";
 import {
@@ -153,7 +153,7 @@ export default function AuthDesktopPage({ mode }: AuthDesktopPageProps) {
     <div className={`${styles.page} ${exiting ? styles.exiting : ""}`}>
       <div className={styles.leftPanel}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/auth/skyline.png" alt="" className={styles.skyline} />
+        <img src={staticAssetUrl("auth/skyline.png")} alt="" className={styles.skyline} />
 
         <div className={styles.leftContent}>
           <h1 className={styles.leftHeadline}>
