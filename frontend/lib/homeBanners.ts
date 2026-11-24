@@ -99,3 +99,33 @@ export const PROMO_SIDE: HomeBanner = {
   width: 600,
   height: 660,
 };
+
+/**
+ * Animated GIFs for the CategoryShowcase feature panels, keyed by category
+ * slug (showcases are picked automatically among the biggest categories,
+ * so a creative is tied to its category, not to a position on the page).
+ *
+ * - `src`: desktop panel, portrait — 600×1000 (3:5). The panel is ~260px
+ *   wide and stretches to the row's height (≈400–470px), cropped "cover".
+ * - `mobileSrc` (optional): phones/tablets, where the panel is a wide
+ *   banner above the row — 1080×450 (12:5). Without it, the panel keeps
+ *   its gradient below 1024px rather than cropping the portrait GIF.
+ *
+ * The bottom ~45% of each creative sits under the category name and button
+ * (with a dark scrim): keep the subject in the top half. A missing file
+ * falls back silently to the gradient.
+ */
+export const SHOWCASE_PANEL_GIFS: Record<string, { src: string; mobileSrc?: string }> = {
+  "reseau-wifi": {
+    src: staticAssetUrl("home/showcase-reseau-wifi.gif"),
+    mobileSrc: staticAssetUrl("home/showcase-reseau-wifi-mobile.gif"),
+  },
+  "videosurveillance-securite": {
+    src: staticAssetUrl("home/showcase-videosurveillance-securite.gif"),
+    mobileSrc: staticAssetUrl("home/showcase-videosurveillance-securite-mobile.gif"),
+  },
+  "radio-communication": {
+    src: staticAssetUrl("home/showcase-radio-communication.gif"),
+    mobileSrc: staticAssetUrl("home/showcase-radio-communication-mobile.gif"),
+  },
+};

@@ -116,6 +116,38 @@ const fr = {
       productsCount: (n: number) => `${n} produits`,
       cta: "Découvrir le rayon",
     },
+    // End-of-row "voir plus" card (ProductSection's ViewMoreCard). A row with
+    // no entry here (En solde, Populaires) gets no end card.
+    viewMore: {
+      kicker: "Et ce n'est pas tout",
+      cta: "Tout explorer",
+      rows: {
+        recommendedForYouTitle: {
+          title: "Votre sélection continue",
+          subtitle: "D'autres trouvailles choisies d'après vos envies.",
+        },
+        megaDealsTitle: {
+          title: "Toutes les méga offres",
+          subtitle: "Les plus grosses remises du jour, à saisir avant minuit.",
+        },
+        bestSellersTitle: {
+          title: "Les chouchous de nos clients",
+          subtitle: "Découvrez le classement complet des meilleures ventes.",
+        },
+        newArrivalsTitle: {
+          title: "Fraîchement arrivés",
+          subtitle: "Toutes les nouveautés ajoutées au catalogue.",
+        },
+        lowPricesTitle: {
+          title: "Plus de petits prix",
+          subtitle: "Des bons plans pour tous les budgets, du moins cher au plus cher.",
+        },
+      },
+      category: (name: string) => ({
+        title: `Tout l'univers ${name}`,
+        subtitle: "Parcourez chaque produit du rayon, filtrez par prix et par marque.",
+      }),
+    },
     brandsTitle: "Les marques que nous proposons",
     heroFallbackSubtitle: "Découvrez un univers d'articles",
     heroFallbackDescription:

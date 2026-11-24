@@ -45,6 +45,20 @@
   transition: transform 0.6s ease;
 }
 
+.panelGif {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.panelGif img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.panel:hover .panelGif img,
 .panel:hover .panelImage {
   transform: scale(1.05);
 }
@@ -102,6 +116,14 @@
   min-width: 0;
 }
 
+/* Portrait-only GIF: below desktop the panel is a wide banner, so it keeps
+   its gradient instead of showing a badly cropped portrait. */
+@media (max-width: 1023px) {
+  .panelGifDesktopOnly {
+    display: none;
+  }
+}
+
 @media (min-width: 1024px) {
   .showcase {
     display: grid;
@@ -122,12 +144,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .panel,
-  .panelImage {
+  .panelImage,
+  .panelGif img {
     transition: none;
   }
 
   .panel:hover,
-  .panel:hover .panelImage {
+  .panel:hover .panelImage,
+  .panel:hover .panelGif img {
     transform: none;
   }
 }

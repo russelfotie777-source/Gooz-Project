@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { Category, Product } from "@/lib/types";
+import { SHOWCASE_PANEL_GIFS } from "@/lib/homeBanners";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import ProductSection from "@/components/ProductSection/ProductSection";
@@ -18,19 +20,33 @@ interface CategoryShowcaseProps {
 const TONES = ["toneBlue", "toneNavy", "toneOrange"] as const;
 
 // A dedicated row for one of the catalogue's biggest categories (chosen by
-// pickShowcaseCategories): a feature panel — the category's own admin image
-// behind a scrim, or a plain brand gradient without one — next to a
-// carousel of that category's products.
+// pickShowcaseCategories): a feature panel — an animated GIF from
+// SHOWCASE_PANEL_GIFS, else the category's own admin image, else a plain
+// brand gradient, always behind a scrim — next to a carousel of that
+// category's products.
 export default function CategoryShowcase({ category, products, index }: CategoryShowcaseProps) {
   const dict = useDictionary();
   const href = `/categories/${category.slug}`;
   const tone = styles[TONES[index % TONES.length]];
+  const gif = SHOWCASE_PANEL_GIFS[category.slug];
+  // A GIF not uploaded yet (or failing) falls back to the image/gradient.
+  const [gifFailed, setGifFailed] = useState(false);
+  const showGif = Boolean(gif) && !gifFailed;
 
   return (
     <div className={styles.showcase}>
       <LocaleLink href={href} className={`${styles.panel} ${tone}`}>
-        {category.image && (
-          <Image src={category.image} alt="" fill sizes="(min-width: 1024px) 280px, 100vw" className={styles.panelImage} />
+        {showGif && gif ? (
+          // <picture>/<img>, not next/image: keeps the GIF animated and lets
+          // phones get their own wide creative (or none — see the CSS).
+          <picture className={`${styles.panelGif} ${gif.mobileSrc ? "" : styles.panelGifDesktopOnly}`}>
+            {gif.mobileSrc && <source media="(max-width: 1023px)" srcSet={gif.mobileSrc} />}
+            <img src={gif.src} alt="" loading="lazy" onError={() => setGifFailed(true)} />
+          </picture>
+        ) : (
+          category.image && (
+            <Image src={category.image} alt="" fill sizes="(min-width: 1024px) 280px, 100vw" className={styles.panelImage} />
+          )
         )}
         <span className={styles.panelBody}>
           <span className={styles.kicker}>{dict.home.showcase.kicker}</span>
@@ -54,6 +70,7 @@ export default function CategoryShowcase({ category, products, index }: Category
           products={products}
           cardLayout="market"
           viewAllHref={href}
+          viewMore={{ ...dict.home.viewMore.category(category.name), count: category.products_count }}
         />
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import { SlideshowConductor } from "@/lib/slideshowConductor";
 import LocaleLink from "@/lib/i18n/LocaleLink";
+import ViewMoreCard, { type ViewMoreCopy, type ViewMoreTone } from "./ViewMoreCard";
 import styles from "./ProductSection.module.css";
 
 interface ProductSectionProps {
@@ -35,7 +36,16 @@ interface ProductSectionProps {
   headerExtra?: ReactNode;
   /** "highlight" sets the row on a tinted panel (Méga offres). */
   tone?: "default" | "highlight";
+  /** Copy for the end-of-row "voir plus" card; defaults to home.viewMore.rows[titleKey]. */
+  viewMore?: ViewMoreCopy;
 }
+
+// Rows whose end card uses a warmer / darker gradient than the default blue.
+const VIEW_MORE_TONES: Partial<Record<ProductSectionProps["titleKey"], ViewMoreTone>> = {
+  megaDealsTitle: "sunset",
+  newArrivalsTitle: "night",
+  lowPricesTitle: "night",
+};
 
 export default function ProductSection({
   titleKey,
@@ -46,12 +56,15 @@ export default function ProductSection({
   viewAllHref,
   headerExtra,
   tone = "default",
+  viewMore,
 }: ProductSectionProps) {
   const dict = useDictionary();
   const title = titleOverride ?? dict.home[titleKey];
   // Existing callers (no link, no extra) keep the bare <h2> exactly as before.
   const hasRichHeader = Boolean(viewAllHref || headerExtra);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const viewMoreRows: Partial<Record<string, ViewMoreCopy>> = dict.home.viewMore.rows;
+  const viewMoreCopy = viewMore ?? viewMoreRows[titleKey];
+  const trackRef =useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
 
   useEffect(() => {
@@ -103,6 +116,16 @@ export default function ProductSection({
                 <ProductCard product={product} layout={cardLayout} swipeable={false} />
               </div>
             ))}
+            {viewAllHref && viewMoreCopy && products.length > 0 && (
+              <div className={cardLayout === "market" ? styles.marketItem : styles.item}>
+                <ViewMoreCard
+                  href={viewAllHref}
+                  copy={viewMoreCopy}
+                  products={products}
+                  tone={VIEW_MORE_TONES[titleKey]}
+                />
+              </div>
+            )}
           </div>
 
           {canScroll && (

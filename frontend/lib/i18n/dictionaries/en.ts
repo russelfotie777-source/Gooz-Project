@@ -111,6 +111,36 @@ const en: Dictionary = {
       productsCount: (n: number) => `${n} products`,
       cta: "Explore the department",
     },
+    viewMore: {
+      kicker: "And there's more",
+      cta: "Explore all",
+      rows: {
+        recommendedForYouTitle: {
+          title: "Your picks continue",
+          subtitle: "More finds chosen from what you like.",
+        },
+        megaDealsTitle: {
+          title: "All mega deals",
+          subtitle: "Today's biggest discounts — grab them before midnight.",
+        },
+        bestSellersTitle: {
+          title: "Our customers' favorites",
+          subtitle: "See the full best-sellers ranking.",
+        },
+        newArrivalsTitle: {
+          title: "Freshly arrived",
+          subtitle: "Every new product added to the catalogue.",
+        },
+        lowPricesTitle: {
+          title: "More small prices",
+          subtitle: "Great finds for every budget, cheapest first.",
+        },
+      },
+      category: (name: string) => ({
+        title: `The whole ${name} range`,
+        subtitle: "Browse every product in the department, filter by price and brand.",
+      }),
+    },
     brandsTitle: "Brands we offer",
     heroFallbackSubtitle: "Discover a world of products",
     heroFallbackDescription:

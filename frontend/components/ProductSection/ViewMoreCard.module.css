@@ -1,0 +1,221 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  height: 100%;
+  min-height: 280px;
+  padding: 20px 18px 18px;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-lg);
+  color: #fff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px -12px rgba(4, 48, 92, 0.55);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Tones — fixed brand colors (the card is its own dark surface, so it
+   reads the same in light and dark mode). */
+.blue {
+  background: linear-gradient(155deg, #0a6fd1 0%, #065aad 45%, #04305c 100%);
+}
+
+.sunset {
+  background: linear-gradient(155deg, #ffb13b 0%, #ff8a00 40%, #e0433c 100%);
+}
+
+.night {
+  background: linear-gradient(155deg, #3a3d5c 0%, #2b2d42 50%, #15162a 100%);
+}
+
+/* Soft light blob that drifts on hover. */
+.glow {
+  position: absolute;
+  top: -30%;
+  right: -35%;
+  z-index: -1;
+  width: 85%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 70%);
+  transition: transform 0.6s ease;
+}
+
+.card:hover .glow {
+  transform: translate(-18%, 14%) scale(1.15);
+}
+
+.dots {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: -1;
+  height: 55%;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(to top, #000, transparent);
+}
+
+.stack {
+  display: flex;
+  align-items: center;
+}
+
+.thumb {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  background: #fff;
+  object-fit: contain;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.thumb + .thumb {
+  margin-left: -12px;
+}
+
+.card:hover .thumb:nth-child(1) {
+  transform: translateX(-3px) rotate(-6deg);
+}
+
+.card:hover .thumb:nth-child(3) {
+  transform: translateX(3px) rotate(6deg);
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.88;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 6px 6px 16px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: #04305c;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .card {
+    padding: 16px 12px 12px;
+  }
+
+  .title {
+    font-size: 17px;
+  }
+
+  .cta {
+    padding-left: 12px;
+    font-size: 12px;
+  }
+
+  .arrow {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.sunset .cta {
+  color: #b33a12;
+}
+
+.night .cta {
+  color: #2b2d42;
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.arrow svg {
+  color: #fff;
+}
+
+.card:hover .arrow {
+  transform: translateX(3px);
+}
+
+@media (min-width: 1024px) {
+  .card {
+    padding: 24px 20px 20px;
+  }
+
+  .title {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .glow,
+  .thumb,
+  .arrow {
+    transition: none;
+  }
+
+  .card:hover,
+  .card:hover .glow,
+  .card:hover .thumb,
+  .card:hover .arrow {
+    transform: none;
+  }
+}
