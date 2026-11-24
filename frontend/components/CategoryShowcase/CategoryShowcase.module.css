@@ -1,0 +1,133 @@
+.showcase {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 150px;
+  padding: 18px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  color: var(--color-white);
+  isolation: isolate;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.panel:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card);
+}
+
+.panel:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.toneBlue {
+  background: linear-gradient(140deg, var(--color-primary), var(--color-navy));
+}
+
+.toneNavy {
+  background: linear-gradient(140deg, var(--color-footer-bg), var(--color-primary-dark));
+}
+
+.toneOrange {
+  background: linear-gradient(140deg, var(--color-accent-strong), var(--color-danger));
+}
+
+.panelImage {
+  z-index: -2;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.panel:hover .panelImage {
+  transform: scale(1.05);
+}
+
+/* Scrim so white text stays readable on any photo. */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.1) 75%);
+}
+
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.count {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.row {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .showcase {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    align-items: stretch;
+    gap: 24px;
+  }
+
+  .panel {
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .name {
+    font-size: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .panelImage {
+    transition: none;
+  }
+
+  .panel:hover,
+  .panel:hover .panelImage {
+    transform: none;
+  }
+}

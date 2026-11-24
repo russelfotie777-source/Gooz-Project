@@ -154,7 +154,16 @@ class EnkapPaymentService
         // sequentially: a second call that was blocked on this lock sees
         // the first call's already-committed status and correctly skips
         // re-notifying/re-clearing the cart.
-        DB::transaction(function () use ($payment, $mapped, $providerStatus) {
+        // Push notifications are dispatched to a Redis-backed queue, which
+        // must stay outside the transaction below: if dispatch() throws
+        // (queue connection hiccup, Redis blip) while still inside
+        // DB::transaction(), the whole transaction rolls back — silently
+        // undoing the payment_status write even though Enkap already
+        // confirmed the payment. Collected here and sent only after the
+        // transaction has actually committed.
+        $pendingPushNotifications = [];
+
+        DB::transaction(function () use ($payment, $mapped, $providerStatus, &$pendingPushNotifications) {
             $previousStatus = $payment->payment_status;
 
             $payment->update([
@@ -177,10 +186,10 @@ class EnkapPaymentService
                         'body' => $body,
                         'type' => 'order_status',
                     ]);
-                    SendPushNotificationJob::dispatch($order->user->id, $title, $body, [
+                    $pendingPushNotifications[] = [$order->user->id, $title, $body, [
                         'order_id' => $order->id,
                         'status' => 'confirmée',
-                    ]);
+                    ]];
                 }
             }
 
@@ -196,9 +205,20 @@ class EnkapPaymentService
                     'body' => $body,
                     'type' => 'payment_failed',
                 ]);
-                SendPushNotificationJob::dispatch($order->user->id, $title, $body);
+                $pendingPushNotifications[] = [$order->user->id, $title, $body, []];
             }
         });
+
+        foreach ($pendingPushNotifications as [$userId, $title, $body, $data]) {
+            try {
+                SendPushNotificationJob::dispatch($userId, $title, $body, $data);
+            } catch (\Throwable $e) {
+                Log::error('enkap_push_notification_dispatch_failed', [
+                    'user_id' => $userId,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return $mapped;
     }

@@ -15,6 +15,8 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'image' => $this->image,
             'is_active' => $this->is_active,
+            // Only present where the query used withCount (public index).
+            'products_count' => $this->when(isset($this->products_count), fn () => (int) $this->products_count),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

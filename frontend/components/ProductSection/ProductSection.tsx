@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/types";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import ProductCard from "@/components/ProductCard/ProductCard";
+import { SlideshowConductor } from "@/lib/slideshowConductor";
+import LocaleLink from "@/lib/i18n/LocaleLink";
 import styles from "./ProductSection.module.css";
 
 interface ProductSectionProps {
@@ -16,18 +18,39 @@ interface ProductSectionProps {
     | "frequentlyBoughtTitle"
     | "alsoViewedTitle"
     | "moreFromBrandTitle"
-    | "recentlyViewedTitle";
+    | "recentlyViewedTitle"
+    | "recommendedForYouTitle"
+    | "megaDealsTitle"
+    | "newArrivalsTitle"
+    | "lowPricesTitle";
+  /** Overrides the dictionary title (e.g. a category name). */
+  title?: string;
   products: Product[];
-  cardLayout?: "row" | "column";
+  cardLayout?: "row" | "column" | "market";
+  /** Anchor target (homepage banners link to some rows). */
+  id?: string;
+  /** Shows a "Voir tout" link in the header. */
+  viewAllHref?: string;
+  /** Rendered next to the title (e.g. a countdown). */
+  headerExtra?: ReactNode;
+  /** "highlight" sets the row on a tinted panel (Méga offres). */
+  tone?: "default" | "highlight";
 }
 
 export default function ProductSection({
   titleKey,
+  title: titleOverride,
   products,
   cardLayout = "row",
+  id,
+  viewAllHref,
+  headerExtra,
+  tone = "default",
 }: ProductSectionProps) {
   const dict = useDictionary();
-  const title = dict.home[titleKey];
+  const title = titleOverride ?? dict.home[titleKey];
+  // Existing callers (no link, no extra) keep the bare <h2> exactly as before.
+  const hasRichHeader = Boolean(viewAllHref || headerExtra);
   const trackRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
 
@@ -50,43 +73,64 @@ export default function ProductSection({
   }
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.title}>{title}</h2>
-
-      <div className={styles.trackWrapper}>
-        <div ref={trackRef} className={styles.track}>
-          {products.map((product) => (
-            <div className={styles.item} key={product.id}>
-              <ProductCard product={product} layout={cardLayout} swipeable={false} />
+    <SlideshowConductor>
+      <section
+        id={id}
+        className={[styles.section, tone === "highlight" && styles.highlight, id && styles.anchored]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {hasRichHeader ? (
+          <div className={styles.header}>
+            <div className={styles.headerMain}>
+              <h2 className={styles.title}>{title}</h2>
+              {headerExtra}
             </div>
-          ))}
-        </div>
-
-        {canScroll && (
-          <>
-            <button
-              type="button"
-              className={`${styles.navButton} ${styles.navButtonPrev}`}
-              aria-label={dict.common.previous}
-              onClick={() => scroll(-1)}
-            >
-              <img
-                src="/icon/product-section/nav-arrow.svg"
-                alt=""
-                className={`${styles.navIcon} ${styles.navIconFlipped}`}
-              />
-            </button>
-            <button
-              type="button"
-              className={`${styles.navButton} ${styles.navButtonNext}`}
-              aria-label={dict.common.next}
-              onClick={() => scroll(1)}
-            >
-              <img src="/icon/product-section/nav-arrow.svg" alt="" className={styles.navIcon} />
-            </button>
-          </>
+            {viewAllHref && (
+              <LocaleLink href={viewAllHref} className={styles.viewAll}>
+                {dict.common.seeAll}
+              </LocaleLink>
+            )}
+          </div>
+        ) : (
+          <h2 className={styles.title}>{title}</h2>
         )}
-      </div>
-    </section>
+
+        <div className={`${styles.trackWrapper} ${cardLayout === "market" ? styles.marketWrapper : ""}`}>
+          <div ref={trackRef} className={styles.track}>
+            {products.map((product) => (
+              <div className={cardLayout === "market" ? styles.marketItem : styles.item} key={product.id}>
+                <ProductCard product={product} layout={cardLayout} swipeable={false} />
+              </div>
+            ))}
+          </div>
+
+          {canScroll && (
+            <>
+              <button
+                type="button"
+                className={`${styles.navButton} ${styles.navButtonPrev}`}
+                aria-label={dict.common.previous}
+                onClick={() => scroll(-1)}
+              >
+                <img
+                  src="/icon/product-section/nav-arrow.svg"
+                  alt=""
+                  className={`${styles.navIcon} ${styles.navIconFlipped}`}
+                />
+              </button>
+              <button
+                type="button"
+                className={`${styles.navButton} ${styles.navButtonNext}`}
+                aria-label={dict.common.next}
+                onClick={() => scroll(1)}
+              >
+                <img src="/icon/product-section/nav-arrow.svg" alt="" className={styles.navIcon} />
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+    </SlideshowConductor>
   );
 }

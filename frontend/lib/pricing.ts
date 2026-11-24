@@ -8,6 +8,14 @@ export function getDisplayVariant(product: Product): ProductVariant | null {
   return product.variants.reduce((cheapest, v) => (v.price < cheapest.price ? v : cheapest));
 }
 
+/** Number only, grouped fr-FR style ("12 500") — for layouts that print
+ *  the currency separately. fr-FR groups with a narrow no-break space
+ *  (U+202F), which the heading font renders almost invisibly ("12500");
+ *  a regular no-break space keeps the groups readable. */
+export function formatAmount(value: number): string {
+  return new Intl.NumberFormat("fr-FR").format(value).replace(/ /g, " ");
+}
+
 export function formatPrice(value: number): string {
   return `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
 }

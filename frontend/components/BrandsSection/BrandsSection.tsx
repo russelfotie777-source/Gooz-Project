@@ -8,6 +8,8 @@ import styles from "./BrandsSection.module.css";
 
 interface BrandsSectionProps {
   brands: Brand[];
+  /** Shows a "Voir tout" link to the brands index. */
+  viewAllHref?: string;
 }
 
 // Constant visual speed (px/s) regardless of how many brands there are —
@@ -40,7 +42,7 @@ const PAUSE_AFTER_INTERACTION_MS = 2500;
 // the page on every engine, even with touch-action set. Letting the browser
 // handle only vertical panning here, and reading horizontal movement in JS,
 // sidesteps that regardless of engine.
-export default function BrandsSection({ brands }: BrandsSectionProps) {
+export default function BrandsSection({ brands, viewAllHref }: BrandsSectionProps) {
   const dict = useDictionary();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -159,7 +161,16 @@ export default function BrandsSection({ brands }: BrandsSectionProps) {
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.title}>{dict.home.brandsTitle}</h2>
+      {viewAllHref ? (
+        <div className={styles.header}>
+          <h2 className={styles.title}>{dict.home.brandsTitle}</h2>
+          <LocaleLink href={viewAllHref} className={styles.viewAll}>
+            {dict.common.seeAll}
+          </LocaleLink>
+        </div>
+      ) : (
+        <h2 className={styles.title}>{dict.home.brandsTitle}</h2>
+      )}
       <div
         className={styles.trackWrapper}
         ref={wrapperRef}

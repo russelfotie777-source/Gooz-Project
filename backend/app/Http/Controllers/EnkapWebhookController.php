@@ -43,7 +43,20 @@ class EnkapWebhookController extends Controller
             return response()->noContent(404);
         }
 
-        $this->enkapPayments->refreshStatus($order->payment);
+        try {
+            $this->enkapPayments->refreshStatus($order->payment);
+        } catch (\Throwable $e) {
+            // Transient failure (Redis/DB hiccup, Enkap API error) — return
+            // a 5xx so Enkap's own retry logic has a chance to redeliver,
+            // instead of letting the exception bubble up into an opaque,
+            // unlogged 500.
+            Log::error('enkap_webhook_refresh_failed', [
+                'order_reference' => $orderReference,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->noContent(500);
+        }
 
         return response()->noContent();
     }

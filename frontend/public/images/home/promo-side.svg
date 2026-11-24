@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 660" width="600" height="660">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff3e6c"/><stop offset="1" stop-color="#a443b8"/></linearGradient>
+<pattern id="d" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="#fff" opacity=".18"/></pattern></defs>
+<rect width="600" height="660" fill="url(#g)"/><rect width="600" height="660" fill="url(#d)"/>
+<circle cx="432" cy="330" r="396" fill="#fff" opacity=".10"/>
+<circle cx="528" cy="82" r="165" fill="#fff" opacity=".10"/>
+<rect x="12" y="12" width="576" height="636" rx="10" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-dasharray="10 8"/>
+<text x="36" y="237" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="56" fill="#fff">NOUVEAU</text>
+<text x="36" y="343" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#fff" opacity=".92">Montres connectées</text>
+<rect x="36" y="409" width="224" height="61" rx="30" fill="#feee00"/>
+<text x="148" y="451" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="28" fill="#1d1d1f">Voir</text>
+<text x="36" y="594" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#fff" opacity=".7">MODÈLE · promo-side · 600×660 px</text>
+</svg>

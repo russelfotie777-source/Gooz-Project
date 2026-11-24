@@ -122,3 +122,54 @@ img {
   max-width: 100%;
   display: block;
 }
+
+/* Dark mode — dark-line icon exports.
+   These SVGs are drawn in black/#1C1B1F/#2B2D42 for a light page and have
+   no light-on-dark variant; as <img> they can't follow currentColor, so on
+   a dark surface they vanished. Inverted in place here (same pattern as
+   BottomNav/ProfilePage, which already did this for their own icons) —
+   one list for the whole site, keyed on the file so every current and
+   future use of these icons is covered.
+   Deliberately NOT listed: icons that sit on a surface that stays light or
+   colored in both themes — header-mobile/search.svg (fixed-white search
+   field), auth/apple.svg (a self-contained dark button) — and colored
+   icons (orange/green/red), which already read fine on dark. */
+html[data-theme="dark"] img:is(
+    [src$="/icon/product-detail/back-circle.svg"],
+    [src$="/icon/product-detail/back.svg"],
+    [src$="/icon/product-detail/chevron-down.svg"],
+    [src$="/icon/product-detail/location.svg"],
+    [src$="/icon/product-section/nav-arrow.svg"],
+    [src$="/icon/cart/add.svg"],
+    [src$="/icon/cart/remove.svg"],
+    [src$="/icon/cart/delete.svg"],
+    [src$="/icon/cart/coupon-chevron.svg"],
+    [src$="/icon/cart/info.svg"],
+    [src$="/icon/checkout/radio-unchecked.svg"],
+    [src$="/icon/checkout/step-card.svg"],
+    [src$="/icon/checkout/step-card-active.svg"],
+    [src$="/icon/checkout/step-shipping.svg"],
+    [src$="/icon/checkout/storefront.svg"],
+    [src$="/icon/auth/visibility.svg"],
+    [src$="/icon/auth/scroll-line.svg"],
+    [src$="/icon/header-mobile/menu.svg"],
+    [src*="/icon/bottom-nav/"][src$="bell.svg"],
+    [src*="/icon/bottom-nav/"][src$="cart.svg"],
+    [src*="/icon/bottom-nav/"][src$="user.svg"],
+    [src$="/icon/bottom-nav/nav-home-inline.svg"],
+    [src$="/icon/profile/avatar-placeholder.svg"],
+    [src$="/icon/profile/arrow-forward-ios.svg"],
+    [src$="/icon/profile/brightness4.svg"],
+    [src$="/icon/profile/credit-card.svg"],
+    [src$="/icon/profile/delivery-truck-bolt.svg"],
+    [src$="/icon/profile/edit-location-alt.svg"],
+    [src$="/icon/profile/g-translate.svg"],
+    [src$="/icon/profile/logout.svg"],
+    [src$="/icon/profile/person-edit.svg"],
+    [src$="/icon/profile/quiz.svg"],
+    [src$="/icon/profile/security.svg"],
+    [src$="/icon/profile/support-agent.svg"],
+    [src$="/icon/profile/verified.svg"]
+  ) {
+  filter: invert(1) brightness(1.15);
+}

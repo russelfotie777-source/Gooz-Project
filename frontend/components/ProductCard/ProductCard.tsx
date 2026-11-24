@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { addCartItem } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { notifyCartUpdated } from "@/lib/cartEvents";
@@ -9,8 +9,9 @@ import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import { useLocaleRouter } from "@/lib/i18n/useLocaleRouter";
 import { savePendingCartIntent } from "@/lib/pendingCartIntent";
-import { formatPrice, getDisplayVariant } from "@/lib/pricing";
+import { formatAmount, formatPrice, getDisplayVariant } from "@/lib/pricing";
 import { productPath } from "@/lib/productUrl";
+import { useSlideshowConductor } from "@/lib/slideshowConductor";
 import type { Product, ProductVariant } from "@/lib/types";
 import styles from "./ProductCard.module.css";
 
@@ -23,7 +24,10 @@ interface ProductCardProps {
    *  aussi...) deliberately use "column"-sized cards inside a horizontally
    *  scrolling carousel for emphasis, so this says nothing about whether
    *  the card sits inside one — see `swipeable` for that. */
-  layout?: "row" | "column";
+  /** "market" = marketplace tile (homepage rows below "Populaires"):
+   *  bordered card, floating "+" cart button over the photo, FCFA price
+   *  line with the discount in green. */
+  layout?: "row" | "column" | "market";
   /** Whether a touch drag on the card's own photo is read as "swipe to the
    *  next photo". Defaults to true (catalogue/boutique grids, favorites —
    *  nothing else around the card wants that horizontal gesture). Any card
@@ -40,6 +44,13 @@ function discountPercent(variant: ProductVariant | null): number | null {
   if (!variant || !variant.is_promotion || !variant.promo_price || variant.base_price <= 0) return null;
   const percent = Math.round((1 - variant.promo_price / variant.base_price) * 100);
   return percent > 0 ? percent : null;
+}
+
+const NEW_PRODUCT_DAYS = 30;
+
+function isRecent(createdAt: string): boolean {
+  const created = Date.parse(createdAt);
+  return Number.isFinite(created) && Date.now() - created < NEW_PRODUCT_DAYS * 24 * 60 * 60 * 1000;
 }
 
 export default function ProductCard({
@@ -147,13 +158,36 @@ export default function ProductCard({
     return () => observer.disconnect();
   }, [manuallySwipeable, images.length]);
 
+  // Inside a carousel row (ProductSection/DynamicHomepageSection), the row's
+  // SlideshowConductor hands out turns so only one card changes photo at a
+  // time — instead of every visible card flipping in sync. A card only
+  // takes part while it's in view and has several photos.
+  const conductor = useSlideshowConductor();
+  const conductorId = useId();
+  const autoplays = !manuallySwipeable && images.length > 1;
+
+  const imageCount = images.length;
+
   useEffect(() => {
-    if (manuallySwipeable || images.length <= 1 || !isActiveInViewport) return;
+    const node = cardRef.current;
+    if (!conductor || !node) return;
+    return conductor.register(conductorId, node, () =>
+      setActiveImageIndex((i) => (i + 1) % Math.max(1, imageCount))
+    );
+  }, [conductor, conductorId, imageCount]);
+
+  useEffect(() => {
+    conductor?.setEligible(conductorId, autoplays && isActiveInViewport);
+  }, [conductor, conductorId, autoplays, isActiveInViewport, imageCount]);
+
+  // Fallback outside any conductor: the card cycles on its own while in view.
+  useEffect(() => {
+    if (conductor || !autoplays || !isActiveInViewport) return;
     const id = window.setInterval(() => {
       setActiveImageIndex((i) => (i + 1) % images.length);
     }, 2500);
     return () => window.clearInterval(id);
-  }, [manuallySwipeable, images.length, isActiveInViewport]);
+  }, [conductor, autoplays, images.length, isActiveInViewport]);
 
   function handlePointerDown(e: React.PointerEvent<HTMLAnchorElement>) {
     if (!manuallySwipeable) return;
@@ -287,9 +321,9 @@ export default function ProductCard({
     }
   }
 
-  return (
-    <article ref={cardRef} className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
-      <div className={styles.imageWrapper}>
+  // Shared by every layout — only the chrome around it differs.
+  const gallery = (
+    <>
         {/* Swipeable like noon.com's catalogue cards — see the pointer
             handlers above for why this is hand-rolled from pointer events
             rather than native horizontal scroll. */}
@@ -302,21 +336,37 @@ export default function ProductCard({
           onPointerCancel={handlePointerCancel}
           onClick={handleImageLinkClick}
         >
+          {/* Swipeable cards slide (the photo follows the finger); cards
+              that change photo on their own cross-fade instead — softer
+              than a slide when nobody asked for the motion. */}
           <div
-            className={styles.imageTrack}
-            style={{
-              transform: `translateX(${dragOffsetPercent ?? -activeImageIndex * 100}%)`,
-              transition: dragOffsetPercent === null ? undefined : "none",
-            }}
+            className={`${styles.imageTrack} ${!manuallySwipeable ? styles.imageTrackFade : ""}`}
+            style={
+              manuallySwipeable
+                ? {
+                    transform: `translateX(${dragOffsetPercent ?? -activeImageIndex * 100}%)`,
+                    transition: dragOffsetPercent === null ? undefined : "none",
+                  }
+                : undefined
+            }
           >
-            {(images.length > 0 ? images : [null]).map((img) => (
-              <div className={styles.imageSlide} key={img?.id ?? "placeholder"}>
+            {(images.length > 0 ? images : [null]).map((img, slideIndex) => (
+              <div
+                className={`${styles.imageSlide} ${slideIndex === activeImageIndex ? styles.imageSlideActive : ""}`}
+                key={img?.id ?? "placeholder"}
+              >
                 <Image
                   src={img && !failedImageIds.has(img.id) ? (img.thumbnail_url ?? img.image_url) : PLACEHOLDER_IMAGE}
                   alt={(img?.alt_text || product.name) ?? ""}
                   className={styles.image}
                   fill
-                  sizes={layout === "row" ? "96px" : "(min-width: 1024px) 280px, 45vw"}
+                  sizes={
+                    layout === "row"
+                      ? "96px"
+                      : layout === "market"
+                        ? "(min-width: 1024px) 240px, 46vw"
+                        : "(min-width: 1024px) 280px, 45vw"
+                  }
                   draggable={false}
                   onError={() => img && setFailedImageIds((prev) => new Set(prev).add(img.id))}
                 />
@@ -334,17 +384,89 @@ export default function ProductCard({
             ))}
           </div>
         )}
+    </>
+  );
+
+  const wishlistButton = (
+    <button
+      type="button"
+      className={`${styles.wishlistButton} ${isFavorite ? styles.wishlistButtonActive : ""}`}
+      aria-label={dict.common.addToWishlist}
+      aria-pressed={isFavorite}
+      disabled={favoriteBusy}
+      onClick={handleToggleWishlist}
+    >
+      <HeartIcon filled={isFavorite} />
+    </button>
+  );
+
+  const addedToast =
+    cartStatus === "added" ? (
+      <div className={styles.toast} role="status" aria-live="polite">
+        <img src="/icon/product-detail/check-circle.svg" alt="" className={styles.toastIcon} />
+        {dict.common.addedToCart}
+      </div>
+    ) : null;
+
+  if (layout === "market") {
+    const isNew = isRecent(product.created_at);
+    return (
+      <article ref={cardRef} className={`${styles.card} ${styles.market}`}>
+        <div className={styles.imageWrapper}>
+          {gallery}
+          {isNew && <span className={styles.marketTag}>{dict.common.newBadge}</span>}
+          {wishlistButton}
+          <button
+            type="button"
+            className={`${styles.marketAdd} ${cartStatus === "added" ? styles.marketAddDone : ""}`}
+            aria-label={dict.common.addToCart}
+            disabled={cartStatus === "adding"}
+            onClick={handleAddToCart}
+          >
+            {cartStatus === "added" ? <CheckIcon /> : <PlusIcon />}
+          </button>
+        </div>
+
+        <LocaleLink href={productPath(product)} className={styles.marketBody}>
+          <h3 className={styles.marketName}>{product.name}</h3>
+          {product.price_from !== null ? (
+            <span className={styles.marketPrice}>
+              <strong className={styles.marketAmount}>
+                {formatAmount(product.price_from)}
+                <span className={styles.marketCurrency}> FCFA</span>
+              </strong>
+              {discount && displayVariant && (
+                <>
+                  <s className={styles.marketOld}>{formatAmount(displayVariant.base_price)} FCFA</s>
+                  <em className={styles.marketOff}>-{discount}%</em>
+                </>
+              )}
+            </span>
+          ) : (
+            <span className={styles.marketUnavailable}>{dict.common.priceUnavailable}</span>
+          )}
+          {product.brand?.name && <span className={styles.marketChip}>{product.brand.name}</span>}
+          <span className={styles.marketExpress}>
+            <BoltIcon />
+            {dict.common.expressLabel}
+            <small className={styles.marketExpressNote}>
+              <span className={styles.marketExpressPrefix}>{dict.common.expressDelayPrefix} </span>
+              {dict.common.expressDelay}
+            </small>
+          </span>
+        </LocaleLink>
+
+        {addedToast}
+      </article>
+    );
+  }
+
+  return (
+    <article ref={cardRef} className={`${styles.card} ${layout === "column" ? styles.column : styles.row}`}>
+      <div className={styles.imageWrapper}>
+        {gallery}
         {discount && <span className={styles.discountTag}>-{discount}%</span>}
-        <button
-          type="button"
-          className={`${styles.wishlistButton} ${isFavorite ? styles.wishlistButtonActive : ""}`}
-          aria-label={dict.common.addToWishlist}
-          aria-pressed={isFavorite}
-          disabled={favoriteBusy}
-          onClick={handleToggleWishlist}
-        >
-          <HeartIcon filled={isFavorite} />
-        </button>
+        {wishlistButton}
       </div>
 
       <div className={styles.info}>
@@ -375,13 +497,32 @@ export default function ProductCard({
         </div>
       </div>
 
-      {cartStatus === "added" && (
-        <div className={styles.toast} role="status" aria-live="polite">
-          <img src="/icon/product-detail/check-circle.svg" alt="" className={styles.toastIcon} />
-          {dict.common.addedToCart}
-        </div>
-      )}
+      {addedToast}
     </article>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BoltIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true">
+      <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+      <path d="m5 12.5 4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

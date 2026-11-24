@@ -1,0 +1,163 @@
+.promo {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.main {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.track {
+  display: flex;
+  transition: transform 0.7s cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+
+.slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+}
+
+.slideImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 1;
+  object-fit: cover;
+  user-select: none;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1d1d1f;
+  box-shadow: 0 6px 22px rgba(30, 40, 90, 0.12);
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.arrowPrev {
+  left: 14px;
+}
+
+.arrowNext {
+  right: 14px;
+}
+
+.main:hover .arrow,
+.arrow:focus-visible {
+  opacity: 1;
+}
+
+.arrow:hover {
+  transform: translateY(-50%) scale(1.08);
+}
+
+.dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  transition: width 0.3s ease;
+}
+
+.dotActive {
+  width: 28px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Fills left→right over the slide's display time. */
+.dotFill {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  transform-origin: left;
+  animation: fill linear forwards;
+}
+
+.dotActive:not(:has(.dotFill)) {
+  background: #fff;
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Side GIF panel: hidden on phones (like the reference), where the
+   carousel alone already fills the width. */
+.side {
+  position: relative;
+  display: none;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+/* Absolutely placed so the panel takes the carousel's height instead of
+   the image's own intrinsic height stretching the row. */
+.sideImage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.side:hover .sideImage {
+  transform: scale(1.04);
+}
+
+@media (min-width: 900px) {
+  .promo {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .side {
+    display: block;
+  }
+
+  .arrow {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .arrow,
+  .sideImage {
+    transition: none;
+  }
+}

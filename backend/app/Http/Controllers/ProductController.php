@@ -7,6 +7,7 @@ use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\ProductView;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -17,7 +18,15 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductController extends Controller
 {
-    private const SORTABLE_COLUMNS = ['created_at', 'base_price', 'name'];
+    // best_sellers isn't a column — it ranks by total quantity ordered
+    // (order_items), same aggregate as HomepageSectionController's
+    // best_sellers strategy. Used by the homepage "Meilleures ventes" row.
+    // most_viewed ranks by product page views over the last 30 days
+    // ("Produits populaires"); discount by the deepest promo among a
+    // product's variants ("Méga offres").
+    private const SORTABLE_COLUMNS = ['created_at', 'base_price', 'name', 'best_sellers', 'most_viewed', 'discount'];
+
+    private const POPULARITY_WINDOW_DAYS = 30;
 
     /**
      * Display a listing of the resource.
@@ -63,7 +72,40 @@ class ProductController extends Controller
             : 'created_at';
         $sortDir = $request->query('sort_dir') === 'asc' ? 'asc' : 'desc';
 
-        if ($sortBy === 'base_price') {
+        if ($sortBy === 'best_sellers') {
+            $query->withSum('orderItems as sold_quantity', 'quantity')
+                ->orderBy('sold_quantity', $sortDir)
+                ->orderBy('created_at', 'desc');
+        } elseif ($sortBy === 'most_viewed') {
+            $query->withCount(['views as recent_views' => fn ($q) => $q->where(
+                'created_at',
+                '>=',
+                now()->subDays(self::POPULARITY_WINDOW_DAYS)
+            )])
+                ->orderBy('recent_views', $sortDir)
+                ->orderBy('created_at', 'desc');
+        } elseif ($sortBy === 'discount') {
+            // Deepest promo ratio among the product's active promo variants;
+            // products with no promo sort last (NULL) in either direction.
+            // CAST ... AS REAL forces floating-point division — without it,
+            // SQLite's NUMERIC column affinity stores round decimal values
+            // (e.g. 10000.00) as plain integers, and "/" between two SQLite
+            // integers truncates to 0, silently breaking this sort under the
+            // test suite's SQLite connection (MySQL's DECIMAL/DECIMAL
+            // division doesn't have this issue, but the cast is harmless
+            // there too).
+            $query->addSelect(['max_discount' => ProductVariant::query()
+                ->selectRaw('MAX((CAST(base_price AS REAL) - promo_price) / base_price)')
+                ->whereColumn('product_variants.product_id', 'products.id')
+                ->where('is_promotion', true)
+                ->where('is_active', true)
+                ->whereNotNull('promo_price')
+                ->where('base_price', '>', 0),
+            ])
+                ->orderByRaw('max_discount IS NULL')
+                ->orderBy('max_discount', $sortDir)
+                ->orderBy('created_at', 'desc');
+        } elseif ($sortBy === 'base_price') {
             // min_price (products.min_price) is kept in sync by
             // ProductVariantObserver — sorts on an indexed column instead of
             // a correlated subquery per row (performance audit finding).

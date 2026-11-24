@@ -14,6 +14,10 @@ const fr = {
     next: "Suivant",
     seeAll: "Voir tout",
     priceUnavailable: "Prix indisponible",
+    newBadge: "Nouveau",
+    expressLabel: "EXPRESS",
+    expressDelayPrefix: "Livré en",
+    expressDelay: "24h",
     close: "Fermer",
   },
   header: {
@@ -102,6 +106,16 @@ const fr = {
     alsoViewedTitle: "Les clients ont aussi consulté",
     moreFromBrandTitle: "Plus de produits de cette marque",
     recentlyViewedTitle: "Récemment consultés",
+    recommendedForYouTitle: "Recommandé pour vous",
+    megaDealsTitle: "Méga offres du jour",
+    newArrivalsTitle: "Nouveautés",
+    lowPricesTitle: "Petits prix, grandes trouvailles",
+    dealsEndIn: "Se termine dans",
+    showcase: {
+      kicker: "Rayon à la une",
+      productsCount: (n: number) => `${n} produits`,
+      cta: "Découvrir le rayon",
+    },
     brandsTitle: "Les marques que nous proposons",
     heroFallbackSubtitle: "Découvrez un univers d'articles",
     heroFallbackDescription:
@@ -121,23 +135,43 @@ const fr = {
       viewers: (n: number) => `${n} Doualais regardent cette box`,
       cta: "Tenter ma chance",
     },
-    catalogue: {
-      title: "Catalogue",
-      filters: "Filtres",
-      category: "Catégorie",
-      allCategories: "Toutes les catégories",
-      price: "Prix",
-      brand: "Marque",
-      color: "Couleur",
-      noResults: "Aucun produit ne correspond à ces filtres.",
-      truncatedNotice: "Affichage des premiers résultats du catalogue. Affinez votre recherche pour voir plus de produits.",
-      priceRanges: {
-        under10000: "Moins de 10 000 FCFA",
-        "10000to25000": "10 000 - 25 000 FCFA",
-        "25000to50000": "25 000 - 50 000 FCFA",
-        over50000: "Plus de 50 000 FCFA",
-      },
+  },
+  collections: {
+    breadcrumbHome: "Accueil",
+    promotions: {
+      title: "En solde",
+      description: "Tous les produits actuellement en promotion.",
     },
+    populaires: {
+      title: "Produits populaires",
+      description: "Les produits les plus consultés ces 30 derniers jours.",
+    },
+    megaOffres: {
+      title: "Méga offres",
+      description: "Les plus grosses remises du moment, de la plus forte à la plus petite.",
+    },
+    meilleuresVentes: {
+      title: "Meilleures ventes",
+      description: "Les produits les plus commandés par nos clients.",
+    },
+    nouveautes: {
+      title: "Nouveautés",
+      description: "Les derniers produits arrivés en boutique.",
+    },
+    petitsPrix: {
+      title: "Petits prix, grandes trouvailles",
+      description: "Notre catalogue du moins cher au plus cher.",
+    },
+    pourVous: {
+      title: "Recommandé pour vous",
+      description: "Une sélection basée sur les produits que vous avez consultés.",
+      noHistory: "Consultez quelques produits : nous vous proposerons ici une sélection à votre goût. En attendant, voici nos nouveautés.",
+    },
+  },
+  brandsIndex: {
+    title: "Toutes nos marques",
+    description: "Retrouvez les produits de vos marques préférées.",
+    empty: "Aucune marque pour le moment.",
   },
   category: {
     resultsFound: (n: number) => `${n} produits trouvés`,

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import HomePage from "@/components/HomePage/HomePage";
 import { isLocale, type Locale } from "@/lib/i18n/config";
-import { parsePageParam } from "@/lib/pagination";
 import { canonicalAlternates } from "@/lib/seo";
 
 // The root layout's own alternates.canonical ("/${lang}") already covers
@@ -18,8 +17,9 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   };
 }
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const { page } = await searchParams;
-
-  return <HomePage page={parsePageParam(page)} />;
+// The homepage used to read ?page= for its paginated catalogue; that
+// catalogue is gone (replaced by curated rows — see HomePage), so a legacy
+// /?page=2 link just renders the homepage, whose canonical is plain "/".
+export default function Home() {
+  return <HomePage />;
 }

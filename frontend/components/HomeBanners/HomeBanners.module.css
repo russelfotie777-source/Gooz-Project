@@ -1,0 +1,81 @@
+.banner {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  /* Lifts slightly on hover, like the reference — transform only, so it
+     never shifts the layout around it. */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.banner:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card);
+}
+
+.banner:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.5s ease;
+}
+
+.banner:hover .image {
+  transform: scale(1.03);
+}
+
+/* Phones: the 3 strips become a swipeable row (one and a bit visible, so
+   the next one peeks in and signals there's more). */
+.strips {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 82%;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
+.strips::-webkit-scrollbar {
+  display: none;
+}
+
+.strip {
+  scroll-snap-align: start;
+}
+
+.deals {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .strips {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: visible;
+  }
+
+  .deals {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner,
+  .image {
+    transition: none;
+  }
+
+  .banner:hover,
+  .banner:hover .image {
+    transform: none;
+  }
+}

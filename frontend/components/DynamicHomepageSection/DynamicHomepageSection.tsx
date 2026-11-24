@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import ProductCard from "@/components/ProductCard/ProductCard";
+import { SlideshowConductor } from "@/lib/slideshowConductor";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
 import LocaleLink from "@/lib/i18n/LocaleLink";
 import type { HomepageSection } from "@/lib/types";
@@ -51,89 +52,91 @@ export default function DynamicHomepageSection({ section }: DynamicHomepageSecti
   if (itemCount === 0) return null;
 
   return (
-    <section className={styles.section}>
-      {(section.show_title || section.show_view_all) && (
-        <div className={styles.header}>
-          {section.show_title && <h2 className={styles.title}>{section.display_title}</h2>}
-          {section.show_view_all && (
-            <LocaleLink href={section.view_all_url} className={styles.viewAll}>
-              {dict.common.seeAll}
-            </LocaleLink>
+    <SlideshowConductor>
+      <section className={styles.section}>
+        {(section.show_title || section.show_view_all) && (
+          <div className={styles.header}>
+            {section.show_title && <h2 className={styles.title}>{section.display_title}</h2>}
+            {section.show_view_all && (
+              <LocaleLink href={section.view_all_url} className={styles.viewAll}>
+                {dict.common.seeAll}
+              </LocaleLink>
+            )}
+          </div>
+        )}
+        {section.description && <p className={styles.description}>{section.description}</p>}
+
+        <div className={styles.trackWrapper}>
+          <div
+            ref={trackRef}
+            className={`${styles.track} ${isHorizontal ? styles.trackHorizontal : styles.trackGrid}`}
+          >
+            {section.content_type === "products" &&
+              section.products.map((product) => (
+                <div className={styles.item} key={product.id}>
+                  <ProductCard
+                    product={product}
+                    layout={isHorizontal ? "row" : "column"}
+                    swipeable={!isHorizontal}
+                  />
+                </div>
+              ))}
+
+            {section.content_type === "categories" &&
+              section.categories.map((category) => (
+                <LocaleLink href={`/categories/${category.slug}`} className={styles.cardItem} key={category.id}>
+                  <span className={styles.cardBadge}>
+                    {category.image ? (
+                      <Image src={category.image} alt="" fill sizes="72px" className={styles.cardImage} />
+                    ) : (
+                      <span className={styles.cardInitial}>{category.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </span>
+                  <span className={styles.cardName}>{category.name}</span>
+                </LocaleLink>
+              ))}
+
+            {section.content_type === "brands" &&
+              section.brands.map((brand) => (
+                <LocaleLink href={`/marques/${brand.slug}`} className={styles.cardItem} key={brand.id}>
+                  <span className={styles.cardBadge}>
+                    {brand.logo ? (
+                      <Image src={brand.logo} alt="" fill sizes="72px" className={styles.cardImage} />
+                    ) : (
+                      <span className={styles.cardInitial}>{brand.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </span>
+                  <span className={styles.cardName}>{brand.name}</span>
+                </LocaleLink>
+              ))}
+          </div>
+
+          {isHorizontal && canScroll && (
+            <>
+              <button
+                type="button"
+                className={`${styles.navButton} ${styles.navButtonPrev}`}
+                aria-label={dict.common.previous}
+                onClick={() => scroll(-1)}
+              >
+                <img
+                  src="/icon/product-section/nav-arrow.svg"
+                  alt=""
+                  className={`${styles.navIcon} ${styles.navIconFlipped}`}
+                />
+              </button>
+              <button
+                type="button"
+                className={`${styles.navButton} ${styles.navButtonNext}`}
+                aria-label={dict.common.next}
+                onClick={() => scroll(1)}
+              >
+                <img src="/icon/product-section/nav-arrow.svg" alt="" className={styles.navIcon} />
+              </button>
+            </>
           )}
         </div>
-      )}
-      {section.description && <p className={styles.description}>{section.description}</p>}
-
-      <div className={styles.trackWrapper}>
-        <div
-          ref={trackRef}
-          className={`${styles.track} ${isHorizontal ? styles.trackHorizontal : styles.trackGrid}`}
-        >
-          {section.content_type === "products" &&
-            section.products.map((product) => (
-              <div className={styles.item} key={product.id}>
-                <ProductCard
-                  product={product}
-                  layout={isHorizontal ? "row" : "column"}
-                  swipeable={!isHorizontal}
-                />
-              </div>
-            ))}
-
-          {section.content_type === "categories" &&
-            section.categories.map((category) => (
-              <LocaleLink href={`/categories/${category.slug}`} className={styles.cardItem} key={category.id}>
-                <span className={styles.cardBadge}>
-                  {category.image ? (
-                    <Image src={category.image} alt="" fill sizes="72px" className={styles.cardImage} />
-                  ) : (
-                    <span className={styles.cardInitial}>{category.name.charAt(0).toUpperCase()}</span>
-                  )}
-                </span>
-                <span className={styles.cardName}>{category.name}</span>
-              </LocaleLink>
-            ))}
-
-          {section.content_type === "brands" &&
-            section.brands.map((brand) => (
-              <LocaleLink href={`/marques/${brand.slug}`} className={styles.cardItem} key={brand.id}>
-                <span className={styles.cardBadge}>
-                  {brand.logo ? (
-                    <Image src={brand.logo} alt="" fill sizes="72px" className={styles.cardImage} />
-                  ) : (
-                    <span className={styles.cardInitial}>{brand.name.charAt(0).toUpperCase()}</span>
-                  )}
-                </span>
-                <span className={styles.cardName}>{brand.name}</span>
-              </LocaleLink>
-            ))}
-        </div>
-
-        {isHorizontal && canScroll && (
-          <>
-            <button
-              type="button"
-              className={`${styles.navButton} ${styles.navButtonPrev}`}
-              aria-label={dict.common.previous}
-              onClick={() => scroll(-1)}
-            >
-              <img
-                src="/icon/product-section/nav-arrow.svg"
-                alt=""
-                className={`${styles.navIcon} ${styles.navIconFlipped}`}
-              />
-            </button>
-            <button
-              type="button"
-              className={`${styles.navButton} ${styles.navButtonNext}`}
-              aria-label={dict.common.next}
-              onClick={() => scroll(1)}
-            >
-              <img src="/icon/product-section/nav-arrow.svg" alt="" className={styles.navIcon} />
-            </button>
-          </>
-        )}
-      </div>
-    </section>
+      </section>
+    </SlideshowConductor>
   );
 }

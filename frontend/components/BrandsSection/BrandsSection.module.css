@@ -106,3 +106,34 @@
     font-size: 20px;
   }
 }
+
+/* Optional header with "Voir tout" — same look as ProductSection's. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.viewAll {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.viewAll:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+@media (min-width: 1024px) {
+  .viewAll {
+    font-size: 14px;
+  }
+}

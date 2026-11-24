@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Product } from "@/lib/types";
 import { getProductsPage, type GetProductsParams } from "@/lib/api";
 import { useDictionary } from "@/lib/i18n/I18nProvider";
@@ -26,13 +26,22 @@ interface CategoryResultsProps {
   /** "search" swaps the empty-state wording and the heading format ("no
    * product matches your search" / "Results for ..." instead of the plain
    * title) — same filter/sort/pagination UI in all three modes. */
-  mode?: "category" | "brand" | "search";
+  mode?: "category" | "brand" | "search" | "collection";
   /** Required in "category" mode — re-fetches stay scoped to this category. */
   categoryId?: number;
   /** Required in "brand" mode — re-fetches stay scoped to this brand. */
   brandId?: number;
   /** Required in "search" mode — re-fetches stay scoped to this term. */
   searchQuery?: string;
+  /** "collection" mode: the collection's fixed query (see lib/collections.ts) —
+   *  the shopper's own sort and price filters are applied on top. */
+  baseParams?: GetProductsParams;
+  /** One line under the heading. */
+  description?: string;
+  /** Rendered under the heading (e.g. the daily-deals countdown). */
+  headerExtra?: ReactNode;
+  pageSize?: number;
+  cardLayout?: "column" | "market";
 }
 
 const PAGE_SIZE = 9;
@@ -55,6 +64,11 @@ export default function CategoryResults({
   categoryId,
   brandId,
   searchQuery,
+  baseParams,
+  description,
+  headerExtra,
+  pageSize = PAGE_SIZE,
+  cardLayout = "column",
 }: CategoryResultsProps) {
   const dict = useDictionary();
   const router = useRouter();
@@ -106,12 +120,13 @@ export default function CategoryResults({
 
     const params: GetProductsParams = {
       page,
-      per_page: PAGE_SIZE,
+      per_page: pageSize,
       category_id: mode === "category" ? categoryId : undefined,
       brand_id: mode === "brand" ? brandId : undefined,
       q: mode === "search" ? searchQuery : undefined,
       min_price: appliedRange.min ?? undefined,
       max_price: appliedRange.max ?? undefined,
+      ...(mode === "collection" ? baseParams : {}),
       ...(sort ? SORT_TO_PARAMS[sort] : {}),
     };
 
@@ -164,6 +179,12 @@ export default function CategoryResults({
   return (
     <section className={styles.section} id="catalogue">
       <h1 className={styles.pageTitle}>{heading}</h1>
+      {(description || headerExtra) && (
+        <div className={styles.intro}>
+          {description && <p className={styles.description}>{description}</p>}
+          {headerExtra}
+        </div>
+      )}
 
       <div className={styles.resultBar}>
         <p className={styles.count}>{dict.category.resultsFound(total)}</p>
@@ -233,9 +254,9 @@ export default function CategoryResults({
         </aside>
 
         {products.length > 0 ? (
-          <div className={styles.grid} aria-busy={loading}>
+          <div className={cardLayout === "market" ? styles.marketGrid : styles.grid} aria-busy={loading}>
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} layout="column" />
+              <ProductCard key={product.id} product={product} layout={cardLayout} />
             ))}
           </div>
         ) : (

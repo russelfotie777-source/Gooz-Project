@@ -1,0 +1,28 @@
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.label {
+  margin-right: 2px;
+}
+
+.digit {
+  min-width: 28px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-chrome-bg);
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .countdown {
+    font-size: 13px;
+  }
+}

@@ -9,6 +9,10 @@ const en: Dictionary = {
     next: "Next",
     seeAll: "See all",
     priceUnavailable: "Price unavailable",
+    newBadge: "New",
+    expressLabel: "EXPRESS",
+    expressDelayPrefix: "Delivered in",
+    expressDelay: "24h",
     close: "Close",
   },
   header: {
@@ -97,6 +101,16 @@ const en: Dictionary = {
     alsoViewedTitle: "Customers also viewed",
     moreFromBrandTitle: "More from this brand",
     recentlyViewedTitle: "Recently viewed",
+    recommendedForYouTitle: "Recommended for you",
+    megaDealsTitle: "Today's mega deals",
+    newArrivalsTitle: "New arrivals",
+    lowPricesTitle: "Small prices, great finds",
+    dealsEndIn: "Ends in",
+    showcase: {
+      kicker: "Featured department",
+      productsCount: (n: number) => `${n} products`,
+      cta: "Explore the department",
+    },
     brandsTitle: "Brands we offer",
     heroFallbackSubtitle: "Discover a world of products",
     heroFallbackDescription:
@@ -116,23 +130,43 @@ const en: Dictionary = {
       viewers: (n: number) => `${n} people in Douala are watching`,
       cta: "Try my luck",
     },
-    catalogue: {
-      title: "Catalogue",
-      filters: "Filters",
-      category: "Category",
-      allCategories: "All categories",
-      price: "Price",
-      brand: "Brand",
-      color: "Color",
-      noResults: "No product matches these filters.",
-      truncatedNotice: "Showing the first results of the catalogue. Narrow your search to see more products.",
-      priceRanges: {
-        under10000: "Under 10,000 FCFA",
-        "10000to25000": "10,000 - 25,000 FCFA",
-        "25000to50000": "25,000 - 50,000 FCFA",
-        over50000: "Over 50,000 FCFA",
-      },
+  },
+  collections: {
+    breadcrumbHome: "Home",
+    promotions: {
+      title: "On sale",
+      description: "Every product currently on promotion.",
     },
+    populaires: {
+      title: "Popular products",
+      description: "The most viewed products over the last 30 days.",
+    },
+    megaOffres: {
+      title: "Mega deals",
+      description: "The biggest discounts right now, largest first.",
+    },
+    meilleuresVentes: {
+      title: "Best sellers",
+      description: "The products our customers order the most.",
+    },
+    nouveautes: {
+      title: "New arrivals",
+      description: "The latest products in store.",
+    },
+    petitsPrix: {
+      title: "Small prices, great finds",
+      description: "Our catalogue from cheapest to most expensive.",
+    },
+    pourVous: {
+      title: "Recommended for you",
+      description: "A selection based on the products you viewed.",
+      noHistory: "Browse a few products and we'll suggest a selection for you here. Meanwhile, here are our new arrivals.",
+    },
+  },
+  brandsIndex: {
+    title: "All our brands",
+    description: "Find the products of your favorite brands.",
+    empty: "No brands yet.",
   },
   category: {
     resultsFound: (n: number) => `${n} products found`,

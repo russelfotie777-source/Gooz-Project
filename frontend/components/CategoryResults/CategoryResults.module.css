@@ -225,3 +225,44 @@
     gap: 20px;
   }
 }
+
+/* "collection" mode (pages behind the homepage's "Voir tout") */
+.intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: -4px;
+}
+
+.description {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ShopItech-style tiles: 2 columns on phones, then as many ~190px columns
+   as fit beside the filters (4–5 on a desktop). */
+.marketGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .marketGrid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketGrid {
+    flex: 1;
+    gap: 16px;
+  }
+
+  .description {
+    font-size: 14px;
+  }
+}

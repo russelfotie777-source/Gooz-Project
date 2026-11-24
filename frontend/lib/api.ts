@@ -306,7 +306,7 @@ function normalizeProduct(raw: Product): Product {
 }
 
 export interface GetProductsParams {
-  category_id?: number;
+  category_id?: number | number[];
   brand_id?: number | number[];
   q?: string;
   is_promotion?: boolean;
@@ -314,7 +314,8 @@ export interface GetProductsParams {
   max_price?: number;
   /** No dedicated "distinct colors" endpoint exists — see CatalogueSection's colors facet. */
   color?: string | string[];
-  sort_by?: "created_at" | "base_price" | "name";
+  /** best_sellers ranks by total quantity ordered (ProductController::index). */
+  sort_by?: "created_at" | "base_price" | "name" | "best_sellers" | "most_viewed" | "discount";
   sort_dir?: "asc" | "desc";
   per_page?: number;
   page?: number;

@@ -81,6 +81,28 @@
   height: 100%;
 }
 
+/* Auto-advancing (non-swipeable) cards: photos stacked, cross-faded. */
+.imageTrackFade {
+  position: relative;
+}
+
+.imageTrackFade .imageSlide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.imageTrackFade .imageSlideActive {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imageTrackFade .imageSlide {
+    transition: none;
+  }
+}
+
 .dots {
   position: absolute;
   bottom: 6px;
@@ -328,5 +350,249 @@
 
   .price {
     font-size: 15px;
+  }
+}
+
+/* ── "market" layout (homepage rows below "Populaires") ─────────────────
+   Marketplace tile: thin border instead of a drop shadow, lifts on hover,
+   light photo backdrop, floating "+" cart button over the photo, and a
+   price line that prints the currency small with the discount in green. */
+.market {
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.market:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(30, 40, 90, 0.12);
+}
+
+/* Light mode: white photo zone (product shots are on white already) over a
+   slightly darker info zone, so the two halves read apart. Dark mode keeps
+   the themed surfaces. */
+.market .imageWrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1.05;
+  background: #ffffff;
+}
+
+:root[data-theme="dark"] .market .imageWrapper {
+  background: var(--color-surface-alt);
+}
+
+.market .imageLink {
+  transition: transform 0.45s ease;
+}
+
+.market:hover .imageLink {
+  transform: scale(1.05);
+}
+
+.market .wishlistButton {
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease;
+}
+
+.market .wishlistButton:hover {
+  transform: scale(1.1);
+}
+
+.market .wishlistButtonActive {
+  color: var(--color-danger);
+}
+
+.marketTag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: #1f3c2f;
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.marketAdd {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d1d1f;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.marketAdd:hover {
+  transform: scale(1.08);
+}
+
+.marketAdd:disabled {
+  opacity: 0.6;
+}
+
+.marketAddDone {
+  background: var(--color-success);
+  color: var(--color-white);
+}
+
+.marketAdd:focus-visible,
+.market .wishlistButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.marketBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 10px 12px;
+  border-top: 1px solid var(--color-border);
+  background: #f2f4f8;
+  color: var(--color-text);
+}
+
+:root[data-theme="dark"] .marketBody {
+  background: transparent;
+}
+
+.marketName {
+  display: -webkit-box;
+  min-height: 2.7em;
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.marketPrice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 5px;
+}
+
+.marketAmount {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+}
+
+.marketCurrency {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+:root[data-theme="dark"] .marketAmount {
+  color: #5aa6f0;
+}
+
+.marketOld {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.marketOff {
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.marketUnavailable {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.marketChip {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px 6px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: #b85f00;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .marketChip {
+  color: var(--color-accent-strong);
+}
+
+/* Pinned to the bottom so the line aligns across cards of a row whatever
+   the name/price/brand above it takes. */
+.marketExpress {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #feee00;
+  color: #1d1d1f;
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.marketExpressNote {
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* Phone-width cards are too narrow for "Livré en 24h" on one line —
+   "EXPRESS 24h" says the same thing. */
+@media (max-width: 639px) {
+  .marketExpressPrefix {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketAmount {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market,
+  .market .imageLink,
+  .marketAdd {
+    transition: none;
+  }
+
+  .market:hover,
+  .market:hover .imageLink {
+    transform: none;
   }
 }

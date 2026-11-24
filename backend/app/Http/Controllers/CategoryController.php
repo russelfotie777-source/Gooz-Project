@@ -13,7 +13,9 @@ class CategoryController extends Controller
     // Changes only through the admin panel (Admin\CategoryController), which
     // forgets this key on every create/update/delete — safe to cache for a
     // while instead of hitting the DB on every page load.
-    public const CACHE_KEY = 'public:categories';
+    // v2: entries now carry products_count — bumping the key means a stale
+    // pre-count cache entry is simply never read again after deploy.
+    public const CACHE_KEY = 'public:categories:v2';
 
     public function index(): AnonymousResourceCollection
     {
@@ -27,7 +29,15 @@ class CategoryController extends Controller
             Cache::remember(
                 self::CACHE_KEY,
                 3600,
-                fn () => Category::query()->where('is_active', true)->get()->toArray()
+                // products_count (active products only) lets the homepage
+                // pick its most-stocked categories for dedicated rows. It
+                // can lag product changes by up to the cache TTL, which is
+                // fine for a ranking.
+                fn () => Category::query()
+                    ->where('is_active', true)
+                    ->withCount(['products' => fn ($q) => $q->where('is_active', true)])
+                    ->get()
+                    ->toArray()
             )
         );
 

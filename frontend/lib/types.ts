@@ -39,6 +39,8 @@ export interface Category {
   slug: string;
   image: string | null;
   is_active: boolean;
+  /** Active products in this category — only on the public /categories listing. */
+  products_count?: number;
   updated_at: string;
 }
 

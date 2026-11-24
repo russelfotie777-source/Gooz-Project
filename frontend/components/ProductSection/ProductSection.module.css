@@ -12,6 +12,52 @@
   color: var(--color-text);
 }
 
+/* Optional header (title + extra + "Voir tout") — only used by rows that
+   pass viewAllHref/headerExtra; plain rows keep the bare .title. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.headerMain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-width: 0;
+}
+
+.viewAll {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.viewAll:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+/* Tinted panel (Méga offres) — mixed from the accent so it adapts to
+   dark mode instead of a hard-coded pale yellow. */
+.highlight {
+  padding: 16px 12px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-accent) 13%, var(--color-bg));
+}
+
+.anchored {
+  scroll-margin-top: calc(var(--header-height) + 16px);
+}
+
 .trackWrapper {
   position: relative;
 }
@@ -79,5 +125,70 @@
 
   .navButton {
     display: flex;
+  }
+
+  .highlight {
+    padding: 24px;
+  }
+
+  .viewAll {
+    font-size: 14px;
+  }
+}
+
+/* "market" rows: as many cards as fit the row's own width (6 on a wide
+   desktop row, fewer beside a CategoryShowcase panel, ~2 on a phone) —
+   sized off the container, not the viewport, for exactly that reason. */
+.marketWrapper {
+  container-type: inline-size;
+}
+
+.marketItem {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 46%;
+}
+
+@container (min-width: 560px) {
+  .marketItem {
+    width: calc((100% - 2 * 12px) / 3);
+  }
+}
+
+@container (min-width: 760px) {
+  .marketItem {
+    width: calc((100% - 3 * 12px) / 4);
+  }
+}
+
+@container (min-width: 960px) {
+  .marketItem {
+    width: calc((100% - 4 * 12px) / 5);
+  }
+}
+
+@container (min-width: 1160px) {
+  .marketItem {
+    width: calc((100% - 5 * 12px) / 6);
+  }
+}
+
+/* Arrows in market rows: raised above the cards' floating "+" button and
+   revealed on hover only (keyboard focus still shows them), so they never
+   cover the last visible card's controls. */
+.marketWrapper .navButton {
+  top: 38%;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.marketWrapper:hover .navButton,
+.marketWrapper .navButton:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .marketWrapper .navButton {
+    opacity: 1;
   }
 }
