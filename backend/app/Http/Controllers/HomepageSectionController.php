@@ -37,7 +37,12 @@ class HomepageSectionController extends Controller
             ->where(fn (Builder $q) => $q->whereNull('ends_at')->orWhere('ends_at', '>=', $now))
             ->when(! $isLoggedIn, fn (Builder $q) => $q->where('visibility', '!=', 'logged_in'))
             ->when($isLoggedIn, fn (Builder $q) => $q->where('visibility', '!=', 'guests'))
-            ->with(['items.product.brand', 'items.product.categories', 'items.product.images', 'items.product.variants'])
+            ->with([
+                'items.product.brand',
+                'items.product.categories',
+                'items.product.images',
+                'items.product.variants' => fn (Builder $q) => $q->where('is_active', true),
+            ])
             ->orderBy('position')
             ->get();
 
@@ -90,7 +95,7 @@ class HomepageSectionController extends Controller
             $poolSize = (int) $group->sum(fn (HomepageSection $s) => $s->item_limit ?: 8);
 
             $pool = Product::query()
-                ->with(['brand', 'categories', 'images', 'variants'])
+                ->with(['brand', 'categories', 'images', 'variants' => fn (Builder $q) => $q->where('is_active', true)])
                 ->where('is_active', true)
                 ->when(
                     ! $needsAllCategories,
@@ -202,7 +207,7 @@ class HomepageSectionController extends Controller
     private function queryAutomaticProducts(HomepageSection $section, int $limit): Collection
     {
         $query = Product::query()
-            ->with(['brand', 'categories', 'images', 'variants'])
+            ->with(['brand', 'categories', 'images', 'variants' => fn (Builder $q) => $q->where('is_active', true)])
             ->where('is_active', true);
 
         $this->applyAutomaticFilters($query, $section);

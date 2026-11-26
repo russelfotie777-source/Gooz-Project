@@ -37,7 +37,7 @@ class ProductController extends Controller
         // Pricing lives on variants now, so filters/sorts that used to touch
         // products.base_price go through the variants relation instead.
         $query = Product::query()
-            ->with(['brand', 'categories', 'images', 'variants'])
+            ->with(['brand', 'categories', 'images', 'variants' => fn ($q) => $q->where('is_active', true)])
             ->where('is_active', true);
 
         if ($categoryId = $request->query('category_id')) {
@@ -323,7 +323,13 @@ class ProductController extends Controller
             throw new NotFoundHttpException;
         }
 
-        $product->load(['brand', 'categories', 'images', 'variants.images', 'variants.stocks', 'stocks']);
+        $product->load([
+            'brand',
+            'categories',
+            'images',
+            'variants' => fn ($q) => $q->where('is_active', true)->with(['images', 'stocks']),
+            'stocks',
+        ]);
 
         return new ProductResource($product);
     }
@@ -416,7 +422,7 @@ class ProductController extends Controller
     {
         $products = Product::whereIn('id', $rankedIds)
             ->where('is_active', true)
-            ->with(['brand', 'categories', 'images', 'variants'])
+            ->with(['brand', 'categories', 'images', 'variants' => fn ($q) => $q->where('is_active', true)])
             ->get()
             ->sortBy(fn ($p) => $rankedIds->search($p->id))
             ->values();
@@ -428,7 +434,7 @@ class ProductController extends Controller
             $fallback = Product::where('is_active', true)
                 ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
                 ->whereNotIn('id', $excludeIds)
-                ->with(['brand', 'categories', 'images', 'variants'])
+                ->with(['brand', 'categories', 'images', 'variants' => fn ($q) => $q->where('is_active', true)])
                 ->latest()
                 ->limit($limit - $products->count())
                 ->get();

@@ -40,6 +40,32 @@ class ProductCatalogTest extends TestCase
         $this->getJson("/api/v1/products/{$product->id}")->assertOk()->assertJsonPath('data.id', $product->id);
     }
 
+    public function test_inactive_variant_is_hidden_from_product_detail(): void
+    {
+        $product = Product::factory()->create();
+        $visible = ProductVariant::factory()->for($product)->create();
+        $hidden = ProductVariant::factory()->for($product)->inactive()->create();
+
+        $response = $this->getJson("/api/v1/products/{$product->id}")->assertOk();
+
+        $ids = collect($response->json('data.variants'))->pluck('id');
+        $this->assertTrue($ids->contains($visible->id));
+        $this->assertFalse($ids->contains($hidden->id));
+    }
+
+    public function test_inactive_variant_is_hidden_from_product_listing(): void
+    {
+        $product = Product::factory()->create();
+        $visible = ProductVariant::factory()->for($product)->create();
+        ProductVariant::factory()->for($product)->inactive()->create();
+
+        $response = $this->getJson('/api/v1/products')->assertOk();
+
+        $entry = collect($response->json('data'))->firstWhere('id', $product->id);
+        $ids = collect($entry['variants'])->pluck('id');
+        $this->assertEquals([$visible->id], $ids->all());
+    }
+
     public function test_category_listing_only_returns_active_categories(): void
     {
         $active = Category::factory()->create(['name' => 'Visible']);

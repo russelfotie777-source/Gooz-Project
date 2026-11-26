@@ -12,7 +12,12 @@ class FavoriteController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $favorites = $request->user()->favorites()
-            ->with(['product.brand', 'product.categories', 'product.images', 'product.variants'])
+            ->with([
+                'product.brand',
+                'product.categories',
+                'product.images',
+                'product.variants' => fn ($q) => $q->where('is_active', true),
+            ])
             ->whereHas('product', fn ($q) => $q->where('is_active', true))
             ->paginate(20);
 
@@ -38,7 +43,7 @@ class FavoriteController extends Controller
 
     private function lowestPrice(Product $product): ?float
     {
-        $prices = $product->variants()->get()->map(fn ($variant) => $variant->effectivePrice());
+        $prices = $product->variants()->where('is_active', true)->get()->map(fn ($variant) => $variant->effectivePrice());
 
         return $prices->isEmpty() ? null : (float) $prices->min();
     }

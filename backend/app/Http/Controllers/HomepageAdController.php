@@ -11,9 +11,9 @@ class HomepageAdController extends Controller
     {
         return new HomepageAdSettingResource(HomepageAdSetting::current()->load([
             'flashSacrificeProduct.images',
-            'flashSacrificeProduct.variants',
+            'flashSacrificeProduct.variants' => fn ($q) => $q->where('is_active', true),
             'mysteryBoxProduct.images',
-            'mysteryBoxProduct.variants',
+            'mysteryBoxProduct.variants' => fn ($q) => $q->where('is_active', true),
         ]));
     }
 }
