@@ -84,3 +84,23 @@
     transform: none;
   }
 }
+
+/* "Toutes les catégories" / "Réduire" tile. */
+.toggle {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.toggleBadge {
+  background: linear-gradient(145deg, var(--color-primary), var(--color-navy));
+  color: #fff;
+}
+
+.toggleCount {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+}

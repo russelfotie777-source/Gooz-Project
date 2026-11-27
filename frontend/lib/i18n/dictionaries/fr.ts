@@ -97,6 +97,8 @@ const fr = {
   home: {
     browseByCategory: "Parcourir par catégorie",
     categoriesNav: "Catégories",
+    categoriesShowAll: (n: number) => `Toutes les catégories (${n})`,
+    categoriesShowLess: "Réduire",
     saleTitle: "En Solde",
     popularTitle: "Produits Populaire",
     bestSellersTitle: "Meilleures ventes",

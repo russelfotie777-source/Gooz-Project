@@ -92,6 +92,8 @@ const en: Dictionary = {
   home: {
     browseByCategory: "Browse by category",
     categoriesNav: "Categories",
+    categoriesShowAll: (n: number) => `All categories (${n})`,
+    categoriesShowLess: "Show less",
     saleTitle: "On Sale",
     popularTitle: "Popular Products",
     bestSellersTitle: "Best sellers",

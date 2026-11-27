@@ -81,7 +81,14 @@ export default async function HomePage() {
     .map((category, i) => ({ category, products: showcaseProducts[i] }))
     .filter((showcase) => showcase.products.length > 0);
 
-  const saleProducts = products.filter((p) => p.variants.some((v) => v.is_promotion));
+  // "En solde": the newest products actually on sale, taken from the
+  // dedicated is_promotion query. (Filtering `products` — the newest
+  // products overall — only caught the few promos among the latest
+  // additions, so the row showed ~1 item while 100+ were on sale.)
+  const isOnSale = (p: Product) => p.variants.some((v) => v.is_promotion);
+  const saleProducts = (promoProducts.length > 0 ? promoProducts : products)
+    .filter(isOnSale)
+    .slice(0, ROW_SIZE);
   // "Produits populaires": most viewed over the last 30 days (falls back
   // to the newest products if that list is empty or unavailable).
   const popularProducts = mostViewed.length > 0 ? mostViewed : products.slice(0, 4);
