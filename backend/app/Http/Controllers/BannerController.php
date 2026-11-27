@@ -14,7 +14,7 @@ class BannerController extends Controller
         $now = now();
 
         $banners = Banner::query()
-            ->with('product')
+            ->with(['product' => fn ($q) => $q->where('is_active', true)])
             ->where('is_active', true)
             // The admin form collects starts_at/ends_at as a real scheduling
             // window, but nothing enforced it before — an inactive-by-date

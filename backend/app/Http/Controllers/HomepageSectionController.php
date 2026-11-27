@@ -41,7 +41,7 @@ class HomepageSectionController extends Controller
                 'items.product.brand',
                 'items.product.categories',
                 'items.product.images',
-                'items.product.variants' => fn (Builder $q) => $q->where('is_active', true),
+                'items.product.variants' => fn ($q) => $q->where('is_active', true),
             ])
             ->orderBy('position')
             ->get();
@@ -183,7 +183,7 @@ class HomepageSectionController extends Controller
     private function resolveProducts(HomepageSection $section, int $limit, ?Collection $batchedProducts = null): Collection
     {
         if ($section->section_type === 'manual') {
-            return $section->items->pluck('product')->filter()->values();
+            return $section->items->pluck('product')->filter(fn (?Product $p) => $p?->is_active)->values();
         }
 
         if ($batchedProducts !== null) {
@@ -193,7 +193,7 @@ class HomepageSectionController extends Controller
         $automatic = $this->queryAutomaticProducts($section, $limit);
 
         if ($section->section_type === 'mixed') {
-            $manual = $section->items->pluck('product')->filter();
+            $manual = $section->items->pluck('product')->filter(fn (?Product $p) => $p?->is_active);
             $manualIds = $manual->pluck('id');
 
             return $manual->concat($automatic->reject(fn (Product $p) => $manualIds->contains($p->id)))
