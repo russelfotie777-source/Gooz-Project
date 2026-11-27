@@ -35,7 +35,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const paths = Array.isArray(body.paths) ? body.paths.filter((p): p is string => typeof p === "string") : [];
 
   for (const tag of tags) {
-    revalidateTag(tag);
+    // Next 16's revalidateTag requires this second "profile" argument (its
+    // newer cache-life system) — "max" just means "treat this as the
+    // broadest possible cache lifetime for matching purposes", it doesn't
+    // need to match taggedCache()'s 60s revalidate value for on-demand
+    // invalidation of a plain fetch()-tagged entry to work.
+    revalidateTag(tag, "max");
   }
 
   for (const path of paths) {
