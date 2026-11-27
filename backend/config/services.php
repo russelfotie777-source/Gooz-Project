@@ -69,6 +69,15 @@ return [
         'webhook_token' => env('ENKAP_WEBHOOK_TOKEN'),
     ],
 
+    // See App\Jobs\RevalidateFrontendCache / frontend's app/api/revalidate/
+    // route.ts. frontend_url reuses FRONTEND_URL (already set for
+    // ResetPasswordNotification's reset link) rather than a second env var
+    // for the same host.
+    'revalidate' => [
+        'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+        'secret' => env('REVALIDATE_SECRET'),
+    ],
+
     'firebase' => [
         // Service account JSON downloaded from Firebase Console > Project
         // Settings > Service Accounts > Generate new private key. Used to

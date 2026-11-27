@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Brand\StoreBrandRequest;
 use App\Http\Requests\Brand\UpdateBrandRequest;
 use App\Http\Resources\BrandResource;
+use App\Jobs\RevalidateFrontendCache;
 use App\Models\Brand;
 use App\Services\ImageResizer;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class BrandController extends Controller
 
         $brand = Brand::create($data);
         Cache::forget(PublicBrandController::CACHE_KEY);
+        RevalidateFrontendCache::dispatch(['brands']);
 
         return new BrandResource($brand->fresh());
     }
@@ -66,6 +68,7 @@ class BrandController extends Controller
 
         $brand->update($data);
         Cache::forget(PublicBrandController::CACHE_KEY);
+        RevalidateFrontendCache::dispatch(['brands']);
 
         return new BrandResource($brand->fresh());
     }
@@ -76,6 +79,7 @@ class BrandController extends Controller
 
         $brand->delete();
         Cache::forget(PublicBrandController::CACHE_KEY);
+        RevalidateFrontendCache::dispatch(['brands']);
 
         return response()->json(null, 204);
     }

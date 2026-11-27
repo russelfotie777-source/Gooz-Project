@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Banner\StoreBannerRequest;
 use App\Http\Requests\Banner\UpdateBannerRequest;
 use App\Http\Resources\BannerResource;
+use App\Jobs\RevalidateFrontendCache;
 use App\Models\Banner;
 use App\Services\ImageResizer;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -40,6 +41,8 @@ class BannerController extends Controller
 
         $banner = Banner::create($data);
 
+        RevalidateFrontendCache::dispatch(['banners']);
+
         return new BannerResource($banner->fresh('product'));
     }
 
@@ -61,6 +64,8 @@ class BannerController extends Controller
 
         $banner->update($data);
 
+        RevalidateFrontendCache::dispatch(['banners']);
+
         return new BannerResource($banner->fresh('product'));
     }
 
@@ -69,6 +74,8 @@ class BannerController extends Controller
         $this->deleteImageFile($banner);
 
         $banner->delete();
+
+        RevalidateFrontendCache::dispatch(['banners']);
 
         return response()->json(null, 204);
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Jobs\RevalidateFrontendCache;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -311,6 +312,8 @@ class ProductController extends Controller
         $product = Product::create($data);
         $product->categories()->sync($categoryIds);
 
+        RevalidateFrontendCache::dispatch(['products']);
+
         return new ProductResource($product->fresh(['brand', 'categories']));
     }
 
@@ -459,6 +462,8 @@ class ProductController extends Controller
 
         $product->update($data);
 
+        RevalidateFrontendCache::dispatch(['products']);
+
         return new ProductResource($product->fresh(['brand', 'categories']));
     }
 
@@ -469,6 +474,8 @@ class ProductController extends Controller
     {
         try {
             $product->delete();
+
+            RevalidateFrontendCache::dispatch(['products']);
         } catch (QueryException $e) {
             // SQLSTATE 23000 here is the inventory_ledgers/stock_adjustment_lines
             // RESTRICT foreign key — any product with real stock history (virtually

@@ -120,11 +120,25 @@ export function isNetworkFailure(error: unknown): boolean {
 
 // Public/shared data (catalogue, categories, banners...) doesn't need a
 // fresh fetch on every single request the way cart/order/profile data does
-// — CATALOG_CACHE lets Next serve a recent cached response instead
+// — taggedCache() lets Next serve a recent cached response instead
 // (performance audit: this was previously hardcoded to `no-store`
 // everywhere, meaning even the homepage re-fetched from Laravel on every
 // visit for data that's identical for every visitor).
-const CATALOG_CACHE: RequestInit = { next: { revalidate: 60 } };
+//
+// Each call site tags its fetch with the resource(s) it reads — this is what
+// lets app/api/revalidate/route.ts clear just that resource's cached
+// fetches on demand (revalidateTag), instead of waiting up to 60s for the
+// next natural revalidation and hoping it actually fires. That matters
+// because self-hosted ISR (no CDN in front, just `next start` behind Nginx)
+// doesn't reliably background-revalidate on its own once a page's initial
+// build-time render is stale enough — confirmed live when a deactivated
+// product kept showing on the homepage well past its 60s window. The admin
+// panel calls that route whenever it changes something customers see (see
+// Laravel's RevalidateFrontendCache job), so the fix is now immediate
+// instead of needing a manual rebuild.
+function taggedCache(...tags: string[]): RequestInit {
+  return { next: { revalidate: 60, tags } };
+}
 
 async function apiFetch<T>(path: string, init: RequestInit = { cache: "no-store" }): Promise<T> {
   const res = await fetchOrThrow(`${API_BASE_URL}${path}`, init);
@@ -354,7 +368,7 @@ function buildQuery(params: GetProductsParams): string {
 export const PRODUCT_FETCH_CAP = 40;
 
 export async function getProducts(params: GetProductsParams = {}): Promise<Product[]> {
-  const { data } = await apiFetch<ApiCollection<Product>>(`/products${buildQuery(params)}`, CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Product>>(`/products${buildQuery(params)}`, taggedCache("products"));
   return data.map(normalizeProduct);
 }
 
@@ -371,7 +385,7 @@ export interface ProductsPage {
 export async function getProductsPage(params: GetProductsParams = {}): Promise<ProductsPage> {
   const { data, meta } = await apiFetch<PaginatedApiCollection<Product>>(
     `/products${buildQuery(params)}`,
-    CATALOG_CACHE
+    taggedCache("products")
   );
   return {
     products: data.map(normalizeProduct),
@@ -382,7 +396,7 @@ export async function getProductsPage(params: GetProductsParams = {}): Promise<P
 }
 
 export async function getProduct(id: number): Promise<Product> {
-  const { data } = await apiFetch<ApiResource<Product>>(`/products/${id}`, CATALOG_CACHE);
+  const { data } = await apiFetch<ApiResource<Product>>(`/products/${id}`, taggedCache("products"));
   return normalizeProduct(data);
 }
 
@@ -390,7 +404,7 @@ export async function getProduct(id: number): Promise<Product> {
 // related(): co-purchased products first (ranked by frequency), filled out
 // with same-category ones when there isn't enough order history yet.
 export async function getRelatedProducts(productId: number): Promise<Product[]> {
-  const { data } = await apiFetch<ApiCollection<Product>>(`/products/${productId}/related`, CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Product>>(`/products/${productId}/related`, taggedCache("products"));
   return data.map(normalizeProduct);
 }
 
@@ -398,7 +412,7 @@ export async function getRelatedProducts(productId: number): Promise<Product[]> 
 // anonymous view sessions instead of orders. See ProductController::
 // alsoViewed() / trackProductView() below.
 export async function getAlsoViewedProducts(productId: number): Promise<Product[]> {
-  const { data } = await apiFetch<ApiCollection<Product>>(`/products/${productId}/also-viewed`, CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Product>>(`/products/${productId}/also-viewed`, taggedCache("products"));
   return data.map(normalizeProduct);
 }
 
@@ -415,34 +429,34 @@ export async function trackProductView(productId: number, sessionToken: string):
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const { data } = await apiFetch<ApiCollection<Category>>("/categories", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Category>>("/categories", taggedCache("categories"));
   return data;
 }
 
 export async function getBrands(): Promise<Brand[]> {
-  const { data } = await apiFetch<ApiCollection<Brand>>("/brands", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Brand>>("/brands", taggedCache("brands"));
   return data;
 }
 
 export async function getBanners(location?: Banner["location"]): Promise<Banner[]> {
   const query = location ? `?location=${location}` : "";
-  const { data } = await apiFetch<ApiCollection<Banner>>(`/banners${query}`, CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Banner>>(`/banners${query}`, taggedCache("banners"));
   return data;
 }
 
 export async function getAnnouncements(): Promise<Announcement[]> {
-  const { data } = await apiFetch<ApiCollection<Announcement>>("/announcements", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Announcement>>("/announcements", taggedCache("announcements"));
   return data;
 }
 
 export async function getAppPromo(): Promise<AppPromoSetting> {
-  const { data } = await apiFetch<ApiResource<AppPromoSetting>>("/app-promo", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiResource<AppPromoSetting>>("/app-promo", taggedCache("app-promo"));
   return data;
 }
 
 // Public — only ever returns admin-approved reviews (see ReviewController::index).
 export async function getProductReviews(productId: number): Promise<Review[]> {
-  const { data } = await apiFetch<PaginatedApiCollection<Review>>(`/products/${productId}/reviews`, CATALOG_CACHE);
+  const { data } = await apiFetch<PaginatedApiCollection<Review>>(`/products/${productId}/reviews`, taggedCache("reviews"));
   return data;
 }
 
@@ -451,7 +465,7 @@ export async function getProductReviews(productId: number): Promise<Review[]> {
 // no pick yet (HomePage.tsx falls back to an automatic choice for the
 // flash-sacrifice slot; the mystery box just stays generic).
 export async function getHomepageAdSettings(): Promise<HomepageAdSetting> {
-  const { data } = await apiFetch<ApiResource<HomepageAdSetting>>("/homepage-ads", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiResource<HomepageAdSetting>>("/homepage-ads", taggedCache("products", "homepage-ads"));
   return {
     flash_sacrifice_product: data.flash_sacrifice_product ? normalizeProduct(data.flash_sacrifice_product) : null,
     mystery_box_product: data.mystery_box_product ? normalizeProduct(data.mystery_box_product) : null,
@@ -462,7 +476,10 @@ export async function getHomepageAdSettings(): Promise<HomepageAdSetting> {
 // resolved server-side (manual picks or an automatic strategy) into
 // products/categories/brands, see HomepageSectionController::present().
 export async function getHomepageSections(): Promise<HomepageSection[]> {
-  const { data } = await apiFetch<ApiCollection<HomepageSection>>("/homepage-sections", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<HomepageSection>>(
+    "/homepage-sections",
+    taggedCache("products", "categories", "brands", "homepage-sections")
+  );
   return data.map((section) =>
     section.content_type === "products" ? { ...section, products: section.products.map(normalizeProduct) } : section
   );
@@ -490,13 +507,13 @@ function normalizeNeighborhood(raw: Neighborhood): Neighborhood {
 }
 
 export async function getCities(): Promise<City[]> {
-  const { data } = await apiFetch<ApiCollection<City>>("/cities", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<City>>("/cities", taggedCache("cities"));
   return data;
 }
 
 export async function getNeighborhoods(cityId?: number): Promise<Neighborhood[]> {
   const query = cityId !== undefined ? `?city_id=${cityId}` : "";
-  const { data } = await apiFetch<ApiCollection<Neighborhood>>(`/neighborhoods${query}`, CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Neighborhood>>(`/neighborhoods${query}`, taggedCache("neighborhoods"));
   return data.map(normalizeNeighborhood);
 }
 
@@ -654,7 +671,7 @@ function normalizeWarehouse(raw: Warehouse): Warehouse {
 }
 
 export async function getWarehouses(): Promise<Warehouse[]> {
-  const { data } = await apiFetch<ApiCollection<Warehouse>>("/warehouses", CATALOG_CACHE);
+  const { data } = await apiFetch<ApiCollection<Warehouse>>("/warehouses", taggedCache("warehouses"));
   return data.map(normalizeWarehouse);
 }
 

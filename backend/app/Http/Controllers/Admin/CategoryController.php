@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Category\StoreCategoryRequest;
 use App\Http\Requests\Category\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
+use App\Jobs\RevalidateFrontendCache;
 use App\Models\Category;
 use App\Services\ImageResizer;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class CategoryController extends Controller
 
         $category = Category::create($data);
         Cache::forget(PublicCategoryController::CACHE_KEY);
+        RevalidateFrontendCache::dispatch(['categories']);
 
         return new CategoryResource($category->fresh());
     }
@@ -66,6 +68,7 @@ class CategoryController extends Controller
 
         $category->update($data);
         Cache::forget(PublicCategoryController::CACHE_KEY);
+        RevalidateFrontendCache::dispatch(['categories']);
 
         return new CategoryResource($category->fresh());
     }
@@ -76,6 +79,7 @@ class CategoryController extends Controller
 
         $category->delete();
         Cache::forget(PublicCategoryController::CACHE_KEY);
+        RevalidateFrontendCache::dispatch(['categories']);
 
         return response()->json(null, 204);
     }

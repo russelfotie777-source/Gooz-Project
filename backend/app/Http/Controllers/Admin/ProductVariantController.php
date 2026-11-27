@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductVariant\StoreProductVariantRequest;
 use App\Http\Requests\ProductVariant\UpdateProductVariantRequest;
 use App\Http\Resources\ProductVariantResource;
+use App\Jobs\RevalidateFrontendCache;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\QueryException;
@@ -41,12 +42,16 @@ class ProductVariantController extends Controller
     {
         $variant = $product->variants()->create($request->validated());
 
+        RevalidateFrontendCache::dispatch(['products']);
+
         return new ProductVariantResource($variant->fresh());
     }
 
     public function update(UpdateProductVariantRequest $request, ProductVariant $variant): ProductVariantResource
     {
         $variant->update($request->validated());
+
+        RevalidateFrontendCache::dispatch(['products']);
 
         return new ProductVariantResource($variant->fresh());
     }
@@ -55,6 +60,8 @@ class ProductVariantController extends Controller
     {
         try {
             $variant->delete();
+
+            RevalidateFrontendCache::dispatch(['products']);
         } catch (QueryException $e) {
             // SQLSTATE 23000 here is the inventory_ledgers/stock_adjustment_lines
             // RESTRICT foreign key — any variant with real stock history (virtually
